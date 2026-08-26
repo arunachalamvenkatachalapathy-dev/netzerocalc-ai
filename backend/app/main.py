@@ -421,23 +421,4 @@ def agent_chat(payload: AgentChatRequest, db: Session = Depends(get_db)):
         "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
     }
 
-@app.post("/api/linkedin/generate")
-def generate_linkedin_post(context: str = "Scope 3 Carbon Accounting & India Industrial GHG Factors"):
-    """
-    Triggers the complete 16-step LinkedIn Autopilot v3.0 pipeline using Gemini API.
-    Does NOT use Pollinations AI, Flux, or free tier endpoints.
-    """
-    orchestrator = NewsroomOrchestrator()
-    result = orchestrator.run_pipeline(domain_context=context)
-    return result
-
-
-@app.get("/api/linkedin/history")
-def get_linkedin_history():
-    """
-    Returns recent LinkedIn publication history for deduplication and analytics.
-    """
-    orchestrator = NewsroomOrchestrator()
-    history = orchestrator.memory.get_recent_history(limit=20)
-    return {"history": history}
 
