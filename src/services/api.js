@@ -1,5 +1,5 @@
 // E-Credits Backend API Client Integration
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://netzerocalc-backend-398062217408.us-central1.run.app';
 
 export async function checkBackendHealth() {
   try {
