@@ -1,0 +1,23 @@
+services:
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: sqlite:////data/bom_lci.db
+      JWT_SECRET: change-this-before-production
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      AI_CHAT_URL: http://host.docker.internal:11434/v1/chat/completions
+      AI_CHAT_MODEL: llama3.1
+      AI_CHAT_API_KEY: ollama
+    ports:
+      - "8000:8000"
+    volumes:
+      - bom_lci_data:/data
+  web:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  bom_lci_data:

@@ -1,0 +1,4406 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>NetZeroCalc | Audit-Ready ESG Workbench & E-Credit Generator</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0f5238",
+            "primary-container": "#2d6a4f",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#a8e7c5",
+            "secondary": "#006399",
+            "secondary-container": "#67bafd",
+            "secondary-fixed": "#cde5ff",
+            "on-secondary-fixed": "#001d32",
+            "tertiary": "#5b00c7",
+            "tertiary-container": "#742fe5",
+            "background": "#faf8ff",
+            "surface": "#faf8ff",
+            "surface-dim": "#d2d9f4",
+            "surface-container": "#eaedff",
+            "surface-container-low": "#f2f3ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e2e7ff",
+            "on-surface": "#131b2e",
+            "on-surface-variant": "#404943",
+            "outline": "#707973",
+            "outline-variant": "#bfc9c1",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a"
+          },
+          fontFamily: {
+            "sans": ["Plus Jakarta Sans", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color: #FAF9F5; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sci-border { border: 1px solid #E2E8F0; }
+    .sci-shadow { box-shadow: 0 1px 3px rgba(15,23,42,0.05); }
+    .font-mono-data { font-family: 'JetBrains Mono', monospace; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #bfc9c1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #707973; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(19, 27, 46, 0.4); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .dqr-pill {
+      width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+    }
+    .dqr-1 { background: #B1F0CE; color: #002114; }
+    .dqr-2 { background: #CDE5FF; color: #001D32; }
+    .dqr-3 { background: #FEF3C7; color: #92400E; }
+    .dqr-4, .dqr-5 { background: #FFDAD6; color: #93000A; }
+  
+.ac-wrapper { position: relative; }
+.ac-dropdown {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  max-height: 320px; overflow-y: auto; background: #fff;
+  border: 1px solid #E2E8F0; border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.12); z-index: 50;
+}
+.ac-dropdown.open { display: block; }
+.ac-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 14px; cursor: pointer; font-size: 13px; color: #0F172A;
+  border-bottom: 1px solid #F1F5F9;
+}
+.ac-item:hover { background: #F8FAFC; }
+.ac-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748B;
+  background: #F1F5F9; padding: 2px 7px; border-radius: 99px; margin-left: 10px;
+}
+.ac-empty { padding: 14px; font-size: 12.5px; color: #64748B; text-align: center; }
+
+</style>
+</head>
+
+<body class="text-on-surface flex min-h-screen overflow-hidden bg-surface">
+
+  <!-- Left SideNavBar -->
+  <nav class="hidden md:flex flex-col h-screen w-[320px] lg:w-[340px] sticky left-0 top-0 overflow-y-auto bg-surface-container-lowest border-r border-outline-variant py-6 px-4 shrink-0 z-50">
+    <div class="mb-6 px-3 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl sci-border">
+        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">eco</span>
+      </div>
+      <div>
+        <h1 class="font-black text-xl text-primary tracking-tight leading-none">NetZeroCalc</h1>
+        <p class="text-[10px] uppercase font-extrabold text-on-surface-variant tracking-wider mt-1">Audit-Ready ESG Platform</p>
+      </div>
+    </div>
+
+    <!-- CTA Button -->
+    <button onclick="openImportModal()" class="mb-6 w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-bold text-sm hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow">
+      <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+      New BOM Analysis
+    </button>
+
+    <!-- Navigation Tabs -->
+    <div class="flex-1 flex flex-col gap-1.5">
+      <button onclick="switchView('workbench')" id="nav-workbench" class="nav-link active flex items-center gap-3 px-4 py-3 bg-secondary-fixed text-on-secondary-fixed rounded-xl font-semibold text-sm transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+        Workbench & Mapping
+      </button>
+      <button onclick="switchView('projects')" id="nav-projects" class="nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">folder_shared</span>
+        Projects & Audits
+      </button>
+      <button onclick="switchView('simulator')" id="nav-simulator" class="nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">tune</span>
+        What-If Simulator
+      </button>
+      <button onclick="switchView('compliance')" id="nav-compliance" class="nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">verified_user</span>
+        CBAM & ISO Compliance
+      </button>
+      <button onclick="openBig4Modal()" class="nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">history_edu</span>
+        Assurance-Ready Report
+      </button>
+      <button onclick="openCertModal()" class="nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full">
+        <span class="material-symbols-outlined text-xl">workspace_premium</span>
+        E-Credit Certificate
+      </button>
+    </div>
+
+    <!-- Footer Controls & Settings -->
+    <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-1">
+      <a href="GHG_Calculator_RECTIFIED_v6.xlsx" download="GHG_Calculator_RECTIFIED_v6.xlsx" class="flex items-center gap-3 px-4 py-2.5 text-xs text-primary font-bold hover:bg-primary/5 rounded-xl transition-colors w-full text-left">
+        <span class="material-symbols-outlined text-lg">download</span>
+        Download GHG Template (.xlsx)
+      </a>
+      <div class="px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/50 mt-2">
+        <div class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Target Database</div>
+        <select id="dbSelect" onchange="updateProjectSettings()" class="w-full text-xs font-semibold bg-white border border-outline-variant rounded-lg p-1.5 text-on-surface focus:ring-1 focus:ring-primary">
+          <option value="India_GHG_Factors" selected>🇮🇳 India GHG Factors v6</option>
+          <option value="USLCI">🇺🇸 USLCI (US National)</option>
+          <option value="ELCD">🇪🇺 ELCD (European Core)</option>
+          <option value="Agribalyse">🌱 Agribalyse (Agri-food)</option>
+        </select>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Workbench Area -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden w-full">
+    
+    <!-- Top Bar Header -->
+    <header class="flex justify-between items-center h-16 px-6 lg:px-8 w-full bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-40 shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="md:hidden font-extrabold text-xl text-primary">NetZeroCalc</div>
+        <nav class="hidden md:flex gap-6">
+          <button onclick="switchView('workbench')" class="text-primary border-b-2 border-primary pb-1 font-bold text-xs uppercase tracking-wider">Dashboard & Workbench</button>
+          <button onclick="switchView('simulator')" class="text-on-surface-variant hover:text-on-surface pb-1 font-semibold text-xs uppercase tracking-wider transition-colors">Scenario Metrics</button>
+          <button onclick="openBig4Modal()" class="text-on-surface-variant hover:text-on-surface pb-1 font-semibold text-xs uppercase tracking-wider transition-colors">ISO 14064 Assurance</button>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="saveIndicator" class="hidden flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-surface-container-high text-on-surface-variant border border-outline-variant/50 transition-colors">
+          <span class="material-symbols-outlined text-sm">cloud_done</span>
+          <span><span id="saveStatusEl">Saved</span></span>
+        </div>
+        
+        <div id="backend-status-pill" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 transition-colors"></div>
+        
+
+        <button id="auditorLoginBtn" onclick="signInWithGoogle()" class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high border border-outline-variant rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-highest transition-colors">
+          <span class="material-symbols-outlined text-sm text-primary">account_circle</span>
+          <span id="auditorBtnText">Auditor / User Login</span>
+        </button>
+
+        <div class="hidden lg:block relative w-64">
+          <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+          <input id="searchInput" oninput="handleSearchInput(event)" onfocus="handleSearchInput(event)" class="w-full bg-surface-container-low border border-outline-variant py-1.5 pl-9 pr-4 rounded-lg font-medium text-xs focus:ring-1 focus:ring-primary outline-none" placeholder="Search LCI database or BOM items..." type="text"/>
+          <!-- Live Search Autocomplete Dropdown Menu -->
+          <div id="searchDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white border border-outline-variant rounded-xl sci-shadow z-50 max-h-80 overflow-y-auto divide-y divide-outline-variant/30 text-xs">
+          </div>
+        </div>
+        <button onclick="openCertModal()" class="hidden md:flex bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-xs hover:bg-primary-container transition-colors shadow-sm items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm">verified</span>
+          Generate Credits & Certificate
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Canvas -->
+    <div class="flex-1 overflow-y-auto p-6 lg:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
+      
+      <!-- Project Metadata Header Card -->
+      <div class="bg-surface-container-lowest sci-border rounded-xl p-4 sci-shadow flex flex-wrap lg:flex-nowrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3 flex-1 min-w-[280px]">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl sci-border shrink-0">
+            <span class="material-symbols-outlined text-primary">badge</span>
+          </div>
+          <div class="flex-1">
+            <label class="block text-[10px] font-extrabold text-on-surface-variant uppercase tracking-wider mb-0.5">Project Name</label>
+            <input id="projectNameInput" onchange="updateProjectHeader()" type="text" value="" class="w-full text-sm font-black text-primary bg-surface-container-low border border-outline-variant/60 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-primary"/>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-1 min-w-[240px]">
+          <div class="flex-1">
+            <label class="block text-[10px] font-extrabold text-on-surface-variant uppercase tracking-wider mb-0.5">Reporting Organization</label>
+            <input id="companyNameInput" onchange="updateProjectHeader()" type="text" value="ACME Corporation (Sample)" class="w-full text-xs font-bold text-on-surface bg-surface-container-low border border-outline-variant/60 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-primary"/>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 min-w-[200px]">
+          <div>
+            <label class="block text-[10px] font-extrabold text-on-surface-variant uppercase tracking-wider mb-0.5">Assurance Framework</label>
+            <select id="standardSelect" onchange="updateProjectHeader()" class="text-xs font-semibold bg-surface-container-low border border-outline-variant/60 rounded-lg px-2.5 py-1 text-on-surface outline-none focus:ring-1 focus:ring-primary">
+              <option value="ISO 14064-1 & GHG Protocol Scope 1-3" selected>ISO 14064-1 & GHG Protocol</option>
+              <option value="ISO 14064-2 Project Accounting">ISO 14064-2 Project</option>
+              <option value="EU CBAM Embedded Emissions">EU CBAM Disclosure</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Workflow Progress Banner -->
+      <div class="bg-surface-container-lowest sci-border rounded-xl p-4 sci-shadow flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onclick="switchView('workbench'); openImportModal();">
+          <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">1</div>
+          <div>
+            <div class="font-bold text-xs text-on-surface">1. Activity Data & BOM</div>
+            <div class="text-[10px] text-on-surface-variant">Import CSV/XLSX / Master Calculator</div>
+          </div>
+        </div>
+
+        <div class="text-outline-variant hidden md:block">→</div>
+
+        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onclick="switchView('workbench')">
+          <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-xs">2</div>
+          <div>
+            <div class="font-bold text-xs text-on-surface">2. LCI Matching & DQR Review</div>
+            <div class="text-[10px] text-on-surface-variant">Review factors & approve risk</div>
+          </div>
+        </div>
+
+        <div class="text-outline-variant hidden md:block">→</div>
+
+        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onclick="switchView('simulator')">
+          <div class="w-8 h-8 rounded-full bg-tertiary text-white flex items-center justify-center font-bold text-xs">3</div>
+          <div>
+            <div class="font-bold text-xs text-on-surface">3. What-If Decarbonization</div>
+            <div class="text-[10px] text-on-surface-variant">Simulate green power & recycling</div>
+          </div>
+        </div>
+
+        <div class="text-outline-variant hidden md:block">→</div>
+
+        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onclick="openBig4Modal()">
+          <div class="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-xs">4</div>
+          <div>
+            <div class="font-bold text-xs text-on-surface">4. ISO Assurance & Credits</div>
+            <div class="text-[10px] text-on-surface-variant">Export audit & certificate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 1: WORKBENCH & MAPPING ENGINE -->
+      <div id="view-workbench" class="flex flex-col gap-6">
+        
+        <!-- Stats KPI Ribbon -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-5 sci-shadow">
+            <h3 class="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Total Carbon Footprint</h3>
+            <div class="flex items-end gap-2">
+              <span id="kpi-total-co2" class="text-3xl font-extrabold text-on-surface font-mono-data">0.00</span>
+              <span class="text-xs font-bold text-on-surface-variant mb-1">tCO₂e</span>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-5 sci-shadow border-l-4 border-l-secondary">
+            <h3 class="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Items Pending Review</h3>
+            <div class="flex items-end gap-2">
+              <span id="kpi-pending-count" class="text-3xl font-extrabold text-secondary font-mono-data">0</span>
+              <span class="text-xs font-bold text-secondary mb-1">Action Req.</span>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-5 sci-shadow border-l-4 border-l-primary">
+            <h3 class="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Estimated E-Credit Value</h3>
+            <div class="flex items-end gap-2">
+              <span id="kpi-credit-value" class="text-3xl font-extrabold text-primary font-mono-data">₹0</span>
+              <span class="text-xs font-bold text-primary mb-1">
+  @ <input type="number" id="pricePerTonne" value="2900" class="w-16 bg-transparent border-b border-primary text-primary outline-none" oninput="updateKPIs()" />/tCO₂e
+</span>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-5 sci-shadow">
+            <h3 class="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Audit Progress</h3>
+            <div class="flex items-end gap-2 mb-2">
+              <span id="kpi-progress-pct" class="text-3xl font-extrabold text-on-surface font-mono-data">0%</span>
+            </div>
+            <div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+              <div id="kpi-progress-bar" class="bg-primary h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- GHG Protocol Scope 1, 2, 3 Summary Breakdown Ribbon -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-purple-50/80 border border-purple-200 rounded-xl p-4 flex items-center justify-between sci-shadow">
+            <div>
+              <div class="text-[10px] font-extrabold text-purple-900 uppercase tracking-widest">Scope 1 (Direct Fuels & Fleet)</div>
+              <div id="kpi-scope1" class="text-xl font-extrabold text-purple-950 font-mono-data mt-0.5">0.000 tCO₂e</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-purple-200 text-purple-900 font-extrabold text-[10px] border border-purple-300">Scope 1</span>
+          </div>
+
+          <div class="bg-blue-50/80 border border-blue-200 rounded-xl p-4 flex items-center justify-between sci-shadow">
+            <div>
+              <div class="text-[10px] font-extrabold text-blue-900 uppercase tracking-widest">Scope 2 (Purchased Electricity)</div>
+              <div id="kpi-scope2" class="text-xl font-extrabold text-blue-950 font-mono-data mt-0.5">0.000 tCO₂e</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-200 text-blue-900 font-extrabold text-[10px] border border-blue-300">Scope 2</span>
+          </div>
+
+          <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-center justify-between sci-shadow">
+            <div>
+              <div class="text-[10px] font-extrabold text-amber-900 uppercase tracking-widest">Scope 3 (Upstream Value Chain)</div>
+              <div id="kpi-scope3" class="text-xl font-extrabold text-amber-950 font-mono-data mt-0.5">0.000 tCO₂e</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 font-extrabold text-[10px] border border-amber-300">Scope 3</span>
+          </div>
+        </section>
+
+        <!-- Workbench Layout (Sidebar Filters + Data Table) -->
+        <div class="flex flex-col lg:flex-row gap-6">
+          
+          <!-- Match Parameters Filter Sidebar -->
+          <aside class="w-full lg:w-64 shrink-0 flex flex-col gap-4">
+            <div class="bg-surface-container-lowest sci-border rounded-xl p-5 sci-shadow">
+              <h2 class="font-bold text-sm text-on-surface mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg text-primary">tune</span>
+                Match Parameters
+              </h2>
+              
+              <!-- Region Context -->
+              <div class="mb-5">
+                <label class="block font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Geography Context</label>
+                <select id="geoSelect" onchange="updateProjectSettings()" class="w-full text-xs font-semibold bg-white border border-outline-variant rounded-lg p-2 text-on-surface">
+                  <option value="IN" selected>India (IN)</option>
+                  <option value="US">United States (US)</option>
+                  <option value="EU">Europe (EU)</option>
+                  <option value="GLO">Global (GLO)</option>
+                </select>
+              </div>
+
+              <!-- Min Confidence Score Slider -->
+              <div class="mb-5">
+                <div class="flex justify-between items-center mb-2">
+                  <label class="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider">Min Confidence</label>
+                  <span id="scoreVal" class="text-xs font-bold text-primary font-mono-data">75%</span>
+                </div>
+                <input id="scoreSlider" oninput="document.getElementById('scoreVal').innerText = this.value + '%'; filterTable();" type="range" min="0" max="95" value="75" class="w-full accent-primary h-1.5 bg-surface-dim rounded-lg cursor-pointer">
+              </div>
+
+              <!-- Risk Filter Chips -->
+              <div>
+                <label class="block font-bold text-[11px] text-on-surface-variant uppercase tracking-wider mb-2">Risk Filter</label>
+                <div class="flex flex-wrap gap-1.5">
+                  <button onclick="setRiskFilter('ALL', this)" class="risk-btn active px-2.5 py-1 rounded-lg border border-primary text-primary font-bold text-[11px] bg-primary/10">ALL</button>
+                  <button onclick="setRiskFilter('HIGH', this)" class="risk-btn px-2.5 py-1 rounded-lg border border-outline-variant text-on-surface-variant font-semibold text-[11px] hover:bg-surface-container-low">HIGH</button>
+                  <button onclick="setRiskFilter('MEDIUM', this)" class="risk-btn px-2.5 py-1 rounded-lg border border-outline-variant text-on-surface-variant font-semibold text-[11px] hover:bg-surface-container-low">MEDIUM</button>
+                  <button onclick="setRiskFilter('LOW', this)" class="risk-btn px-2.5 py-1 rounded-lg border border-outline-variant text-on-surface-variant font-semibold text-[11px] hover:bg-surface-container-low">LOW</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main BOM Data Table -->
+          <div class="flex-1 min-w-0 bg-surface-container-lowest sci-border rounded-xl sci-shadow overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#F8FAFC]">
+              <div>
+                <h2 class="font-bold text-sm text-on-surface">BOM-to-LCI Mapping Engine</h2>
+                <p id="table-subtitle" class="text-xs text-on-surface-variant mt-0.5">No items loaded. Import a BOM or add items manually to get started.</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="approveAllLowRisk()" class="px-3 py-1.5 bg-primary text-on-primary rounded-lg font-bold text-xs hover:bg-primary-container transition-colors shadow-sm flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">done_all</span>
+                  Approve All Low Risk
+                </button>
+                <button onclick="clearAllItems()" class="px-3 py-1.5 border border-error/30 text-error hover:bg-error-container/30 rounded-lg font-bold text-xs transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">delete_sweep</span>
+                  Clear Table
+                </button>
+                <button onclick="loadSampleDemo()" class="px-3 py-1.5 border border-secondary/30 text-secondary hover:bg-secondary-fixed/50 rounded-lg font-bold text-xs transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">restart_alt</span>
+                  Load Sample Data
+                </button>
+                <button onclick="exportCSV()" class="px-3 py-1.5 border border-outline-variant rounded-lg font-semibold text-xs text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">file_download</span>
+                  Export CSV
+                </button>
+                <button onclick="openExcelModal()" class="px-3 py-1.5 border border-emerald-300 bg-emerald-50 rounded-lg font-semibold text-xs text-emerald-800 hover:bg-emerald-100 transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">grid_on</span>
+                  GHG Master Sheet
+                </button>
+                <button onclick="openImportModal()" class="px-3 py-1.5 border border-outline-variant rounded-lg font-semibold text-xs text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">upload_file</span>
+                  Import BOM
+                </button>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-[#F8FAFC] border-b border-outline-variant">
+                  <tr>
+                    <th class="w-8 px-4 py-3"></th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant">Source BOM Item</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant text-right">Qty/Unit</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant">Matched LCI Process</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant text-center">DQR</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant text-right">Similarity</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant">Risk</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant text-right">Footprint</th>
+                    <th class="px-4 py-3 font-bold text-[11px] uppercase tracking-wider text-on-surface-variant text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="bomTableBody" class="divide-y divide-outline-variant/40 font-medium text-xs">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: PROJECTS & AUDITS HISTORY -->
+      <div id="view-projects" class="hidden flex-col gap-6">
+        <div class="bg-surface-container-lowest sci-border rounded-xl p-6 sci-shadow">
+          <h2 class="font-bold text-lg text-on-surface mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">folder_shared</span>
+            Projects & Audit Workspaces
+          </h2>
+          <p class="text-xs text-on-surface-variant mb-6">Manage active ESG audits, product life-cycle models, and ISO compliance logs.</p>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-[#F8FAFC] border-b border-outline-variant">
+                <tr>
+                  <th class="px-4 py-3 font-bold uppercase tracking-wider text-on-surface-variant">Project Identifier</th>
+                  <th class="px-4 py-3 font-bold uppercase tracking-wider text-on-surface-variant">Standard / Framework</th>
+                  <th class="px-4 py-3 font-bold uppercase tracking-wider text-on-surface-variant">Items Mapped</th>
+                  <th class="px-4 py-3 font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
+                  <th class="px-4 py-3 font-bold uppercase tracking-wider text-on-surface-variant text-right">Last Modified</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant/40 font-medium">
+                <tr class="hover:bg-surface-container-low">
+                  <td id="projTableTitle" class="px-4 py-3 font-bold text-primary"></td>
+                  <td id="projTableStd" class="px-4 py-3">ISO 14064-1 & GHG Protocol Scope 1-3</td>
+                  <td class="px-4 py-3 font-mono-data">Active Project Queue</td>
+                  <td class="px-4 py-3"><span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-[10px] border border-primary/20">ACTIVE WORKSPACE</span></td>
+                  <td class="px-4 py-3 text-right font-mono-data">2026-08-08</td>
+                </tr>
+                <tr class="hover:bg-surface-container-low">
+                  <td class="px-4 py-3 font-bold text-on-surface">Solar Array Decarbonization Project</td>
+                  <td class="px-4 py-3">ISO 14064-2:2019 Project Accounting</td>
+                  <td class="px-4 py-3 font-mono-data">14 / 14 Items (100%)</td>
+                  <td class="px-4 py-3"><span class="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-bold text-[10px] border border-secondary/20">VERIFIED</span></td>
+                  <td class="px-4 py-3 text-right font-mono-data">2026-08-01</td>
+                </tr>
+                <tr class="hover:bg-surface-container-low">
+                  <td class="px-4 py-3 font-bold text-on-surface">Aluminium Casting Line Phase 2</td>
+                  <td class="px-4 py-3">EU CBAM & DPP Disclosure</td>
+                  <td class="px-4 py-3 font-mono-data">8 / 12 Items (67%)</td>
+                  <td class="px-4 py-3"><span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-300">IN REVIEW</span></td>
+                  <td class="px-4 py-3 text-right font-mono-data">2026-07-28</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: WHAT-IF SIMULATOR -->
+      <div id="view-simulator" class="hidden flex-col gap-6">
+        <div class="bg-surface-container-lowest sci-border rounded-xl p-6 sci-shadow">
+          <h2 class="font-bold text-lg text-on-surface mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">tune</span>
+            What-If Decarbonization & Renewable Energy Simulator
+          </h2>
+          <p class="text-xs text-on-surface-variant mb-6">Simulate material substitutions, green power procurement, and calculate carbon credit yields.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="flex flex-col gap-5 bg-surface-container-low p-5 rounded-xl border border-outline-variant/40">
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-2">
+                  <span>Recycled Material Substitution</span>
+                  <span id="simRecVal" class="text-primary font-mono-data">50%</span>
+                </div>
+                <input id="simRecSlider" oninput="updateSim()" type="range" min="0" max="100" value="50" class="w-full accent-primary h-2 bg-surface-dim rounded-lg cursor-pointer">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-2">
+                  <span>Renewable Energy (Solar/Wind PPA)</span>
+                  <span id="simRenVal" class="text-secondary font-mono-data">80%</span>
+                </div>
+                <input id="simRenSlider" oninput="updateSim()" type="range" min="0" max="100" value="80" class="w-full accent-secondary h-2 bg-surface-dim rounded-lg cursor-pointer">
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-4 bg-surface-container-lowest p-5 rounded-xl border border-outline-variant">
+              <div class="flex justify-between items-center text-xs pb-3 border-b border-outline-variant/40">
+                <span class="text-on-surface-variant font-medium">Baseline Footprint</span>
+                <span id="simBaseline" class="font-bold text-sm font-mono-data">0.00 tCO₂e</span>
+              </div>
+              <div class="flex justify-between items-center text-xs pb-3 border-b border-outline-variant/40">
+                <span class="text-on-surface-variant font-medium">Simulated Avoided Emissions</span>
+                <span id="simAvoided" class="font-bold text-sm text-primary font-mono-data">0.00 tCO₂e</span>
+              </div>
+              <div class="flex justify-between items-center text-xs pt-1">
+                <span class="text-on-surface-variant font-bold">Estimated E-Credit Valuation (<span id="whatIfPriceLabel">@ ₹2,900/t</span>)</span>
+                <span id="simValuation" class="font-extrabold text-base text-tertiary font-mono-data">₹0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: COMPLIANCE -->
+      <div id="view-compliance" class="hidden flex-col gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-6 sci-shadow flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold mb-4">
+                <span class="material-symbols-outlined text-xl">shield</span>
+              </div>
+              <h3 class="font-bold text-base text-on-surface mb-2">EU CBAM Readiness</h3>
+              <p class="text-xs text-on-surface-variant leading-relaxed">Carbon Border Adjustment Mechanism embedded carbon disclosure for imports into the European Union.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-outline-variant">
+              <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs border border-primary/20">Data Ready for Export</span>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-6 sci-shadow flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary font-bold mb-4">
+                <span class="material-symbols-outlined text-xl">fact_check</span>
+              </div>
+              <h3 class="font-bold text-base text-on-surface mb-2">ISO 14040 / 14044 LCA</h3>
+              <p class="text-xs text-on-surface-variant leading-relaxed">Goal, scope, inventory analysis, and impact assessment standard for Life Cycle Assessment.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-outline-variant">
+              <span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary font-bold text-xs border border-secondary/20">ISO Standards Aligned</span>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest sci-border rounded-xl p-6 sci-shadow flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary font-bold mb-4">
+                <span class="material-symbols-outlined text-xl">qr_code_scanner</span>
+              </div>
+              <h3 class="font-bold text-base text-on-surface mb-2">EU Digital Product Passport</h3>
+              <p class="text-xs text-on-surface-variant leading-relaxed">Material traceability, recycled content disclosure, and carbon footprint per unit.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-outline-variant">
+              <span class="px-3 py-1 rounded-full bg-tertiary/10 text-tertiary font-bold text-xs border border-tertiary/20">DPP JSON Export Available</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Import Modal (Full Working CSV / XLSX Uploader & Manual Entry) -->
+  <div id="importModal" class="modal-overlay">
+    <div class="bg-white rounded-2xl p-8 max-w-xl w-full sci-shadow relative border border-outline-variant">
+      <button onclick="closeImportModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface font-bold text-xl">✕</button>
+      
+      <h2 class="font-black text-lg text-on-surface mb-1 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">upload_file</span>
+        Import Bill of Materials (BOM)
+      </h2>
+      <p class="text-xs text-on-surface-variant mb-6">Upload CSV or XLSX Excel spreadsheets or manually add components.</p>
+
+      
+      <div id="scenarioBar" class="mb-4 p-3 bg-surface border border-outline-variant rounded-lg flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-xs text-on-surface">🌱 ISO 14064-2 Scenario:</span>
+          <div class="flex bg-white rounded-md p-1 border border-outline-variant">
+            <button id="btnScenarioBaseline" type="button" onclick="setScenario('baseline')" class="btn-sm bg-primary text-on-primary font-bold px-3 py-1 rounded">🏢 Baseline</button>
+            <button id="btnScenarioProject" type="button" onclick="setScenario('project')" class="btn-sm bg-surface-container-low text-on-surface-variant font-semibold px-3 py-1 rounded">⚡ Project</button>
+          </div>
+        </div>
+        <div class="text-[10px] text-on-surface-variant" id="scenarioStatusNote">Matching items for <strong>Baseline Scenario</strong></div>
+      </div>
+
+      <!-- Dropzone -->
+      <div onclick="document.getElementById('csvFileInput').click()" class="border-2 border-dashed border-outline-variant hover:border-primary rounded-xl p-6 text-center cursor-pointer bg-surface-container-low transition-colors mb-4">
+        <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)" class="hidden"/>
+        <span class="material-symbols-outlined text-3xl text-primary mb-1">cloud_upload</span>
+        <div class="font-bold text-xs text-on-surface mb-0.5">Click to browse or drag & drop CSV/XLSX</div>
+        <div class="text-[11px] text-on-surface-variant">Supports standard BOM files & GHG Master Calculator templates</div>
+      </div>
+
+      <!-- Paste CSV Collapsible -->
+      <details class="mb-4 text-xs">
+        <summary class="font-bold text-primary cursor-pointer hover:underline py-1">📋 Or paste raw CSV text</summary>
+        <div class="mt-2 space-y-2">
+          <textarea id="pasteCsvArea" rows="4" placeholder="Category / Item,Quantity (Input),Unit,Emission Factor&#10;Diesel Generator (DG Sets),65,Liters,2.656&#10;CNG Vehicles,15,kg,2.686&#10;Taxi Travel,256,km,0.14" class="w-full text-xs font-mono p-2 border border-outline-variant rounded-lg bg-white outline-none focus:ring-1 focus:ring-primary"></textarea>
+          <button type="button" onclick="handlePastedCsv()" class="px-3 py-1.5 bg-primary text-white font-bold text-xs rounded-lg hover:bg-primary-container">Import Pasted CSV</button>
+        </div>
+      </details>
+
+      <div class="relative flex py-2 items-center mb-4">
+        <div class="flex-grow border-t border-outline-variant"></div>
+        <span class="flex-shrink mx-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">or add item manually</span>
+        <div class="flex-grow border-t border-outline-variant"></div>
+      </div>
+
+      <!-- Manual Form -->
+      <form onsubmit="addManualItem(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        
+<div class="form-group md:col-span-3">
+  <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Item Description</label>
+  <div class="ac-wrapper">
+    <input class="w-full text-xs font-semibold p-2 border border-outline-variant rounded-lg outline-none focus:ring-1 focus:ring-primary bg-white" id="manualName" placeholder="Click to browse all 60 materials, or type to search..." autocomplete="off">
+    <div class="ac-dropdown" id="acDropdown"></div>
+  </div>
+</div>
+
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Quantity</label>
+          <input id="manualQty" type="number" required value="100" min="0.01" step="any" class="w-full text-xs font-semibold p-2 border border-outline-variant rounded-lg outline-none focus:ring-1 focus:ring-primary bg-white"/>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Unit</label>
+          <select id="manualUnit" class="w-full text-xs font-semibold p-2 border border-outline-variant rounded-lg outline-none focus:ring-1 focus:ring-primary bg-white">
+            <option value="kg">kg</option>
+            <option value="Liters">Liters</option>
+            <option value="kWh">kWh</option>
+            <option value="km">km</option>
+            <option value="pcs">pcs</option>
+            <option value="INR">INR</option>
+            <option value="tonne-km">tonne-km</option>
+            <option value="p-km">p-km</option>
+            <option value="m3">m3</option>
+            <option value="m">m</option>
+            <option value="Units">Units</option>
+            <option value="Nights">Nights</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="w-full py-2 bg-primary text-white font-bold text-xs rounded-lg hover:bg-primary-container transition-colors shadow-sm">Add Item</button>
+        </div>
+      </form>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-outline-variant">
+        <button onclick="closeImportModal()" class="px-4 py-2 border border-outline-variant rounded-lg font-bold text-xs">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Spreadsheet Integration Modal -->
+  <div id="excelModal" class="modal-overlay">
+    <div class="bg-white rounded-2xl p-6 max-w-6xl w-full max-h-[92vh] flex flex-col sci-shadow relative border border-outline-variant">
+      <button onclick="closeExcelModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface font-bold text-xl">✕</button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+          <span class="material-symbols-outlined">table</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-on-surface">GHG Master Calculator (CSV Integration)</h2>
+          <p class="text-xs text-on-surface-variant">Enter quantities directly into the master sheet. Non-zero entries will sync seamlessly to your BOM.</p>
+        </div>
+      </div>
+      <div class="flex-1 overflow-auto border border-outline-variant rounded-xl mb-4">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low text-[10px] font-bold text-on-surface-variant uppercase sticky top-0 z-10">
+            <tr>
+              <th class="p-3 border-b border-outline-variant/60">Scope</th>
+              <th class="p-3 border-b border-outline-variant/60">Category</th>
+              <th class="p-3 border-b border-outline-variant/60">Emission Source / Process</th>
+              <th class="p-3 border-b border-outline-variant/60">Unit</th>
+              <th class="p-3 border-b border-outline-variant/60">Emission Factor</th>
+              <th class="p-3 border-b border-outline-variant/60 bg-emerald-50">Quantity (Input)</th>
+            </tr>
+          </thead>
+          <tbody id="excelTableBody" class="text-xs font-medium text-on-surface divide-y divide-outline-variant/30">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeExcelModal()" class="px-5 py-2 font-bold text-xs text-on-surface hover:bg-surface-container-low rounded-xl">Cancel</button>
+        <button onclick="syncExcelToBom()" class="px-5 py-2 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:bg-primary-container transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">sync</span> Sync to BOM
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assurance-Ready Report Modal -->
+  <div id="big4Modal" class="modal-overlay">
+    <div class="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[92vh] overflow-y-auto sci-shadow relative border border-outline-variant">
+      <button onclick="closeBig4Modal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface font-bold text-xl">✕</button>
+      
+      <div id="auditReportContent" class="space-y-6 text-on-surface">
+        <div class="flex justify-between items-start border-b border-outline-variant pb-4">
+          <div>
+            <div class="text-[10px] font-extrabold text-primary uppercase tracking-widest">GLOBAL SUSTAINABILITY ASSURANCE PRACTICE</div>
+            <h1 class="text-xl font-black text-on-surface mt-1">INDEPENDENT PRACTITIONER'S ASSURANCE REPORT</h1>
+            <p class="text-xs text-on-surface-variant font-medium">ISAE 3410 & ISO 14064-3:2019 Compliance Statement</p>
+          </div>
+          <div class="text-right">
+            <span id="b4ReportStatus" class="bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs font-extrabold font-mono-data inline-block mb-1">
+              INSUFFICIENT DATA
+            </span>
+            <div id="b4AuditStamp" class="text-[10px] text-on-surface-variant font-bold">Verified by: Unauthenticated (Auditor Login Required)</div>
+          </div>
+        </div>
+
+        <div class="text-xs space-y-3 text-on-surface-variant leading-relaxed">
+          <p>We have performed an independent practitioner limited assurance engagement on the Carbon Footprint & GHG Inventory calculations for <strong id="b4Title" class="text-on-surface font-bold"></strong> (<strong id="b4Company" class="text-on-surface font-bold">Sample Manufacturing Co.</strong>) under <strong id="b4Std" class="text-on-surface font-bold">ISO 14064-1 & GHG Protocol Scope 1-3</strong> using <strong id="b4Db" class="text-on-surface font-bold">India GHG Factors v6</strong>.</p>
+          
+          <div id="b4Conclusion" class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/60 font-medium">
+            <strong>INSUFFICIENT DATA:</strong> Audit not performed.
+          </div>
+        </div>
+
+        <!-- Scope 1, Scope 2, Scope 3 Inventory Breakdown Table -->
+        <div class="space-y-2">
+          <h3 class="font-black text-xs text-on-surface uppercase tracking-wider">Quantified GHG Inventory Scope Breakdown</h3>
+          <div class="overflow-x-auto border border-outline-variant rounded-xl">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-surface-container-high font-bold text-on-surface text-[11px]">
+                <tr>
+                  <th class="p-2.5">Scope Category</th>
+                  <th class="p-2.5">Item Description</th>
+                  <th class="p-2.5 text-right">Activity Data</th>
+                  <th class="p-2.5">LCI Factor Dataset</th>
+                  <th class="p-2.5 text-right">EF (kgCO₂e/unit)</th>
+                  <th class="p-2.5 text-right">Footprint (tCO₂e)</th>
+                </tr>
+              </thead>
+              <tbody id="b4TableBody" class="divide-y divide-outline-variant/40 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- DQR Matrix & Practitioner Signature -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+            <div class="font-bold text-on-surface mb-1">Data Quality & Assurance Ratings</div>
+            <div class="text-[11px] space-y-1 text-on-surface-variant">
+              <div class="flex justify-between"><span>Technological Representativeness (TeR):</span> <span id="b4Ter" class="font-bold text-on-surface">—</span></div>
+              <div class="flex justify-between"><span>Geographical Representativeness (GeR):</span> <span id="b4Ger" class="font-bold text-on-surface">—</span></div>
+              <div class="flex justify-between"><span>Temporal Representativeness (TiR):</span> <span id="b4Tir" class="font-bold text-on-surface">—</span></div>
+              <div class="flex justify-between border-t border-outline-variant/40 pt-1 mt-1 font-bold"><span>Combined Inventory Uncertainty:</span> <span id="b4Uncertainty" class="text-primary">—</span></div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60 flex flex-col justify-between">
+            <div>
+              <div class="font-bold text-on-surface mb-1">Practitioner Sign-Off & Seal</div>
+              <p id="b4SignerName" class="text-[11px] font-bold text-primary">Not yet signed</p>
+              <p id="b4SignerBody" class="text-[10px] text-on-surface-variant">-</p>
+            </div>
+            <div class="text-[9px] text-emerald-800 font-extrabold flex items-center gap-1 mt-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Google OAuth Verified Signature
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant">
+          <button onclick="downloadPdfReport()" class="px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs hover:bg-primary-container flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+            Print / Save PDF Report
+          </button>
+          <button onclick="closeBig4Modal()" class="px-4 py-2 border border-outline-variant rounded-lg font-bold text-xs">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E-Credit Certificate Modal -->
+  <div id="certModal" class="modal-overlay">
+    <div class="bg-white rounded-2xl p-8 max-w-2xl w-full sci-shadow relative border-4 border-primary">
+      <button onclick="closeCertModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface font-bold text-xl">✕</button>
+      
+      <div class="text-center space-y-4">
+        <div class="inline-block px-3 py-1 bg-primary/10 text-primary font-extrabold text-[10px] tracking-widest rounded-full uppercase border border-primary/20">VERIFIED E-CREDIT YIELD</div>
+        <h2 class="text-2xl font-black text-on-surface">Carbon Reduction Certificate</h2>
+        <p class="text-xs text-on-surface-variant">Issued to: <strong id="certProjectName" class="text-on-surface font-bold"> —</strong></p>
+        <p class="text-[10px] text-on-surface-variant font-mono-data font-bold">Certificate Serial: <span id="certSerialNo"><span id="certSerialDisplay">—</span></span></p>
+
+        <div class="grid grid-cols-2 gap-4 p-6 bg-surface-container-low rounded-xl border border-outline-variant/60 my-4">
+          <div>
+            <div class="text-[10px] font-bold text-on-surface-variant uppercase">Simulated Avoided Emissions</div>
+            <div id="certAvoided" class="text-2xl font-black text-primary font-mono-data">0.00 tCO₂e</div>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-on-surface-variant uppercase">E-Credit Valuation (INR)</div>
+            <div id="certValue" class="text-2xl font-black text-tertiary font-mono-data">₹0</div>
+          </div>
+        </div>
+
+        <button onclick="downloadCertificate()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-container shadow-sm flex items-center justify-center gap-2 mx-auto">
+          <span class="material-symbols-outlined text-sm">verified</span>
+          Print / Save Official Certificate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:8000" : "https://e-credits-api.onrender.com";
+
+    // Material keyword-to-LCI database for intelligent matching & scope classification
+    
+
+    
+    const materialDB = [
+
+  {
+
+    "id": 1,
+
+    "keywords": [
+
+      "diesel",
+
+      "generator",
+
+      "sets"
+
+    ],
+
+    "process": "Diesel Generator (DG Sets)",
+
+    "ef": 2.656,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 2,
+
+    "keywords": [
+
+      "furnace",
+
+      "oil",
+
+      "boilers"
+
+    ],
+
+    "process": "Furnace Oil (Boilers)",
+
+    "ef": 3.119,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 3,
+
+    "keywords": [
+
+      "natural",
+
+      "gas"
+
+    ],
+
+    "process": "Natural Gas",
+
+    "ef": 1.891,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "scm"
+
+  },
+
+  {
+
+    "id": 4,
+
+    "keywords": [
+
+      "indian",
+
+      "coal",
+
+      "boilers"
+
+    ],
+
+    "process": "Indian Coal (Boilers)",
+
+    "ef": 1.992,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 5,
+
+    "keywords": [
+
+      "commercial",
+
+      "lpg"
+
+    ],
+
+    "process": "Commercial LPG",
+
+    "ef": 2.998,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 6,
+
+    "keywords": [
+
+      "petrol",
+
+      "company",
+
+      "cars"
+
+    ],
+
+    "process": "Petrol Company Cars",
+
+    "ef": 2.284,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 7,
+
+    "keywords": [
+
+      "diesel",
+
+      "company",
+
+      "vehicles"
+
+    ],
+
+    "process": "Diesel Company Vehicles",
+
+    "ef": 2.656,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 8,
+
+    "keywords": [
+
+      "cng",
+
+      "vehicles"
+
+    ],
+
+    "process": "CNG Vehicles",
+
+    "ef": 2.686,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 9,
+
+    "keywords": [
+
+      "refrigerant",
+
+      "top"
+
+    ],
+
+    "process": "Refrigerant Top-up - R-32",
+
+    "ef": 675,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 10,
+
+    "keywords": [
+
+      "refrigerant",
+
+      "top",
+
+      "410a"
+
+    ],
+
+    "process": "Refrigerant Top-up - R-410A",
+
+    "ef": 2088,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 11,
+
+    "keywords": [
+
+      "refrigerant",
+
+      "top"
+
+    ],
+
+    "process": "Refrigerant Top-up - R-22",
+
+    "ef": 1810,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 12,
+
+    "keywords": [
+
+      "acetylene",
+
+      "welding"
+
+    ],
+
+    "process": "Acetylene Welding",
+
+    "ef": 3.4,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 13,
+
+    "keywords": [
+
+      "co2",
+
+      "fire",
+
+      "extinguisher",
+
+      "discharge"
+
+    ],
+
+    "process": "CO2 Fire Extinguisher Discharge",
+
+    "ef": 1,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 1",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 14,
+
+    "keywords": [
+
+      "office",
+
+      "electricity",
+
+      "grid",
+
+      "average"
+
+    ],
+
+    "process": "Office Electricity - Grid Average",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 15,
+
+    "keywords": [
+
+      "factory",
+
+      "electricity",
+
+      "grid",
+
+      "average"
+
+    ],
+
+    "process": "Factory Electricity - Grid Average",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 16,
+
+    "keywords": [
+
+      "warehouse",
+
+      "electricity",
+
+      "grid",
+
+      "average"
+
+    ],
+
+    "process": "Warehouse Electricity - Grid Average",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 17,
+
+    "keywords": [
+
+      "purchased",
+
+      "steam"
+
+    ],
+
+    "process": "Purchased Steam",
+
+    "ef": 0.181,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 18,
+
+    "keywords": [
+
+      "office",
+
+      "electricity",
+
+      "supplier/residual",
+
+      "mix"
+
+    ],
+
+    "process": "Office Electricity - Supplier/Residual Mix",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2 TOTAL (Location-Based)",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 19,
+
+    "keywords": [
+
+      "factory",
+
+      "electricity",
+
+      "supplier/residual",
+
+      "mix"
+
+    ],
+
+    "process": "Factory Electricity - Supplier/Residual Mix",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2 TOTAL (Location-Based)",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 20,
+
+    "keywords": [
+
+      "renewable/rec",
+
+      "backed",
+
+      "electricity",
+
+      "purchased"
+
+    ],
+
+    "process": "Renewable/REC-Backed Electricity Purchased",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 2 TOTAL (Location-Based)",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 21,
+
+    "keywords": [
+
+      "professional",
+
+      "services",
+
+      "spend"
+
+    ],
+
+    "process": "IT / Professional Services (Spend)",
+
+    "ef": 0.005,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "INR"
+
+  },
+
+  {
+
+    "id": 22,
+
+    "keywords": [
+
+      "construction",
+
+      "repairs",
+
+      "spend"
+
+    ],
+
+    "process": "Construction / Repairs (Spend)",
+
+    "ef": 0.012,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "INR"
+
+  },
+
+  {
+
+    "id": 23,
+
+    "keywords": [
+
+      "generic",
+
+      "purchased",
+
+      "services",
+
+      "spend"
+
+    ],
+
+    "process": "Generic Purchased Services (Spend)",
+
+    "ef": 0.003,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "INR"
+
+  },
+
+  {
+
+    "id": 24,
+
+    "keywords": [
+
+      "virgin",
+
+      "paper",
+
+      "procurement"
+
+    ],
+
+    "process": "Virgin Paper Procurement",
+
+    "ef": 0.92,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 25,
+
+    "keywords": [
+
+      "recycled",
+
+      "paper",
+
+      "procurement"
+
+    ],
+
+    "process": "Recycled Paper Procurement",
+
+    "ef": 0.6,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 26,
+
+    "keywords": [
+
+      "plastic",
+
+      "packaging",
+
+      "procurement"
+
+    ],
+
+    "process": "Plastic Packaging Procurement",
+
+    "ef": 2.5,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 27,
+
+    "keywords": [
+
+      "construction",
+
+      "steel",
+
+      "procurement"
+
+    ],
+
+    "process": "Construction Steel Procurement",
+
+    "ef": 2.33,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 28,
+
+    "keywords": [
+
+      "cement",
+
+      "procurement"
+
+    ],
+
+    "process": "Cement Procurement",
+
+    "ef": 0.9,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 29,
+
+    "keywords": [
+
+      "laptops",
+
+      "purchased"
+
+    ],
+
+    "process": "Laptops Purchased",
+
+    "ef": 250,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units"
+
+  },
+
+  {
+
+    "id": 30,
+
+    "keywords": [
+
+      "desktops",
+
+      "purchased"
+
+    ],
+
+    "process": "Desktops Purchased",
+
+    "ef": 350,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units"
+
+  },
+
+  {
+
+    "id": 31,
+
+    "keywords": [
+
+      "smartphones",
+
+      "purchased"
+
+    ],
+
+    "process": "Smartphones Purchased",
+
+    "ef": 65,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units"
+
+  },
+
+  {
+
+    "id": 32,
+
+    "keywords": [
+
+      "office",
+
+      "furniture",
+
+      "purchased"
+
+    ],
+
+    "process": "Office Furniture Purchased",
+
+    "ef": 3.5,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 33,
+
+    "keywords": [
+
+      "well",
+
+      "tank:",
+
+      "diesel"
+
+    ],
+
+    "process": "Well-to-Tank: Diesel",
+
+    "ef": 0.584,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 34,
+
+    "keywords": [
+
+      "well",
+
+      "tank:",
+
+      "petrol"
+
+    ],
+
+    "process": "Well-to-Tank: Petrol",
+
+    "ef": 0.463,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Liters"
+
+  },
+
+  {
+
+    "id": 35,
+
+    "keywords": [
+
+      "grid",
+
+      "t&d",
+
+      "losses"
+
+    ],
+
+    "process": "Grid T&D Losses",
+
+    "ef": 0.146,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 36,
+
+    "keywords": [
+
+      "inbound",
+
+      "lcv",
+
+      "delivery"
+
+    ],
+
+    "process": "Inbound LCV Delivery",
+
+    "ef": 0.45,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 37,
+
+    "keywords": [
+
+      "inbound",
+
+      "hgv",
+
+      "delivery"
+
+    ],
+
+    "process": "Inbound HGV Delivery",
+
+    "ef": 0.85,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 38,
+
+    "keywords": [
+
+      "inbound",
+
+      "rail",
+
+      "freight"
+
+    ],
+
+    "process": "Inbound Rail Freight",
+
+    "ef": 0.015,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tonne-km"
+
+  },
+
+  {
+
+    "id": 39,
+
+    "keywords": [
+
+      "inbound",
+
+      "air",
+
+      "freight"
+
+    ],
+
+    "process": "Inbound Air Freight",
+
+    "ef": 1.58,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tonne-km"
+
+  },
+
+  {
+
+    "id": 40,
+
+    "keywords": [
+
+      "waste",
+
+      "landfill"
+
+    ],
+
+    "process": "Waste to Landfill",
+
+    "ef": 0.85,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 41,
+
+    "keywords": [
+
+      "waste",
+
+      "recycled"
+
+    ],
+
+    "process": "Waste Recycled",
+
+    "ef": 0.021,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 42,
+
+    "keywords": [
+
+      "waste",
+
+      "incinerated"
+
+    ],
+
+    "process": "Waste Incinerated",
+
+    "ef": 0.4,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kg"
+
+  },
+
+  {
+
+    "id": 43,
+
+    "keywords": [
+
+      "wastewater",
+
+      "treated"
+
+    ],
+
+    "process": "Wastewater Treated",
+
+    "ef": 0.708,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "m3"
+
+  },
+
+  {
+
+    "id": 44,
+
+    "keywords": [
+
+      "domestic",
+
+      "flights"
+
+    ],
+
+    "process": "Domestic Flights",
+
+    "ef": 0.12,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "p-km"
+
+  },
+
+  {
+
+    "id": 45,
+
+    "keywords": [
+
+      "international",
+
+      "flights"
+
+    ],
+
+    "process": "International Flights",
+
+    "ef": 0.117,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "p-km"
+
+  },
+
+  {
+
+    "id": 46,
+
+    "keywords": [
+
+      "rail",
+
+      "travel"
+
+    ],
+
+    "process": "Rail Travel",
+
+    "ef": 0.01,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "p-km"
+
+  },
+
+  {
+
+    "id": 47,
+
+    "keywords": [
+
+      "taxi",
+
+      "travel"
+
+    ],
+
+    "process": "Taxi Travel",
+
+    "ef": 0.14,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 48,
+
+    "keywords": [
+
+      "hotel",
+
+      "nights",
+
+      "star"
+
+    ],
+
+    "process": "Hotel Nights - 5 Star",
+
+    "ef": 75.5,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Nights"
+
+  },
+
+  {
+
+    "id": 49,
+
+    "keywords": [
+
+      "hotel",
+
+      "nights",
+
+      "budget"
+
+    ],
+
+    "process": "Hotel Nights - Budget",
+
+    "ef": 25,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Nights"
+
+  },
+
+  {
+
+    "id": 50,
+
+    "keywords": [
+
+      "two",
+
+      "wheeler",
+
+      "commute"
+
+    ],
+
+    "process": "Two-Wheeler Commute",
+
+    "ef": 0.04,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 51,
+
+    "keywords": [
+
+      "car",
+
+      "commute",
+
+      "small",
+
+      "segment"
+
+    ],
+
+    "process": "Car Commute - Small Segment",
+
+    "ef": 0.11,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 52,
+
+    "keywords": [
+
+      "car",
+
+      "commute",
+
+      "average"
+
+    ],
+
+    "process": "Car Commute - Average",
+
+    "ef": 0.14,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 53,
+
+    "keywords": [
+
+      "car",
+
+      "commute",
+
+      "large",
+
+      "segment"
+
+    ],
+
+    "process": "Car Commute - Large Segment",
+
+    "ef": 0.17,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "km"
+
+  },
+
+  {
+
+    "id": 54,
+
+    "keywords": [
+
+      "bus",
+
+      "commute"
+
+    ],
+
+    "process": "Bus Commute",
+
+    "ef": 0.03,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "p-km"
+
+  },
+
+  {
+
+    "id": 55,
+
+    "keywords": [
+
+      "metro",
+
+      "rail",
+
+      "commute"
+
+    ],
+
+    "process": "Metro Rail Commute",
+
+    "ef": 0.015,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "p-km"
+
+  },
+
+  {
+
+    "id": 56,
+
+    "keywords": [
+
+      "leased",
+
+      "office/warehouse",
+
+      "electricity"
+
+    ],
+
+    "process": "Leased Office/Warehouse Electricity",
+
+    "ef": 0.731,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "kWh"
+
+  },
+
+  {
+
+    "id": 57,
+
+    "keywords": [
+
+      "leased",
+
+      "facility",
+
+      "water",
+
+      "use"
+
+    ],
+
+    "process": "Leased Facility Water Use",
+
+    "ef": 0.31,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "m3"
+
+  },
+
+  {
+
+    "id": 58,
+
+    "keywords": [
+
+      "outbound",
+
+      "trucking",
+
+      "customers"
+
+    ],
+
+    "process": "Outbound Trucking to Customers",
+
+    "ef": 0.09,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tonne-km"
+
+  },
+
+  {
+
+    "id": 59,
+
+    "keywords": [
+
+      "outbound",
+
+      "air",
+
+      "freight",
+
+      "customers"
+
+    ],
+
+    "process": "Outbound Air Freight to Customers",
+
+    "ef": 1.58,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tonne-km"
+
+  },
+
+  {
+
+    "id": 60,
+
+    "keywords": [
+
+      "outbound",
+
+      "rail",
+
+      "distribution"
+
+    ],
+
+    "process": "Outbound Rail Distribution",
+
+    "ef": 0.015,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tonne-km"
+
+  },
+
+  {
+
+    "id": 61,
+
+    "keywords": [
+
+      "third",
+
+      "party",
+
+      "processing",
+
+      "intermediate",
+
+      "goods",
+
+      "applicable"
+
+    ],
+
+    "process": "Third-Party Processing of Intermediate Goods (if applicable)",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units"
+
+  },
+
+  {
+
+    "id": 62,
+
+    "keywords": [
+
+      "estimated",
+
+      "product",
+
+      "use",
+
+      "phase",
+
+      "energy"
+
+    ],
+
+    "process": "Estimated Product Use-Phase Energy",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units Sold"
+
+  },
+
+  {
+
+    "id": 63,
+
+    "keywords": [
+
+      "estimated",
+
+      "end",
+
+      "life",
+
+      "emissions"
+
+    ],
+
+    "process": "Estimated End-of-Life Emissions",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units Sold"
+
+  },
+
+  {
+
+    "id": 64,
+
+    "keywords": [
+
+      "assets",
+
+      "leased",
+
+      "others",
+
+      "energy",
+
+      "use"
+
+    ],
+
+    "process": "Assets Leased to Others - Energy Use",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Units"
+
+  },
+
+  {
+
+    "id": 65,
+
+    "keywords": [
+
+      "franchise",
+
+      "operations",
+
+      "applicable"
+
+    ],
+
+    "process": "Franchise Operations (if applicable)",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "Franchises"
+
+  },
+
+  {
+
+    "id": 66,
+
+    "keywords": [
+
+      "equity",
+
+      "share",
+
+      "weighted",
+
+      "investee",
+
+      "emissions"
+
+    ],
+
+    "process": "Equity-Share-Weighted Investee Emissions",
+
+    "ef": 0,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "INR Invested"
+
+  },
+
+  {
+
+    "id": 67,
+
+    "keywords": [
+
+      "financed",
+
+      "emissions",
+
+      "financial",
+
+      "sector",
+
+      "direct",
+
+      "pass",
+
+      "through"
+
+    ],
+
+    "process": "Financed Emissions (Financial Sector - direct pass-through)",
+
+    "ef": 1,
+
+    "ter": 1,
+
+    "ger": 1,
+
+    "tir": 1,
+
+    "sim": 0.9,
+
+    "scope": "Scope 3",
+
+    "unit": "tCO2e Reported"
+
+  }
+
+];
+
+    async function matchMaterial(name, unit) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-second timeout if Render is asleep
+      try {
+        let res = await fetch(BACKEND_URL + "/bom/match", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            project_id: currentProjectId || 'temp-id',
+            raw_bom_input: name,
+            quantity: 1,
+            unit: unit,
+            target_geography: document.getElementById('geography') ? document.getElementById('geography').value : 'IN',
+            target_year: document.getElementById('targetYear') ? parseInt(document.getElementById('targetYear').value) : 2024,
+            database_source: document.getElementById('databaseSource') ? document.getElementById('databaseSource').value : 'USLCI',
+            system_model: 'Cut-off',
+            scenario: 'baseline'
+          })
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('API Error');
+        let data = await res.json();
+        return {
+          process: data.matched_process_name,
+          ef: data.matched_emission_factor,
+          sim: data.vector_similarity_score,
+          ter: data.dqr_technological_score || 1,
+          ger: data.dqr_geographical_score || 1,
+          tir: data.dqr_temporal_score || 1,
+          risk: data.audit_risk_level || 'LOW',
+          scope: 'Scope 3',
+          status: data.audit_risk_level === 'HIGH' ? 'Manual Review' : 'Auto-Matched',
+          matchUnit: data.converted_unit || unit,
+          result_tco2e: data.result_tco2e,
+          data_quality_status: data.matched_data_quality_status,
+          audit_id: data.id
+        };
+      } catch (e) {
+        console.error("API matched failed, falling back to local database:", e);
+        // Fallback to local materialDB if API is asleep
+        
+        let nameLower = String(name).toLowerCase();
+        let bestMatch = materialDB[0];
+        let bestSim = 0;
+        for (let m of materialDB) {
+          let score = 0;
+          if (m.name.toLowerCase().includes(nameLower)) score += 0.8;
+          else if (nameLower.includes(m.name.toLowerCase())) score += 0.5;
+          if (m.keywords && m.keywords.some(k => nameLower.includes(k.toLowerCase()))) score += 0.2;
+          
+          if (score > bestSim) {
+            bestSim = score;
+            bestMatch = m;
+          }
+        }
+        
+        let targetGeo = document.getElementById('geoSelect') ? document.getElementById('geoSelect').value : 'IN';
+        let isIndiaToIndia = (targetGeo === 'IN' && (bestMatch.process.includes('- IN') || bestMatch.process.includes('India')));
+        let calculatedGer = isIndiaToIndia ? 1 : (bestMatch.ger || 2);
+        
+        let targetYear = 2024;
+        let vintageYear = 2022; // Assume 2022 as default vintage for static DB
+        let diffYears = Math.abs(targetYear - vintageYear);
+        let calculatedTir = diffYears <= 3 ? 1 : (diffYears <= 6 ? 2 : 3);
+
+        return {
+          process: bestMatch.process,
+          ef: bestMatch.ef,
+          sim: Math.min(bestSim, 0.99), // No artificial floor
+          ter: bestMatch.ter || 1,
+          ger: calculatedGer, // Fix B: Geography DQR
+          tir: calculatedTir, // Fix C: Temporal DQR
+          risk: bestSim >= 0.8 ? 'LOW' : 'HIGH',
+          scope: bestMatch.scope || 'Scope 3',
+          status: 'Offline Fallback',
+          matchUnit: bestMatch.unit || 'kg',
+          result_tco2e: null,
+          data_quality_status: 'Local',
+          audit_id: null,
+          scenario: typeof currentScenario !== 'undefined' ? currentScenario : 'baseline'
+        };
+
+      }
+    }
+
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    
+    // Autocomplete Logic
+    
+const EMISSION_DB = [{"key": "Diesel_Fuel", "name": "Diesel fuel combustion", "unit": "L", "factor": 2.6558, "status": "uplifted", "keywords": ["diesel", "generator", "dg set", "genset", "backup power"]}, {"key": "Petrol_Fuel", "name": "Petrol / gasoline combustion", "unit": "L", "factor": 2.2836, "status": "uplifted", "keywords": ["petrol", "gasoline", "car", "vehicle"]}, {"key": "CNG_Fuel", "name": "CNG vehicle fuel", "unit": "kg", "factor": 2.686, "status": "uplifted", "keywords": ["cng", "compressed natural gas", "vehicle"]}, {"key": "LPG_Commercial", "name": "Commercial LPG cylinder", "unit": "kg", "factor": 2.9979, "status": "uplifted", "keywords": ["lpg", "cylinder", "cooking gas", "canteen"]}, {"key": "Coal_Indian", "name": "Indian coal (boiler)", "unit": "kg", "factor": 1.9919, "status": "uplifted", "keywords": ["coal", "boiler", "furnace"]}, {"key": "Furnace_Oil", "name": "Furnace oil (boiler)", "unit": "L", "factor": 3.1186, "status": "uplifted", "keywords": ["furnace oil", "boiler", "heating"]}, {"key": "Natural_Gas", "name": "Natural gas", "unit": "scm", "factor": 1.8913, "status": "uplifted", "keywords": ["natural gas", "gas", "scm"]}, {"key": "Acetylene_Welding", "name": "Acetylene welding gas", "unit": "kg", "factor": 3.4003, "status": "uplifted", "keywords": ["acetylene", "welding", "gas cutting"]}, {"key": "Fire_Extinguisher_CO2", "name": "CO2 fire extinguisher discharge", "unit": "kg", "factor": 1, "status": "clean", "keywords": ["fire extinguisher", "co2 extinguisher", "fire safety"]}, {"key": "Refrig_R32", "name": "Refrigerant R-32 top-up", "unit": "kg", "factor": 675, "status": "clean", "keywords": ["refrigerant", "refrigerator", "fridge", "ac", "air conditioner", "split ac", "cooling", "r32", "freon"]}, {"key": "Refrig_R410A", "name": "Refrigerant R-410A top-up", "unit": "kg", "factor": 2088, "status": "clean", "keywords": ["refrigerant", "refrigerator", "fridge", "ac", "air conditioner", "r410a", "cooling", "freon"]}, {"key": "Refrig_R22", "name": "Refrigerant R-22 top-up", "unit": "kg", "factor": 1810, "status": "clean", "keywords": ["refrigerant", "refrigerator", "fridge", "ac", "window ac", "old ac", "r22", "cooling", "freon"]}, {"key": "Grid_India_CEA", "name": "Grid electricity, location-based (CEA)", "unit": "kWh", "factor": 0.7314, "status": "uplifted", "keywords": ["electricity", "grid", "power", "office electricity", "factory electricity"]}, {"key": "Grid_MarketBased_Default", "name": "Grid electricity, market-based / residual mix", "unit": "kWh", "factor": 0.7314, "status": "uplifted", "keywords": ["electricity", "market based", "supplier", "residual mix"]}, {"key": "REC_Backed_Electricity", "name": "Renewable Energy Certificate (REC) backed electricity", "unit": "kWh", "factor": 0, "status": "clean", "keywords": ["renewable electricity", "rec", "solar", "wind", "green power", "ppa"]}, {"key": "Purchased_Steam", "name": "Purchased steam", "unit": "kg", "factor": 0.1811, "status": "uplifted", "keywords": ["steam", "purchased steam", "process heat"]}, {"key": "Transport_Truck_tkm", "name": "Trucking, diesel (tonne-km)", "unit": "tonne-km", "factor": 0.09, "status": "clean", "keywords": ["trucking", "freight", "logistics", "diesel truck", "tonne-km"]}, {"key": "Transport_LCV_km", "name": "Light commercial vehicle delivery", "unit": "km", "factor": 0.45, "status": "clean", "keywords": ["delivery van", "tempo", "lcv", "light commercial vehicle"]}, {"key": "Transport_HGV_km", "name": "Heavy goods vehicle delivery", "unit": "km", "factor": 0.85, "status": "clean", "keywords": ["heavy truck", "lorry", "hgv", "large truck"]}, {"key": "Rail_Freight", "name": "Rail freight", "unit": "tonne-km", "factor": 0.015, "status": "clean", "keywords": ["rail freight", "goods train", "railway cargo"]}, {"key": "Rail_Passenger", "name": "Rail passenger travel", "unit": "p-km", "factor": 0.01, "status": "clean", "keywords": ["train travel", "railway", "passenger rail"]}, {"key": "Air_Domestic", "name": "Domestic flight", "unit": "p-km", "factor": 0.12, "status": "clean", "keywords": ["domestic flight", "airplane", "air travel"]}, {"key": "Air_International", "name": "International flight", "unit": "p-km", "factor": 0.117, "status": "clean", "keywords": ["international flight", "overseas travel", "air travel"]}, {"key": "Air_Freight_Cargo", "name": "Air freight cargo", "unit": "tonne-km", "factor": 1.58, "status": "clean", "keywords": ["air cargo", "air freight", "courier"]}, {"key": "Taxi_Diesel", "name": "Taxi travel", "unit": "km", "factor": 0.14, "status": "clean", "keywords": ["taxi", "cab", "ride"]}, {"key": "Commute_2Wheeler", "name": "Two-wheeler commute", "unit": "km", "factor": 0.04, "status": "clean", "keywords": ["bike", "scooter", "two wheeler", "motorcycle commute"]}, {"key": "Commute_Car_Avg", "name": "Car commute, average", "unit": "km", "factor": 0.14, "status": "clean", "keywords": ["car commute", "employee car"]}, {"key": "Commute_Car_Small", "name": "Car commute, small segment", "unit": "km", "factor": 0.11, "status": "clean", "keywords": ["small car", "hatchback commute"]}, {"key": "Commute_Car_Large", "name": "Car commute, large segment", "unit": "km", "factor": 0.17, "status": "clean", "keywords": ["large car", "suv commute"]}, {"key": "Commute_Bus", "name": "Bus commute", "unit": "p-km", "factor": 0.03, "status": "clean", "keywords": ["bus", "staff bus", "public transport"]}, {"key": "Metro_Rail", "name": "Metro rail commute", "unit": "p-km", "factor": 0.015, "status": "clean", "keywords": ["metro", "subway", "urban rail"]}, {"key": "Waste_Landfill", "name": "Waste to landfill", "unit": "kg", "factor": 0.85, "status": "clean", "keywords": ["landfill", "waste disposal", "garbage"]}, {"key": "Waste_Recycle", "name": "Waste recycled", "unit": "kg", "factor": 0.021, "status": "clean", "keywords": ["recycling", "recycled waste"]}, {"key": "Waste_Incineration", "name": "Waste incinerated", "unit": "kg", "factor": 0.4, "status": "clean", "keywords": ["incineration", "burning waste"]}, {"key": "Wastewater_Treatment", "name": "Wastewater treated", "unit": "m3", "factor": 0.708, "status": "clean", "keywords": ["wastewater", "sewage", "effluent treatment"]}, {"key": "Water_Supply", "name": "Municipal water supply", "unit": "m3", "factor": 0.31, "status": "proxy", "keywords": ["water", "municipal water", "tap water"]}, {"key": "Paper_Virgin", "name": "Virgin paper procurement", "unit": "kg", "factor": 0.92, "status": "clean", "keywords": ["paper", "virgin paper", "office paper"]}, {"key": "Paper_Recycled", "name": "Recycled paper procurement", "unit": "kg", "factor": 0.6, "status": "clean", "keywords": ["recycled paper"]}, {"key": "Plastic_Packaging", "name": "Plastic packaging procurement", "unit": "kg", "factor": 2.5, "status": "clean", "keywords": ["plastic", "packaging", "plastic wrap"]}, {"key": "Construction_Steel", "name": "Structural / construction steel", "unit": "kg", "factor": 2.33, "status": "clean", "keywords": ["steel", "construction steel", "structural steel", "rebar"]}, {"key": "Cement_Portland", "name": "Portland cement", "unit": "kg", "factor": 0.9, "status": "clean", "keywords": ["cement", "concrete", "portland cement"]}, {"key": "Spend_IT", "name": "IT / professional services spend", "unit": "INR", "factor": 0.005, "status": "clean", "keywords": ["it services", "software", "professional services"]}, {"key": "Spend_Construction", "name": "Construction / repairs spend", "unit": "INR", "factor": 0.012, "status": "clean", "keywords": ["construction spend", "repairs", "renovation"]}, {"key": "Spend_Generic_Services", "name": "Generic purchased services spend", "unit": "INR", "factor": 0.003, "status": "clean", "keywords": ["services", "generic spend", "consulting"]}, {"key": "Laptop_Unit", "name": "Laptop, embodied carbon", "unit": "unit", "factor": 250, "status": "clean", "keywords": ["laptop", "notebook computer"]}, {"key": "Desktop_Unit", "name": "Desktop computer, embodied carbon", "unit": "unit", "factor": 350, "status": "clean", "keywords": ["desktop", "pc", "computer"]}, {"key": "Smartphone_Unit", "name": "Smartphone, embodied carbon", "unit": "unit", "factor": 65, "status": "clean", "keywords": ["smartphone", "mobile phone"]}, {"key": "Furniture", "name": "Office furniture", "unit": "kg", "factor": 3.5, "status": "clean", "keywords": ["furniture", "office furniture", "desk", "chair"]}, {"key": "Grid_TD_Loss", "name": "Grid transmission & distribution loss", "unit": "kWh", "factor": 0.1459, "status": "uplifted", "keywords": ["transmission loss", "grid loss", "td loss"]}, {"key": "WTT_Diesel", "name": "Well-to-tank, diesel upstream", "unit": "L", "factor": 0.5835, "status": "uplifted", "keywords": ["diesel upstream", "well to tank diesel"]}, {"key": "WTT_Petrol", "name": "Well-to-tank, petrol upstream", "unit": "L", "factor": 0.4628, "status": "uplifted", "keywords": ["petrol upstream", "well to tank petrol"]}, {"key": "Hotel_5Star", "name": "Hotel stay, 5-star", "unit": "night", "factor": 75.5, "status": "clean", "keywords": ["hotel", "5 star hotel", "luxury hotel stay"]}, {"key": "Hotel_Budget", "name": "Hotel stay, budget", "unit": "night", "factor": 25, "status": "clean", "keywords": ["budget hotel", "hotel stay"]}, {"key": "Product_Use_Phase_Energy", "name": "Product use-phase energy (Cat.11)", "unit": "unit sold", "factor": 0, "status": "placeholder", "keywords": ["product use phase", "use phase energy"]}, {"key": "Product_EndOfLife", "name": "Product end-of-life treatment (Cat.12)", "unit": "unit sold", "factor": 0, "status": "placeholder", "keywords": ["end of life", "disposal", "product disposal"]}, {"key": "Investment_Equity_Share", "name": "Equity-share investee emissions (Cat.15)", "unit": "INR invested", "factor": 0, "status": "placeholder", "keywords": ["investment", "equity", "financed emissions"]}, {"key": "Franchise_Estimate", "name": "Franchise operations (Cat.14)", "unit": "franchise", "factor": 0, "status": "placeholder", "keywords": ["franchise"]}, {"key": "Leased_Asset_Downstream", "name": "Downstream leased asset energy (Cat.13)", "unit": "unit", "factor": 0, "status": "placeholder", "keywords": ["leased asset", "downstream lease"]}, {"key": "Financed_Emissions_Passthrough", "name": "Financed emissions, direct pass-through (Cat.15)", "unit": "tCO2e reported", "factor": 1, "status": "clean", "keywords": ["financed emissions", "portfolio emissions"]}, {"key": "Processing_Sold_Products_Proxy", "name": "Third-party processing of sold products (Cat.10)", "unit": "unit", "factor": 0, "status": "placeholder", "keywords": ["processing", "third party processing"]}];
+
+
+    // Autocomplete UI logic from spec
+    const acInput = document.getElementById('manualName');
+    const acDropdown = document.getElementById('acDropdown');
+
+    if (acInput && acDropdown) {
+      acInput.addEventListener('click', () => renderDropdown(acInput.value));
+      acInput.addEventListener('input', () => renderDropdown(acInput.value));
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.ac-wrapper')) acDropdown.classList.remove('open');
+      });
+    }
+
+    function renderDropdown(query) {
+      acDropdown.innerHTML = '';
+      const q = query.toLowerCase().trim();
+
+      const pool = q === ''
+        ? EMISSION_DB
+        : EMISSION_DB.filter(e =>
+            e.name.toLowerCase().includes(q) ||
+            (e.keywords && e.keywords.some(k => k.toLowerCase().includes(q)))
+          );
+
+      if (pool.length === 0) {
+        acDropdown.innerHTML = '<div class="ac-empty">No match — try a different word</div>';
+        acDropdown.classList.add('open');
+        return;
+      }
+
+      pool.forEach(entry => {
+        const item = document.createElement('div');
+        item.className = 'ac-item';
+        item.innerHTML = `<span>${entry.name}</span><span class="ac-tag">${entry.unit}</span>`;
+        item.onclick = () => {
+          acInput.value = entry.name;
+          acInput.dataset.selectedKey = entry.key;
+          acInput.dataset.selectedFactor = entry.factor;
+          const unitSelect = document.getElementById('manualUnit');
+          if (unitSelect) {
+            let found = Array.from(unitSelect.options).some(opt => opt.value === entry.unit);
+            if(found) unitSelect.value = entry.unit;
+          }
+          acDropdown.classList.remove('open');
+          document.getElementById('manualQty')?.focus();
+        };
+        acDropdown.appendChild(item);
+      });
+
+      acDropdown.classList.add('open');
+    }
+
+// old block
+
+    const acDropdown = document.getElementById('acDropdown');
+    const manualNameInput = document.getElementById('manualName');
+
+    if (manualNameInput && acDropdown) {
+      manualNameInput.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        acDropdown.innerHTML = '';
+        if (!val) {
+          acDropdown.classList.add('hidden');
+          return;
+        }
+        
+        let matches = filterDb.map(m => {
+          let score = 0;
+          if (m.name.toLowerCase().includes(val)) score += 10;
+          if (m.keywords && m.keywords.some(k => k.toLowerCase().includes(val))) score += 5;
+          return { ...m, score };
+        }).filter(m => m.score > 0).sort((a,b) => b.score - a.score).slice(0, 5);
+
+        if (matches.length === 0) {
+          acDropdown.classList.add('hidden');
+          return;
+        }
+
+        acDropdown.classList.remove('hidden');
+        matches.forEach(m => {
+          const div = document.createElement('div');
+          div.className = "px-3 py-2 cursor-pointer hover:bg-surface-container-low text-on-surface";
+          div.innerHTML = `<div class="font-bold">${m.name}</div><div class="text-[10px] text-on-surface-variant opacity-75">${m.process}</div>`;
+          div.onclick = () => {
+            manualNameInput.value = m.name;
+            acDropdown.classList.add('hidden');
+          };
+          acDropdown.appendChild(div);
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#acDropdown') && e.target !== manualNameInput) {
+          acDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    let currentScenario = 'baseline';
+    function setScenario(type) {
+      currentScenario = type;
+      if (document.getElementById('btnScenarioBaseline')) {
+        document.getElementById('btnScenarioBaseline').className = type === 'baseline' ? 'btn-sm bg-primary text-on-primary font-bold px-3 py-1 rounded' : 'btn-sm bg-surface-container-low text-on-surface-variant font-semibold px-3 py-1 rounded';
+      }
+      if (document.getElementById('btnScenarioProject')) {
+        document.getElementById('btnScenarioProject').className = type === 'project' ? 'btn-sm bg-primary text-on-primary font-bold px-3 py-1 rounded' : 'btn-sm bg-surface-container-low text-on-surface-variant font-semibold px-3 py-1 rounded';
+      }
+      if (document.getElementById('scenarioStatusNote')) {
+        document.getElementById('scenarioStatusNote').innerHTML = `Matching items for <strong>${type === 'baseline' ? 'Baseline' : 'Project'} Scenario</strong>`;
+      }
+    }
+
+    
+    const CREDIT_RATE_INR = 2900;
+    function updateSaveStatus(status) {
+      const el = document.getElementById('saveStatusEl');
+      if(el) el.innerText = status;
+    }
+    
+    async function pingHealth() {
+      try {
+        let res = await fetch('http://localhost:8000/health');
+        if(res.ok) document.getElementById('apiHealthIndicator').className = 'text-green-500 font-bold';
+      } catch(e) {
+        document.getElementById('apiHealthIndicator').className = 'text-red-500 font-bold';
+      }
+    }
+    setInterval(pingHealth, 30000);
+    setTimeout(pingHealth, 1000);
+ // ₹ per tCO₂e (Indian Carbon Market rate)
+
+    const demoItems = [
+      { id: 1, name: "Aluminum Sheet, 5052-H32", qty: 1450, unit: "kg", process: "aluminium alloy production, AlMg3 | cutoff, S - IN", ef: 14.2, sim: 0.98, ter: 1, ger: 2, tir: 1, risk: "LOW", scope: "Scope 3", status: "Auto-Matched", approved: true },
+      { id: 2, name: "Custom Polyurethane Foam Insert", qty: 320, unit: "pcs", process: "polyurethane production, flexible foam | cutoff, S - GLO", ef: 4.8, sim: 0.42, ter: 4, ger: 3, tir: 2, risk: "HIGH", scope: "Scope 3", status: "Manual Review", approved: false },
+      { id: 3, name: "Copper Wire, 12 AWG", qty: 50, unit: "kg", process: "copper wire drawing, technology mix | cutoff, S - IN", ef: 6.5, sim: 0.94, ter: 1, ger: 1, tir: 1, risk: "LOW", scope: "Scope 3", status: "Auto-Matched", approved: true },
+      { id: 4, name: "Grid Electricity (Maharashtra Substation)", qty: 12000, unit: "kWh", process: "Electricity Grid Mix CEA India 2024", ef: 0.716, sim: 0.99, ter: 1, ger: 1, tir: 1, risk: "LOW", scope: "Scope 2", status: "Auto-Matched", approved: true },
+      { id: 5, name: "Structural Steel Enclosure Bracket", qty: 850, unit: "kg", process: "steel production, converter, unalloyed | cutoff, S - IN", ef: 1.85, sim: 0.88, ter: 2, ger: 2, tir: 1, risk: "MEDIUM", scope: "Scope 3", status: "Auto-Matched", approved: false }
+    ];
+
+    let currentBOM = [];
+    let currentRiskFilter = "ALL";
+
+    function renderTable() {
+      const tbody = document.getElementById("bomTableBody");
+      tbody.innerHTML = "";
+
+      let searchVal = document.getElementById("searchInput").value.toLowerCase();
+      let minScore = parseInt(document.getElementById("scoreSlider").value) / 100;
+
+      let filtered = currentBOM.filter(item => {
+        if (currentRiskFilter !== "ALL" && item.risk !== currentRiskFilter) return false;
+        if (searchVal && !item.name.toLowerCase().includes(searchVal) && !item.process.toLowerCase().includes(searchVal)) return false;
+        if (item.sim < minScore) return false;
+        return true;
+      });
+
+      document.getElementById("table-subtitle").innerText = currentBOM.length === 0 ? 
+        "Table is empty. Click 'Import BOM' or 'New BOM Analysis' to add items." : 
+        `Loaded ${filtered.length} of ${currentBOM.length} materials in project queue.`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-8 text-center text-on-surface-variant font-medium">
+              No items match the current filter criteria.
+            </td>
+          </tr>
+        `;
+      } else {
+        filtered.forEach(item => {
+          let valid = true;
+          let qty = item.qty;
+          let mu = item.matchUnit || 'kg';
+          let iu = item.unit || 'kg';
+          if (iu === mu) { qty = item.qty; }
+          else if (iu === 'g' && mu === 'kg') qty = item.qty / 1000;
+          else if (iu === 't' && mu === 'kg') qty = item.qty * 1000;
+          else if (iu === 'lb' && mu === 'kg') qty = item.qty * 0.4536;
+          else if (iu === 'MJ' && mu === 'kWh') qty = item.qty / 3.6;
+          else valid = false;
+
+          let co2e = valid ? ((qty * item.ef) / 1000).toFixed(3) : "ERR";
+          let riskClass = item.risk === "HIGH" ? "bg-error-container text-on-error-container border-error/20" :
+                          item.risk === "MEDIUM" ? "bg-amber-100 text-amber-900 border-amber-300" :
+                          "bg-primary/10 text-primary border-primary/20";
+
+          let scopeClass = item.scope === "Scope 1" ? "bg-purple-100 text-purple-900 border-purple-300" :
+                           item.scope === "Scope 2" ? "bg-blue-100 text-blue-900 border-blue-300" :
+                           "bg-amber-100 text-amber-900 border-amber-300";
+
+          let tr = document.createElement("tr");
+          tr.className = "hover:bg-surface-container-low transition-colors cursor-pointer";
+          tr.onclick = () => toggleDrawer(item.id);
+
+          // Build LCI Process Dropdown Options
+          let optionsHtml = '';
+          let matchedFound = false;
+          materialDB.forEach((mat, mIdx) => {
+            let selected = (mat.process === item.process) ? 'selected' : '';
+            if (selected) matchedFound = true;
+            optionsHtml += `<option value="${mIdx}" ${selected}>${escapeHtml(mat.process)} (${mat.ef} kgCO₂e/${escapeHtml(item.unit)})</option>`;
+          });
+          if (!matchedFound && item.process) {
+            optionsHtml = `<option value="custom" selected>⚠️ ${escapeHtml(item.process)} (${item.ef} kgCO₂e/${escapeHtml(item.unit)})</option>` + optionsHtml;
+          }
+
+          tr.innerHTML = `
+            <td class="px-4 py-3 text-outline-variant"><span id="chevron-${item.id}" class="material-symbols-outlined text-base transition-transform">chevron_right</span></td>
+            <td class="px-4 py-3">
+              <div class="font-semibold text-on-surface flex items-center gap-2">
+                ${escapeHtml(item.name)}
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold border ${scopeClass}">${item.scope || 'Scope 3'}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 font-mono-data text-right text-on-surface-variant" onclick="event.stopPropagation()">
+              ${item.approved ? 
+                `<span class="font-bold text-on-surface">${item.qty.toLocaleString()} ${escapeHtml(item.unit)}</span>` : 
+                `<div class="inline-flex items-center gap-1 justify-end">
+                   <input type="number" min="0.001" step="any" value="${item.qty}" onchange="updateRowQty(${item.id}, this.value)" class="w-24 px-2 py-1 text-right font-bold text-xs bg-white border border-outline-variant rounded-lg outline-none focus:ring-1 focus:ring-primary font-mono-data shadow-sm" />
+                   <span class="text-xs font-semibold text-on-surface-variant">${escapeHtml(item.unit)}</span>
+                 </div>`
+              }
+            </td>
+            <td class="px-4 py-3" onclick="event.stopPropagation()">
+              <select onchange="changeRowLciProcess(${item.id}, this.value)" class="w-full text-xs font-medium bg-white border border-outline-variant rounded-lg p-1.5 outline-none focus:ring-1 focus:ring-primary truncate max-w-[320px]">
+                ${optionsHtml}
+              </select>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex gap-1 justify-center">
+                <span class="dqr-pill dqr-${item.ter || 1}">${item.ter || 1}</span>
+                <span class="dqr-pill dqr-${item.ger || 1}">${item.ger || 1}</span>
+                <span class="dqr-pill dqr-${item.tir || 1}">${item.tir || 1}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-right font-mono-data font-bold ${item.sim < 0.6 ? 'text-error' : 'text-primary'}">${(item.sim * 100).toFixed(0)}%</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${riskClass}">${item.risk}</span>
+            </td>
+            <td class="px-4 py-3 text-right font-mono-data font-bold text-on-surface">${co2e === "ERR" ? '<span class="text-error" title="Unit mismatch">ERR</span>' : co2e + ' t'}</td>
+            <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-end gap-1.5">
+                ${item.approved ? 
+                  `<span class="text-primary font-bold text-[11px] flex items-center gap-1"><span class="material-symbols-outlined text-sm">check_circle</span> Approved</span>` :
+                  `<button onclick="approveRow(${item.id})" class="px-2.5 py-1 bg-primary text-white text-[11px] font-bold rounded-lg hover:bg-primary-container">Approve</button>`
+                }
+                <button onclick="deleteRow(${item.id})" title="Delete this item" class="p-1 text-error/60 hover:text-error hover:bg-error-container/30 rounded-lg transition-colors">
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
+            </td>
+          `;
+
+          tbody.appendChild(tr);
+
+          // Drawer row
+          let drawerTr = document.createElement("tr");
+          drawerTr.id = `drawer-${item.id}`;
+          drawerTr.className = "bg-surface-container-low/40 hidden";
+          drawerTr.innerHTML = `
+            <td colspan="9" class="p-4 pl-12 border-b border-outline-variant/40">
+              <div class="flex flex-col md:flex-row gap-6 items-start text-xs">
+                <div class="w-64 shrink-0 bg-white p-3 rounded-lg border border-outline-variant">
+                  <div class="font-bold text-on-surface mb-2 uppercase text-[10px] tracking-wider">Data Quality Rating (DQR)</div>
+                  <div class="space-y-1.5 text-[11px]">
+                    <div class="flex justify-between"><span>Technological (TeR):</span> <span class="font-bold">${item.ter || 1}/5</span></div>
+                    <div class="flex justify-between"><span>Geographical (GeR):</span> <span class="font-bold">${item.ger || 1}/5</span></div>
+                    <div class="flex justify-between"><span>Temporal (TiR):</span> <span class="font-bold">${item.tir || 1}/5</span></div>
+                  </div>
+                </div>
+                <div class="flex-1 bg-white p-3 rounded-lg border border-outline-variant w-full">
+                  <div class="font-bold text-on-surface mb-1">Auditor Verification & Provenance Notes</div>
+                  <input type="text" value="${escapeHtml(item.auditorNotes || '')}" placeholder="Add auditor verification notes / LCI dataset provenance link..." onchange="updateRowNotes(${item.id}, this.value)" onclick="event.stopPropagation()" class="w-full text-xs p-2 border border-outline-variant rounded-lg bg-surface-container-low outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(drawerTr);
+        });
+      }
+
+      updateKPIs();
+    }
+
+    function filterTable() { renderTable(); }
+
+    function handleSearchInput(evt) {
+      let query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      let dropdown = document.getElementById("searchDropdown");
+
+      filterTable();
+
+      if (!query || query.length === 0) {
+        dropdown.classList.add("hidden");
+        dropdown.innerHTML = "";
+        return;
+      }
+
+      let matches = materialDB.filter(mat => {
+        let nameMatch = mat.process.toLowerCase().includes(query);
+        let kwMatch = mat.keywords.some(kw => kw.toLowerCase().includes(query));
+        return nameMatch || kwMatch;
+      });
+
+      if (matches.length === 0) {
+        dropdown.innerHTML = `
+          <div class="p-3 text-center text-on-surface-variant font-medium">
+            No LCI factors matching "${escapeHtml(query)}".
+            <button onclick="openImportModal(); closeSearchDropdown();" class="block w-full mt-2 py-1 bg-primary text-white rounded font-bold text-[11px]">
+              + Add Custom BOM Item
+            </button>
+          </div>
+        `;
+        dropdown.classList.remove("hidden");
+        return;
+      }
+
+      let html = '';
+      matches.slice(0, 8).forEach(mat => {
+        let originalIdx = materialDB.indexOf(mat);
+        let scopeClass = mat.scope === "Scope 1" ? "bg-purple-100 text-purple-900 border-purple-300" :
+                         mat.scope === "Scope 2" ? "bg-blue-100 text-blue-900 border-blue-300" :
+                         "bg-amber-100 text-amber-900 border-amber-300";
+
+        let displayName = mat.keywords[0].toUpperCase() + ' — ' + mat.process;
+
+        html += `
+          <div onclick="addSearchItemToBom(${originalIdx})" class="p-2.5 hover:bg-primary/5 cursor-pointer flex justify-between items-center transition-colors">
+            <div class="flex-1 pr-2 min-w-0">
+              <div class="font-bold text-on-surface flex items-center gap-1.5 truncate">
+                ${escapeHtml(displayName)}
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold border ${scopeClass}">${mat.scope || 'Scope 3'}</span>
+              </div>
+              <div class="text-[10px] text-on-surface-variant">${mat.ef} kgCO₂e per unit • Similarity ${Math.round(mat.sim * 100)}%</div>
+            </div>
+            <button class="px-2 py-1 bg-primary text-white text-[10px] font-extrabold rounded hover:bg-primary-container shrink-0">
+              + Add to BOM
+            </button>
+          </div>
+        `;
+      });
+
+      dropdown.innerHTML = html;
+      dropdown.classList.remove("hidden");
+    }
+
+    function addSearchItemToBom(matIdx) {
+      let mat = materialDB[matIdx];
+      if (!mat) return;
+
+      let defaultUnit = mat.keywords.includes("electric") ? "kWh" :
+                         (mat.keywords.includes("diesel") || mat.keywords.includes("fuel")) ? "Liters" :
+                         mat.keywords.includes("transport") ? "tkm" : "kg";
+      let defaultQty = defaultUnit === "kWh" ? 1000 : defaultUnit === "Liters" ? 100 : 500;
+      let itemName = mat.keywords[0].charAt(0).toUpperCase() + mat.keywords[0].slice(1) + " Component";
+
+      currentBOM.unshift({
+        id: Date.now(),
+        name: itemName,
+        qty: defaultQty,
+        unit: defaultUnit,
+        matchUnit: mat.unit || "kg",
+        process: mat.process,
+        ef: mat.ef,
+        sim: mat.sim,
+        ter: mat.ter, ger: mat.ger, tir: mat.tir,
+        risk: mat.sim >= 0.90 ? "LOW" : mat.sim >= 0.75 ? "MEDIUM" : "HIGH",
+        scope: mat.scope || "Scope 3",
+        status: "Auto-Matched",
+        approved: false
+      });
+
+      closeSearchDropdown();
+      document.getElementById("searchInput").value = "";
+      switchView("workbench");
+      renderTable();
+    }
+
+    function closeSearchDropdown() {
+      let dropdown = document.getElementById("searchDropdown");
+      if (dropdown) dropdown.classList.add("hidden");
+    }
+
+    document.addEventListener("click", function(e) {
+      let searchBox = document.getElementById("searchInput");
+      let dropdown = document.getElementById("searchDropdown");
+      if (searchBox && dropdown && !searchBox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add("hidden");
+      }
+    });
+
+    function toggleDrawer(id) {
+      let d = document.getElementById(`drawer-${id}`);
+      let c = document.getElementById(`chevron-${id}`);
+      if (d) {
+        d.classList.toggle("hidden");
+        if (c) c.style.transform = d.classList.contains("hidden") ? "rotate(0deg)" : "rotate(90deg)";
+      }
+    }
+
+    function approveRow(id) {
+      let item = currentBOM.find(i => i.id === id);
+      if (item) {
+        item.approved = true;
+        renderTable();
+      }
+    }
+
+    function approveAllLowRisk() {
+      currentBOM.forEach(i => { if (i.risk === "LOW") i.approved = true; });
+      renderTable();
+    }
+
+    function clearAllItems() {
+      if (!confirm('Are you sure you want to clear ALL BOM items? This cannot be undone.')) return;
+      currentBOM = [];
+      renderTable();
+    }
+
+    function deleteRow(id) {
+      let item = currentBOM.find(i => i.id === id);
+      if (!item) return;
+      if (!confirm(`Delete "${item.name}" from BOM?`)) return;
+      currentBOM = currentBOM.filter(i => i.id !== id);
+      renderTable();
+    }
+
+    function loadSampleDemo() {
+      // Append demo items that aren't already in the list
+      demoItems.forEach(demo => {
+        let exists = currentBOM.some(item => item.name === demo.name);
+        if (!exists) {
+          currentBOM.push({...demo, id: Date.now() + demo.id});
+        }
+      });
+      renderTable();
+    }
+
+    function setRiskFilter(risk, btn) {
+      currentRiskFilter = risk;
+      document.querySelectorAll(".risk-btn").forEach(b => {
+        b.className = "risk-btn px-2.5 py-1 rounded-lg border border-outline-variant text-on-surface-variant font-semibold text-[11px] hover:bg-surface-container-low";
+      });
+      btn.className = "risk-btn active px-2.5 py-1 rounded-lg border border-primary text-primary font-bold text-[11px] bg-primary/10";
+      renderTable();
+    }
+
+    function updateRowQty(id, newQty) {
+      let item = currentBOM.find(i => i.id === id);
+      let val = parseFloat(newQty);
+      if (item && !isNaN(val) && val >= 0) {
+        item.qty = val;
+        renderTable();
+      }
+    }
+
+    function getValidCo2(i) {
+      let qty = i.qty;
+      let mu = i.matchUnit || 'kg';
+      let iu = i.unit || 'kg';
+      if (iu === mu) { qty = i.qty; }
+      else if (iu === 'g' && mu === 'kg') qty = i.qty / 1000;
+      else if (iu === 't' && mu === 'kg') qty = i.qty * 1000;
+      else if (iu === 'lb' && mu === 'kg') qty = i.qty * 0.4536;
+      else if (iu === 'MJ' && mu === 'kWh') qty = i.qty / 3.6;
+      else return 0; // Invalid conversion
+      return (qty * i.ef) / 1000;
+    }
+
+    function updateKPIs() {
+      let approvedItems = currentBOM.filter(i => i.approved);
+      let totalCo2 = approvedItems.reduce((sum, i) => sum + getValidCo2(i), 0); // User Spec 4: sum of approved matched items
+      let pending = currentBOM.filter(i => !i.approved).length;
+      let approvedCount = approvedItems.length;
+      let pct = currentBOM.length > 0 ? Math.round((approvedCount / currentBOM.length) * 100) : 0;
+      
+      let rateInput = document.getElementById('pricePerTonne');
+      let currentRate = rateInput ? parseFloat(rateInput.value) || 0 : CREDIT_RATE_INR;
+      let creditVal = Math.round(totalCo2 * currentRate);
+      
+      if(document.getElementById('whatIfPriceLabel')) {
+        document.getElementById('whatIfPriceLabel').innerText = "@ ₹" + currentRate.toLocaleString('en-IN') + "/t";
+      }
+
+      // User Spec 5: each shows real summed tCO2e per scope from matched + approved items
+      let scope1 = approvedItems.filter(i => i.scope === "Scope 1").reduce((s, i) => s + getValidCo2(i), 0);
+      let scope2 = approvedItems.filter(i => i.scope === "Scope 2").reduce((s, i) => s + getValidCo2(i), 0);
+      let scope3 = approvedItems.filter(i => (i.scope || "Scope 3") === "Scope 3").reduce((s, i) => s + getValidCo2(i), 0);
+
+            // Update Assurance Report DQR Ratings
+      let approvedMatched = approvedItems.filter(i => i.dqr);
+      if (approvedMatched.length > 0) {
+          let avgTeR = approvedMatched.reduce((s, i) => s + (i.dqr.TeR || 0), 0) / approvedMatched.length;
+          let avgGeR = approvedMatched.reduce((s, i) => s + (i.dqr.GeR || 0), 0) / approvedMatched.length;
+          let avgTiR = approvedMatched.reduce((s, i) => s + (i.dqr.TiR || 0), 0) / approvedMatched.length;
+          let combined = ((avgTeR + avgGeR + avgTiR) / 3).toFixed(1);
+          
+          if(document.getElementById('displayTer')) document.getElementById('displayTer').innerText = avgTeR.toFixed(1) + "/5";
+          if(document.getElementById('displayGer')) document.getElementById('displayGer').innerText = avgGeR.toFixed(1) + "/5";
+          if(document.getElementById('displayTir')) document.getElementById('displayTir').innerText = avgTiR.toFixed(1) + "/5";
+          if(document.getElementById('displayUncertainty')) document.getElementById('displayUncertainty').innerText = "±" + (combined * 3).toFixed(1) + "%";
+      } else {
+          if(document.getElementById('displayTer')) document.getElementById('displayTer').innerText = "—";
+          if(document.getElementById('displayGer')) document.getElementById('displayGer').innerText = "—";
+          if(document.getElementById('displayTir')) document.getElementById('displayTir').innerText = "—";
+          if(document.getElementById('displayUncertainty')) document.getElementById('displayUncertainty').innerText = "—";
+      }
+      document.getElementById("kpi-total-co2").innerText = totalCo2.toFixed(3);
+      document.getElementById("kpi-pending-count").innerText = pending;
+      document.getElementById("kpi-credit-value").innerText = "₹" + creditVal.toLocaleString('en-IN');
+      document.getElementById("kpi-progress-pct").innerText = pct + "%";
+      document.getElementById("kpi-progress-bar").style.width = pct + "%";
+
+      if (document.getElementById("kpi-scope1")) document.getElementById("kpi-scope1").innerText = scope1.toFixed(3) + " tCO₂e";
+      if (document.getElementById("kpi-scope2")) document.getElementById("kpi-scope2").innerText = scope2.toFixed(3) + " tCO₂e";
+      if (document.getElementById("kpi-scope3")) document.getElementById("kpi-scope3").innerText = scope3.toFixed(3) + " tCO₂e";
+
+      document.getElementById("simBaseline").innerText = totalCo2.toFixed(3) + " tCO₂e";
+      updateSim();
+    }
+
+    function updateSim() {
+      let baseCo2 = parseFloat(document.getElementById("kpi-total-co2").innerText) || 0;
+      let rec = parseInt(document.getElementById("simRecSlider").value);
+      let ren = parseInt(document.getElementById("simRenSlider").value);
+      
+      document.getElementById("simRecVal").innerText = rec + "%";
+      document.getElementById("simRenVal").innerText = ren + "%";
+
+      let avoided = baseCo2 * ((rec * 0.4 + ren * 0.45) / 100);
+      let val = Math.round(avoided * CREDIT_RATE_INR);
+
+      document.getElementById("simAvoided").innerText = avoided.toFixed(3) + " tCO₂e";
+      document.getElementById("simValuation").innerText = "₹" + val.toLocaleString('en-IN');
+      document.getElementById("certAvoided").innerText = avoided.toFixed(3) + " tCO₂e";
+      document.getElementById("certValue").innerText = "₹" + val.toLocaleString('en-IN');
+    }
+
+    function switchView(view) {
+      document.querySelectorAll("[id^='view-']").forEach(v => v.classList.add("hidden"));
+      let target = document.getElementById(`view-${view}`);
+      if (target) target.classList.remove("hidden");
+
+      document.querySelectorAll(".nav-link").forEach(l => {
+        l.className = "nav-link flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high font-medium text-sm rounded-xl transition-all text-left w-full";
+      });
+      let activeNav = document.getElementById(`nav-${view}`);
+      if (activeNav) {
+        activeNav.className = "nav-link active flex items-center gap-3 px-4 py-3 bg-secondary-fixed text-on-secondary-fixed rounded-xl font-semibold text-sm transition-all text-left w-full";
+      }
+    }
+
+    function updateProjectSettings() {
+      document.getElementById("b4Db").innerText = document.getElementById("dbSelect").value;
+      renderTable();
+    }
+
+    
+    // Firebase Initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCTqXpd1zpb7NpCPqpLN0XL4LktIHAU_U",
+      authDomain: "netzerocalc-5be21.firebaseapp.com",
+      projectId: "netzerocalc-5be21",
+      storageBucket: "netzerocalc-5be21.firebasestorage.app",
+      messagingSenderId: "398524028031",
+      appId: "1:398524028031:web:1527046117481192fe5b4a"
+    };
+
+    let firebaseApp = null;
+    let db = null;
+    if (firebaseConfig.apiKey !== 'YOUR_FIREBASE_API_KEY' && firebaseConfig.apiKey !== '{{FIREBASE_API_KEY}}') {
+      try {
+        if (window.firebase) {
+          firebaseApp = firebase.initializeApp(firebaseConfig);
+          db = firebase.firestore();
+        }
+      } catch(e) { console.error('Firebase init failed:', e); }
+    }
+
+    // Supabase Initialization
+    const supabaseUrl = 'https://nepmqpdxolisxkbbhmxn.supabase.co';
+    const supabaseKey = 'sb_publishable_3_jOVeUeMgKc0iIHTBXikQ_BjzeV4lE';
+    let supabase = null;
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      }
+    } catch(e) {
+      console.error('Supabase init failed:', e);
+    }
+
+    // Auditor State
+    let currentAuditor = {
+      id: null,
+      name: null,
+      cert: null,
+      authenticated: false,
+      picture: null
+    };
+
+    // Check auth on load
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (!supabase) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await handleAuthSuccess(session.user);
+      }
+      
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          await handleAuthSuccess(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          handleAuthSignOut();
+        }
+      });
+    });
+
+    async function handleAuthSuccess(user) {
+      currentAuditor = {
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email.split('@')[0],
+        cert: user.email,
+        picture: user.user_metadata?.avatar_url,
+        authenticated: true
+      };
+      updateAuditorUiState();
+      await loadStateFromSupabase();
+    }
+    
+    function handleAuthSignOut() {
+      currentAuditor = { id: null, name: null, cert: null, authenticated: false, picture: null };
+      currentProjectId = null;
+      updateAuditorUiState();
+      currentBOM = [];
+      renderTable();
+    }
+
+    async function signInWithGoogle() {
+      if (!supabase) {
+        alert("Supabase not configured. Please use valid credentials.");
+        return;
+      }
+      await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+    }
+
+    function updateAuditorUiState() {
+      let btnText = document.getElementById("auditorLoginText");
+      let btn = document.getElementById("auditorLoginBtn");
+      if (currentAuditor.authenticated) {
+        if (btnText) btnText.innerHTML = currentAuditor.picture 
+            ? `<div class="flex items-center gap-1.5"><img src="${currentAuditor.picture}" class="w-4 h-4 rounded-full" /> <span>Verified: ${currentAuditor.name}</span></div>` 
+            : `Verified: ${currentAuditor.name}`;
+        if (btn) {
+          btn.className = "flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-extrabold text-emerald-900";
+          // Remove default SVG icon if picture is present
+          if (currentAuditor.picture) {
+             let svg = btn.querySelector('svg');
+             if (svg) svg.style.display = 'none';
+          }
+            btn.classList.add("bg-emerald-100", "text-emerald-900", "border-emerald-300");
+            btn.classList.remove("bg-surface-container-high", "text-on-surface", "hover:bg-surface-container-highest");
+            btn.onclick = signOutUser;
+        }
+      } else {
+        if (btnText) btnText.innerText = "Auditor / User Login";
+        if (btn) {
+            btn.classList.remove("bg-emerald-100", "text-emerald-900", "border-emerald-300");
+            btn.classList.add("bg-surface-container-high", "text-on-surface", "hover:bg-surface-container-highest");
+            btn.onclick = signInWithGoogle;
+        }
+      }
+
+      // Update Report Signatures
+      let b4Stamp = document.getElementById("b4AuditStamp");
+      if (b4Stamp) b4Stamp.innerText = currentAuditor.authenticated ? `Verified by: ${currentAuditor.name} (${currentAuditor.cert})` : "Verified by: Unauthenticated (Auditor Login Required)";
+      
+      let b4Name = document.getElementById("b4SignerName");
+      if (b4Name) b4Name.innerText = currentAuditor.authenticated ? `${currentAuditor.name}` : "Not yet signed";
+      
+      let b4Body = document.getElementById("b4SignerBody");
+      if (b4Body) b4Body.innerText = currentAuditor.authenticated ? `Google Authenticated User • Cert #${currentAuditor.cert}` : "—";
+    }
+
+    function downloadPdfReport() {
+      window.print();
+    }
+    
+    function downloadCertificate() {
+      window.print();
+    }
+
+    function showSmsToast(msg) {
+      let toast = document.createElement("div");
+      toast.className = "fixed top-20 right-6 z-50 bg-slate-900 text-white font-semibold text-xs px-4 py-3 rounded-xl sci-shadow border border-white/20 animate-bounce flex items-center gap-2 max-w-sm";
+      toast.style.background = "#0f172a";
+      toast.innerHTML = `<span class="material-symbols-outlined text-emerald-400 text-base">sms</span> ${escapeHtml(msg)}`;
+      document.body.appendChild(toast);
+      setTimeout(() => { if (document.body.contains(toast)) document.body.removeChild(toast); }, 6000);
+    }
+
+    function openImportModal() { document.getElementById("importModal").classList.add("open"); }
+    function closeImportModal() { document.getElementById("importModal").classList.remove("open"); }
+    
+    function openBig4Modal() {
+      let isReady = true;
+      if (!currentAuditor.authenticated) isReady = false;
+      if (currentBOM.length === 0) isReady = false;
+      if (currentBOM.some(item => !item.approved)) isReady = false;
+
+      let totalFootprint = currentBOM.reduce((acc, item) => acc + ((item.qty * item.ef) / 1000), 0);
+      if (totalFootprint <= 0) isReady = false;
+
+      let b4ReportStatus = document.getElementById("b4ReportStatus");
+      let b4Conclusion = document.getElementById("b4Conclusion");
+      let b4Ter = document.getElementById("b4Ter");
+      let b4Ger = document.getElementById("b4Ger");
+      let b4Tir = document.getElementById("b4Tir");
+      let b4Uncertainty = document.getElementById("b4Uncertainty");
+
+      if (isReady) {
+        if (b4ReportStatus) b4ReportStatus.innerText = "PASSED ASSURANCE AUDIT";
+        if (b4Conclusion) b4Conclusion.innerHTML = `<strong>Practitioner Conclusion:</strong> Based on the audit procedures performed, nothing has come to our attention that causes us to believe that the quantified GHG Inventory footprint of <strong id="b4Total" class="text-primary font-mono-data font-bold">${totalFootprint.toFixed(3)} tCO₂e</strong> is not prepared in all material respects in accordance with GHG Protocol and ISO 14064-1:2018 requirements.`;
+        
+        let avgTer = (currentBOM.reduce((acc, item) => acc + (item.ter || 1), 0) / currentBOM.length).toFixed(1);
+        let avgGer = (currentBOM.reduce((acc, item) => acc + (item.ger || 1), 0) / currentBOM.length).toFixed(1);
+        let avgTir = (currentBOM.reduce((acc, item) => acc + (item.tir || 1), 0) / currentBOM.length).toFixed(1);
+        let dqrAvg = (parseFloat(avgTer) + parseFloat(avgGer) + parseFloat(avgTir)) / 3;
+        let uncertainty = (dqrAvg * 3.5).toFixed(1);
+
+        if (b4Ter) b4Ter.innerText = `${avgTer} / 5 (High)`;
+        if (b4Ger) b4Ger.innerText = `${avgGer} / 5 (High)`;
+        if (b4Tir) b4Tir.innerText = `${avgTir} / 5 (High)`;
+        if (b4Uncertainty) b4Uncertainty.innerText = `±${uncertainty}%`;
+      } else {
+        if (b4ReportStatus) b4ReportStatus.innerText = "INSUFFICIENT DATA";
+        if (b4Conclusion) b4Conclusion.innerHTML = `<strong>INSUFFICIENT DATA:</strong> Audit not performed.`;
+        
+        if (b4Ter) b4Ter.innerText = "—";
+        if (b4Ger) b4Ger.innerText = "—";
+        if (b4Tir) b4Tir.innerText = "—";
+        if (b4Uncertainty) b4Uncertainty.innerText = "—";
+      }
+
+      let tbody = document.getElementById("b4TableBody");
+      if (tbody) {
+        tbody.innerHTML = "";
+        currentBOM.forEach(item => {
+          let co2e = ((item.qty * item.ef) / 1000).toFixed(3);
+          let scopeClass = item.scope === "Scope 1" ? "bg-purple-100 text-purple-900 border-purple-300" :
+                           item.scope === "Scope 2" ? "bg-blue-100 text-blue-900 border-blue-300" :
+                           "bg-amber-100 text-amber-900 border-amber-300";
+          tbody.innerHTML += `
+            <tr class="hover:bg-surface-container-low">
+              <td class="p-2.5 font-bold"><span class="px-1.5 py-0.5 rounded text-[9px] border ${scopeClass}">${item.scope || 'Scope 3'}</span></td>
+              <td class="p-2.5 font-semibold">${escapeHtml(item.name)}</td>
+              <td class="p-2.5 text-right font-mono-data">${item.qty.toLocaleString()} ${escapeHtml(item.unit)}</td>
+              <td class="p-2.5 truncate max-w-[200px] text-on-surface-variant">${escapeHtml(item.process)}</td>
+              <td class="p-2.5 text-right font-mono-data">${item.ef}</td>
+              <td class="p-2.5 text-right font-bold font-mono-data">${co2e} t</td>
+            </tr>
+          `;
+        });
+      }
+      updateProjectHeader();
+      document.getElementById("big4Modal").classList.add("open");
+    }
+
+
+    function closeBig4Modal() { document.getElementById("big4Modal").classList.remove("open"); }
+
+    function openCertModal() {
+      if (!currentAuditor.authenticated) {
+        signInWithGoogle();
+        return;
+      }
+      document.getElementById("certModal").classList.add("open");
+    }
+
+    function closeCertModal() { document.getElementById("certModal").classList.remove("open"); }
+
+    async function addManualItem(evt) {
+      if (evt) evt.preventDefault();
+      let name = document.getElementById("manualName").value.trim();
+      let qty = parseFloat(document.getElementById("manualQty").value);
+      let unit = document.getElementById("manualUnit").value;
+
+      if (!name || isNaN(qty) || qty <= 0) return;
+
+      let match = await matchMaterial(name, unit);
+      if (!match) { alert("Error: Backend API is waking up or currently unavailable. Please try again in 30 seconds."); return; }
+      currentBOM.unshift({
+        id: Date.now(),
+        name: name,
+        qty: qty,
+        unit: unit,
+        process: match.process,
+        ef: match.ef,
+        sim: match.sim,
+        ter: match.ter, ger: match.ger, tir: match.tir,
+        risk: match.risk,
+        status: match.status,
+        approved: false
+      });
+
+      document.getElementById("manualName").value = "";
+      closeImportModal();
+      renderTable();
+    }
+
+    function handlePastedCsv() {
+      let rawText = document.getElementById("pasteCsvArea").value;
+      if (!rawText || !rawText.trim()) return;
+      Papa.parse(rawText, {
+        header: false,
+        skipEmptyLines: 'greedy',
+        complete: function(results) {
+          if (results.data && results.data.length > 0) {
+            parseMatrix(results.data);
+            document.getElementById("pasteCsvArea").value = "";
+          }
+        }
+      });
+    }
+
+    function handleFileUpload(evt) {
+      let file = evt.target.files[0];
+      if (!file) return;
+
+      let filename = file.name.toLowerCase();
+
+      if (filename.endsWith('.csv')) {
+        Papa.parse(file, {
+          header: false,
+          skipEmptyLines: 'greedy',
+          complete: function(results) {
+            if (results.data && results.data.length > 0) {
+              parseMatrix(results.data);
+            }
+          }
+        });
+      } else if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          let data = new Uint8Array(e.target.result);
+          let workbook = XLSX.read(data, { type: 'array' });
+          let firstSheetName = workbook.SheetNames[0];
+          let worksheet = workbook.Sheets[firstSheetName];
+          let matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          if (matrix && matrix.length > 0) {
+            parseMatrix(matrix);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    async function parseMatrix(matrix) {
+      let candidateRows = [];
+
+      matrix.forEach((row, rIdx) => {
+        if (!Array.isArray(row) || row.length === 0) return;
+
+        let cells = row.map(c => (c !== null && c !== undefined) ? String(c).trim() : '');
+        let firstCell = cells[0] || '';
+        let firstLower = firstCell.toLowerCase();
+
+        // Skip headers, totals, notes, formulas
+        if (!firstCell ||
+            firstLower.startsWith('scope ') ||
+            firstLower.startsWith('category / item') ||
+            firstLower.startsWith('category') ||
+            firstLower.includes('total') ||
+            firstLower.includes('note:') ||
+            firstLower.includes('formula')) {
+          return;
+        }
+
+        let name = firstCell;
+        let rawQty = cells[1] || '';
+        let unit = cells[2] || 'kg';
+        let rawEf = cells[3] || '';
+
+        let qty = parseFloat(rawQty);
+        let ef = parseFloat(rawEf);
+
+        if (isNaN(qty)) {
+          let num1 = parseFloat(cells[0]);
+          let num2 = parseFloat(cells[2]);
+          if (!isNaN(num1) && isNaN(parseFloat(name))) {
+            qty = num1;
+            name = cells[1] || name;
+          } else if (!isNaN(num2)) {
+            qty = num2;
+          }
+        }
+
+        if (!name || name.length < 2) return;
+
+        // Skip subheaders with no quantity and no unit
+        if ((isNaN(qty) || qty === 0) && (!cells[2] || cells[2].length === 0 || cells[2] === '0')) {
+          return;
+        }
+
+        candidateRows.push({
+          rawName: name,
+          qty: isNaN(qty) ? 0 : qty,
+          unit: unit || 'kg',
+          ef: (!isNaN(ef) && ef > 0) ? ef : null,
+          rowIdx: rIdx
+        });
+      });
+
+      let activeRows = candidateRows.filter(r => r.qty > 0);
+      let itemsToImport = activeRows.length > 0 ? activeRows : candidateRows.map(r => ({...r, qty: r.qty || 100}));
+
+      if (itemsToImport.length === 0) {
+        alert("No valid BOM materials found in the uploaded file.");
+        return;
+      }
+
+      for (let [idx, item] of itemsToImport.entries()) {
+        let match = await matchMaterial(item.rawName, item.unit);
+        let finalEf = item.ef !== null ? item.ef : match.ef;
+
+        currentBOM.unshift({
+          id: Date.now() + idx,
+          name: item.rawName,
+          qty: item.qty,
+          unit: item.unit,
+          matchUnit: match.matchUnit || 'kg',
+          process: item.ef !== null ? `${item.rawName} (Template Factor: ${item.ef} kgCO₂e/${item.unit})` : match.process,
+          ef: finalEf,
+          sim: item.ef !== null ? 0.99 : match.sim,
+          ter: item.ef !== null ? 1 : match.ter,
+          ger: item.ef !== null ? 1 : match.ger,
+          tir: item.ef !== null ? 1 : match.tir,
+          risk: item.ef !== null ? "LOW" : match.risk,
+          status: "Auto-Matched",
+          approved: true
+        });
+      }
+
+      closeImportModal();
+      renderTable();
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Item,Quantity,Unit,Matched Process,Emission Factor,Risk,Footprint (tCO2e)\n";
+      currentBOM.forEach(i => {
+        let co2e = ((i.qty * i.ef) / 1000).toFixed(3);
+        let safeName = String(i.name || '').replace(/"/g, '""');
+        let safeUnit = String(i.unit || '').replace(/"/g, '""');
+        let safeProc = String(i.process || '').replace(/"/g, '""');
+        let safeRisk = String(i.risk || '').replace(/"/g, '""');
+        csvContent += `"${safeName}",${i.qty},"${safeUnit}","${safeProc}",${i.ef},"${safeRisk}",${co2e}\n`;
+      });
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "NetZeroCalc_BOM_Export.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function changeRowLciProcess(id, value) {
+      let item = currentBOM.find(i => i.id === id);
+      if (!item) return;
+
+      if (value === "custom") return;
+
+      let mIdx = parseInt(value);
+      let mat = materialDB[mIdx];
+      if (mat) {
+        item.process = mat.process;
+        item.ef = mat.ef;
+        item.sim = mat.sim;
+        item.ter = mat.ter;
+        item.ger = mat.ger;
+        item.tir = mat.tir;
+        item.scope = mat.scope;
+        item.risk = "LOW";
+        item.status = "Auditor Overridden";
+        renderTable();
+      }
+    }
+
+    function updateRowNotes(id, text) {
+      let item = currentBOM.find(i => i.id === id);
+      if (item) {
+        item.auditorNotes = text;
+        saveState();
+      }
+    }
+
+    function updateProjectHeader() {
+      let proj = document.getElementById("projectNameInput").value.trim() || "";
+      let comp = document.getElementById("companyNameInput").value.trim() || "ACME Corporation (Sample)";
+      let std = document.getElementById("standardSelect").value;
+
+      let b4Title = document.getElementById("b4Title");
+      if (b4Title) b4Title.innerText = proj;
+      let b4Comp = document.getElementById("b4Company");
+      if (b4Comp) b4Comp.innerText = comp;
+      let b4Std = document.getElementById("b4Std");
+      if (b4Std) b4Std.innerText = std;
+
+      let certProj = document.getElementById("certProjectName");
+      if (certProj) certProj.innerText = `${proj} (${comp})`;
+
+      let pRowProj = document.getElementById("projTableTitle");
+      if (pRowProj) pRowProj.innerText = proj;
+      let pRowStd = document.getElementById("projTableStd");
+      if (pRowStd) pRowStd.innerText = std;
+
+      saveState();
+    }
+
+    let saveTimeout = null;
+    function saveState() {
+      try {
+        localStorage.setItem('netzerocalc_bom', JSON.stringify(currentBOM));
+        let meta = {
+          proj: document.getElementById("projectNameInput")?.value || '',
+          comp: document.getElementById("companyNameInput")?.value || '',
+          std: document.getElementById("standardSelect")?.value || ''
+        };
+        localStorage.setItem('netzerocalc_meta', JSON.stringify(meta));
+
+        // Debounced Real-Time Backend Persistence
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(syncData, 600);
+      } catch(e) {}
+    }
+
+    async function loadStateFromSupabase() {
+      if (!supabase || !currentAuditor.authenticated) {
+        loadStateLocal(); // fallback to local
+        return;
+      }
+      
+      try {
+        // Fetch the user's latest project
+        const { data: projects, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', currentAuditor.id)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+          
+        if (error) throw error;
+        
+        if (projects && projects.length > 0) {
+          const proj = projects[0];
+          currentProjectId = proj.id;
+          
+          if (document.getElementById("projectNameInput")) document.getElementById("projectNameInput").value = proj.project_name || '';
+          if (document.getElementById("companyNameInput")) document.getElementById("companyNameInput").value = proj.company_name || '';
+          if (document.getElementById("standardSelect")) document.getElementById("standardSelect").value = proj.standard || '';
+          updateProjectHeader();
+          
+          // Fetch BOM items
+          const { data: items, error: itemsError } = await supabase
+            .from('bom_items')
+            .select('*')
+            .eq('project_id', proj.id)
+            .order('created_at', { ascending: true });
+            
+          if (itemsError) throw itemsError;
+          
+          if (items && items.length > 0) {
+            currentBOM = items.map(item => ({
+              id: item.id, // Keep UUID for Supabase
+              name: item.name,
+              qty: parseFloat(item.qty),
+              unit: item.unit,
+              process: item.process,
+              ef: parseFloat(item.ef),
+              scope: item.scope,
+              risk: item.risk,
+              status: item.status,
+              approved: item.approved,
+              ter: parseFloat(item.ter),
+              ger: parseFloat(item.ger),
+              tir: parseFloat(item.tir),
+              auditorNotes: item.auditor_notes
+            }));
+            renderTable();
+          }
+        } else {
+          loadStateLocal();
+        }
+      } catch (e) {
+        console.error("Error loading from Supabase", e);
+        loadStateLocal();
+      }
+    }
+
+    async function syncData() {
+      if (!supabase || !currentAuditor.authenticated) return;
+      
+      let indicator = document.getElementById("saveIndicator");
+      if(indicator) {
+        indicator.classList.remove("hidden");
+        indicator.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 transition-colors";
+        indicator.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span><span>Saving...</span>';
+      }
+      
+      try {
+        let totalFootprint = currentBOM.reduce((acc, item) => acc + ((item.qty * item.ef) / 1000), 0);
+        let projData = {
+          user_id: currentAuditor.id,
+          project_name: document.getElementById("projectNameInput")?.value || '',
+          company_name: document.getElementById("companyNameInput")?.value || 'ACME Corporation (Sample)',
+          standard: document.getElementById("standardSelect")?.value || 'ISO 14064-1 & GHG Protocol Scope 1-3',
+          total_footprint: totalFootprint,
+          updated_at: new Date().toISOString()
+        };
+
+        let projectId = currentProjectId;
+        
+        if (projectId) {
+          const { error } = await supabase.from('projects').update(projData).eq('id', projectId);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase.from('projects').insert([projData]).select();
+          if (error) throw error;
+          projectId = data[0].id;
+          currentProjectId = projectId;
+        }
+
+        // Wipe existing BOM items and re-insert (simple sync)
+        if (projectId) {
+           await supabase.from('bom_items').delete().eq('project_id', projectId);
+           if (currentBOM.length > 0) {
+             const itemsToInsert = currentBOM.map(item => ({
+                project_id: projectId,
+                name: item.name,
+                qty: item.qty,
+                unit: item.unit,
+                process: item.process,
+                ef: item.ef,
+                scope: item.scope,
+                risk: item.risk,
+                status: item.status,
+                approved: item.approved,
+                ter: item.ter || null,
+                ger: item.ger || null,
+                tir: item.tir || null,
+                auditor_notes: item.auditorNotes || null
+             }));
+             const { error } = await supabase.from('bom_items').insert(itemsToInsert);
+             if (error) throw error;
+           }
+        }
+         // Dual Write to Firebase Realtime / Firestore if configured
+         if (db && projectId) {
+           try {
+             await db.collection('projects').doc(projectId).set(projData);
+             const batch = db.batch();
+             if (currentBOM.length > 0) {
+               currentBOM.forEach(item => {
+                 let docRef = db.collection('projects').doc(projectId).collection('bom_items').doc(String(item.id));
+                 batch.set(docRef, item);
+               });
+             }
+             await batch.commit();
+             console.log("Firebase sync successful.");
+           } catch(fbErr) {
+             console.warn("Firebase sync failed (check config/rules):", fbErr);
+           }
+         }
+        
+         if (indicator) {
+           indicator.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 transition-colors";
+           indicator.innerHTML = '<span class="material-symbols-outlined text-sm">cloud_done</span><span><span id="saveStatusEl">Saved</span></span>';
+           setTimeout(() => { if(indicator) indicator.classList.add("hidden"); }, 2000);
+        }
+      } catch(e) {
+        console.error(e);
+        if(indicator) {
+           indicator.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-error-container text-error border border-error/50 transition-colors";
+           indicator.innerHTML = '<span class="material-symbols-outlined text-sm">cloud_off</span><span>Save Error</span>';
+        }
+      }
+    }
+
+    function loadStateLocal() {
+      try {
+        let saved = localStorage.getItem('netzerocalc_bom');
+        if (saved) {
+          let parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) currentBOM = parsed;
+        }
+        let savedMeta = localStorage.getItem('netzerocalc_meta');
+        if (savedMeta) {
+          let meta = JSON.parse(savedMeta);
+          if (meta.proj && document.getElementById("projectNameInput")) document.getElementById("projectNameInput").value = meta.proj;
+          if (meta.comp && document.getElementById("companyNameInput")) document.getElementById("companyNameInput").value = meta.comp;
+          if (meta.std && document.getElementById("standardSelect")) document.getElementById("standardSelect").value = meta.std;
+          updateProjectHeader();
+        }
+      } catch(e) {}
+    }
+
+    async function checkSupabaseHealth() {
+      try {
+        let el = document.getElementById("backend-status-pill");
+        if (supabase) {
+          if (el) {
+            el.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Supabase Connected';
+          }
+        } else {
+          if (el) {
+            el.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300";
+            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-600"></span> Local Only';
+          }
+        }
+      } catch(e) {}
+    }
+
+    loadStateLocal();
+    checkSupabaseHealth();
+
+    // --- Spreadsheet / Excel CSV Integration Logic ---
+    function openExcelModal() {
+      populateExcelTable();
+      document.getElementById("excelModal").classList.add("open");
+    }
+
+    function closeExcelModal() {
+      document.getElementById("excelModal").classList.remove("open");
+    }
+
+    function populateExcelTable() {
+      const tbody = document.getElementById("excelTableBody");
+      tbody.innerHTML = "";
+      
+      materialDB.forEach((item, index) => {
+        let tr = document.createElement("tr");
+        tr.className = "hover:bg-surface-container-lowest transition-colors";
+        tr.innerHTML = `
+          <td class="p-2 border-b border-outline-variant/30">${escapeHtml(item.scope)}</td>
+          <td class="p-2 border-b border-outline-variant/30">${escapeHtml(item.category)}</td>
+          <td class="p-2 border-b border-outline-variant/30 font-bold">${escapeHtml(item.process)}</td>
+          <td class="p-2 border-b border-outline-variant/30">${escapeHtml(item.unit)}</td>
+          <td class="p-2 border-b border-outline-variant/30">${item.ef}</td>
+          <td class="p-2 border-b border-outline-variant/30 bg-emerald-50/50">
+            <input type="number" id="excel-qty-${index}" min="0" step="any" placeholder="0" class="w-24 p-1 text-xs border border-emerald-200 rounded outline-none focus:ring-1 focus:ring-emerald-500 bg-white">
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function syncExcelToBom() {
+      let added = 0;
+      materialDB.forEach((item, index) => {
+        let qtyInput = document.getElementById(`excel-qty-${index}`);
+        if (qtyInput) {
+          let qty = parseFloat(qtyInput.value);
+          if (!isNaN(qty) && qty > 0) {
+            // Add to BOM
+            currentBOM.push({
+              id: Date.now() + Math.random(),
+              name: `Imported from Master Sheet: ${item.process}`,
+              qty: qty,
+              unit: item.unit,
+              process: item.process,
+              ef: item.ef,
+              sim: 1.0, // Perfect match since it's from the sheet
+              ter: 1, ger: 1, tir: 1,
+              risk: "LOW",
+              scope: item.scope,
+              status: "Auto-Matched",
+              approved: false
+            });
+            added++;
+            qtyInput.value = ""; // reset
+          }
+        }
+      });
+      
+      if (added > 0) {
+        showSmsToast(`Successfully imported ${added} items from Master Sheet!`);
+        renderTable();
+        saveState();
+        closeExcelModal();
+      } else {
+        closeExcelModal();
+      }
+    }
+
+    renderTable();
+  </script>
+</body>
+</html>

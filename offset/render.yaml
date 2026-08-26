@@ -1,0 +1,29 @@
+databases:
+  - name: e-credits-db
+    plan: free
+    databaseName: e_credits
+    user: e_credits
+
+services:
+  - type: web
+    name: e-credits-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: e-credits-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173"
+        # ^ Update this in the Render dashboard after your Netlify site is
+        # live -- set it to your real Netlify URL, comma-separated with
+        # localhost if you still want local dev to work. This file can't
+        # know your Netlify URL in advance, so it ships with a safe default
+        # that will need one manual edit post-deploy.

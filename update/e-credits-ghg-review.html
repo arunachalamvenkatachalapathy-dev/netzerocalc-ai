@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — GHG Inventory Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAFAF7;
+    --paper-raised:#FFFFFF;
+    --ink:#1A1D1A;
+    --ink-soft:#5B6058;
+    --hairline:#D8D5CC;
+    --forest:#1F4E42;
+    --forest-soft:#E7EFEC;
+    --risk-low:#2E7D5B;
+    --risk-low-bg:#E7F3EC;
+    --risk-med:#B8791F;
+    --risk-med-bg:#FBF1DF;
+    --risk-high:#B23A34;
+    --risk-high-bg:#FBE9E7;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:14px; line-height:1.5;
+  }
+  a{color:inherit;}
+  .app{display:flex; min-height:100vh;}
+
+  /* ---- Left rail: the process, not decoration ---- */
+  .rail{
+    width:220px; flex-shrink:0; background:var(--paper-raised);
+    border-right:1px solid var(--hairline); padding:28px 20px;
+    position:sticky; top:0; height:100vh;
+  }
+  .rail-brand{font-family:var(--mono); font-weight:600; font-size:15px; letter-spacing:0.02em;}
+  .rail-brand span{color:var(--forest);}
+  .rail-sub{font-size:11.5px; color:var(--ink-soft); margin-top:4px; margin-bottom:32px;}
+  .step{
+    display:flex; align-items:flex-start; gap:10px; padding:11px 0;
+    cursor:pointer; border-bottom:1px solid transparent;
+  }
+  .step-num{
+    font-family:var(--mono); font-size:11px; width:20px; height:20px; flex-shrink:0;
+    border:1px solid var(--hairline); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .step.active .step-num{background:var(--forest); border-color:var(--forest); color:#fff;}
+  .step.done .step-num{background:var(--forest-soft); border-color:var(--forest); color:var(--forest);}
+  .step-label{font-size:13px; margin-top:1px;}
+  .step.active .step-label{font-weight:600;}
+  .step-desc{font-size:11px; color:var(--ink-soft); margin-top:1px;}
+
+  /* ---- Signature element: live provenance strip ---- */
+  .provenance{margin-top:36px; border-top:1px solid var(--hairline); padding-top:18px;}
+  .provenance-title{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:10px;}
+  .prov-bar{display:flex; height:8px; border-radius:2px; overflow:hidden; background:var(--hairline);}
+  .prov-seg{height:100%;}
+  .prov-seg.clean{background:var(--forest);}
+  .prov-seg.uplifted{background:#7FA99C;}
+  .prov-seg.proxy{background:#C9A24A;}
+  .prov-seg.placeholder{background:#D8B8B4;}
+  .prov-legend{margin-top:10px; display:flex; flex-direction:column; gap:5px;}
+  .prov-legend-item{display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--ink-soft);}
+  .prov-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+  .prov-dot.clean{background:var(--forest);}
+  .prov-dot.uplifted{background:#7FA99C;}
+  .prov-dot.proxy{background:#C9A24A;}
+  .prov-dot.placeholder{background:#D8B8B4;}
+  .prov-count{font-family:var(--mono); margin-left:auto;}
+
+  /* ---- Main ---- */
+  .main{flex:1; padding:32px 40px; max-width:1180px;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  h1{font-family:var(--mono); font-size:20px; font-weight:600; margin:0 0 4px 0;}
+  .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 28px 0; max-width:640px;}
+
+  .card{
+    background:var(--paper-raised); border:1px solid var(--hairline); border-radius:6px;
+    padding:22px 24px; margin-bottom:18px;
+  }
+  .card-title{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .field .hint{font-size:11px; color:var(--ink-soft); margin-top:4px;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--hairline); border-radius:4px;
+    font-family:var(--sans); font-size:13px; background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--forest); outline-offset:1px;}
+  textarea{font-family:var(--mono); font-size:12px; min-height:110px;}
+
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:13px; padding:10px 18px;
+    border-radius:4px; border:1px solid var(--forest); background:var(--forest); color:#fff;
+    cursor:pointer;
+  }
+  .btn:hover{background:#173B32;}
+  .btn:disabled{background:var(--hairline); border-color:var(--hairline); color:var(--ink-soft); cursor:not-allowed;}
+  .btn.secondary{background:#fff; color:var(--forest);}
+  .btn.secondary:hover{background:var(--forest-soft);}
+  .btn.small{padding:5px 10px; font-size:11.5px;}
+  .btn-row{display:flex; gap:10px; margin-top:20px;}
+
+  .drop{
+    border:1.5px dashed var(--hairline); border-radius:6px; padding:34px 20px; text-align:center;
+    color:var(--ink-soft); font-size:13px; cursor:pointer;
+  }
+  .drop:hover{border-color:var(--forest); color:var(--forest);}
+  .drop input{display:none;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th{
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em;
+    text-align:left; color:var(--ink-soft); padding:8px 10px; border-bottom:1px solid var(--hairline);
+    background:var(--paper);
+  }
+  td{padding:9px 10px; border-bottom:1px solid var(--hairline); vertical-align:top;}
+  tr.risk-HIGH td:first-child{border-left:3px solid var(--risk-high);}
+  tr.risk-MEDIUM td:first-child{border-left:3px solid var(--risk-med);}
+  tr.risk-LOW td:first-child{border-left:3px solid var(--risk-low);}
+  .badge{
+    display:inline-block; font-family:var(--mono); font-size:10.5px; font-weight:600;
+    padding:2px 7px; border-radius:3px; text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .badge.risk-HIGH{background:var(--risk-high-bg); color:var(--risk-high);}
+  .badge.risk-MEDIUM{background:var(--risk-med-bg); color:var(--risk-med);}
+  .badge.risk-LOW{background:var(--risk-low-bg); color:var(--risk-low);}
+  .badge.status-clean{background:var(--forest-soft); color:var(--forest);}
+  .badge.status-uplifted{background:#EEF4F1; color:#5A7D70;}
+  .badge.status-proxy{background:#FBF1DF; color:#8A6A2E;}
+  .badge.status-placeholder{background:#FBE9E7; color:#9C4A44;}
+  .num{font-family:var(--mono); text-align:right;}
+  .approved-row{opacity:0.55;}
+  .row-actions{display:flex; gap:6px;}
+  .flag-warning{color:var(--risk-high); font-size:11px; font-family:var(--mono); margin-top:3px;}
+  .candidate-list{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px;}
+  .candidate-chip{
+    font-family:var(--sans); font-size:10.5px; padding:3px 8px; border-radius:12px;
+    border:1px solid var(--hairline); background:#fff; color:var(--ink-soft); cursor:pointer;
+  }
+  .candidate-chip:hover{border-color:var(--forest); color:var(--forest);}
+  .candidate-chip.selected{background:var(--forest); border-color:var(--forest); color:#fff;}
+  .chip-sim{font-family:var(--mono); opacity:0.75;}
+  .source-note{font-size:11px; color:var(--ink-soft); max-width:260px;}
+
+  .totals-strip{
+    display:flex; gap:24px; margin-top:20px; padding:18px 22px;
+    background:var(--forest); color:#fff; border-radius:6px; flex-wrap:wrap;
+  }
+  .totals-strip .stat{min-width:140px;}
+  .totals-strip .stat-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; opacity:0.75;}
+  .totals-strip .stat-value{font-family:var(--mono); font-size:22px; font-weight:600; margin-top:2px;}
+  .totals-strip .stat-value small{font-size:12px; font-weight:400; opacity:0.8;}
+
+  .empty{padding:50px 20px; text-align:center; color:var(--ink-soft);}
+  .empty-title{font-family:var(--mono); font-weight:600; color:var(--ink); margin-bottom:6px;}
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; background:var(--ink); color:#fff;
+    padding:12px 18px; border-radius:5px; font-size:12.5px; display:none; max-width:320px;
+    font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LEFT RAIL: the actual pipeline, sequential by necessity -->
+  <div class="rail">
+    <div class="rail-brand">LEDGER <span>/ ghg</span></div>
+    <div class="rail-sub">BOM → emission factor review</div>
+
+    <div class="step active" data-step="setup" onclick="goToStep('setup')">
+      <div class="step-num">1</div>
+      <div><div class="step-label">Setup</div><div class="step-desc">Boundary & base year</div></div>
+    </div>
+    <div class="step" data-step="import" onclick="goToStep('import')">
+      <div class="step-num">2</div>
+      <div><div class="step-label">Import</div><div class="step-desc">Upload BOM lines</div></div>
+    </div>
+    <div class="step" data-step="review" onclick="goToStep('review')">
+      <div class="step-num">3</div>
+      <div><div class="step-label">Review</div><div class="step-desc">Match, approve, override</div></div>
+    </div>
+    <div class="step" data-step="results" onclick="goToStep('results')">
+      <div class="step-num">4</div>
+      <div><div class="step-label">Results</div><div class="step-desc">Totals & export</div></div>
+    </div>
+
+    <!-- Signature element: live data-provenance ledger, always visible -->
+    <div class="provenance">
+      <div class="provenance-title">Factor provenance (60 total)</div>
+      <div class="prov-bar" id="provBar"></div>
+      <div class="prov-legend" id="provLegend"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STEP 1: SETUP -->
+    <div class="panel active" id="panel-setup">
+      <h1>Inventory setup</h1>
+      <p class="lede">Every number downstream inherits from these choices. State them before matching a single line — a verifier's first question is always the boundary, not the data.</p>
+
+      <div class="card">
+        <div class="card-title">Reporting entity</div>
+        <div class="grid2">
+          <div class="field"><label>Company / facility name</label><input type="text" id="s-company" placeholder="e.g. Chennai Fabrication Unit"></div>
+          <div class="field"><label>Reporting period</label><input type="text" id="s-period" placeholder="e.g. Apr 2025 – Mar 2026"></div>
+          <div class="field"><label>Base year</label><input type="text" id="s-baseyear" placeholder="e.g. 2024"></div>
+          <div class="field"><label>Target geography</label>
+            <select id="s-geo"><option value="IN">India (IN)</option><option value="US">United States (US)</option><option value="GLO">Global (GLO)</option><option value="EU">European Union (EU)</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scope 2 method</div>
+        <div class="grid2">
+          <div class="field">
+            <label>Reporting approach</label>
+            <select id="s-scope2"><option>Dual reporting — Location-based + Market-based</option><option>Location-based only</option></select>
+            <div class="hint">GHG Protocol Scope 2 Guidance (2015) requires dual reporting wherever market-based data (RECs, PPAs, supplier contracts) exists.</div>
+          </div>
+          <div class="field">
+            <label>Materiality threshold</label>
+            <input type="text" id="s-materiality" placeholder="e.g. 5% of total inventory, or an absolute tCO2e cutoff">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Emission factor source</div>
+        <div class="field">
+          <label>Database</label>
+          <select id="s-source"><option value="India_GHG_Factors">India GHG Factors (this dataset — 60 factors, provenance-tagged)</option></select>
+          <div class="hint">This source is what you uploaded — the corrected, cited, provenance-tagged factor set. Every match below carries its clean / uplifted / proxy / placeholder status forward, never silently.</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goToStep('import')">Continue to import →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: IMPORT -->
+    <div class="panel" id="panel-import">
+      <h1>Import BOM lines</h1>
+      <p class="lede">Upload a CSV with <code>description, quantity, unit</code> columns, or paste rows directly. Nothing is matched yet — this step only loads what you'll review next.</p>
+
+      <div class="card">
+        <div class="card-title">Upload CSV</div>
+        <label class="drop" for="fileInput">
+          <div id="dropLabel">Click to choose a CSV file, or drag one here</div>
+          <input type="file" id="fileInput" accept=".csv" onchange="handleFile(event)">
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Or paste rows</div>
+        <div class="field">
+          <textarea id="pasteArea" placeholder="description,quantity,unit&#10;Diesel generator fuel,1500,L&#10;Office grid electricity,42000,kWh&#10;Inbound trucking,3200,tonne-km"></textarea>
+        </div>
+        <button class="btn secondary small" onclick="loadPasted()">Load pasted rows</button>
+      </div>
+
+      <div class="card" id="loadedPreview" style="display:none;">
+        <div class="card-title">Loaded — <span id="loadedCount"></span> rows</div>
+        <table><thead><tr><th>Description</th><th>Quantity</th><th>Unit</th></tr></thead><tbody id="previewBody"></tbody></table>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" onclick="goToStep('setup')">← Back</button>
+        <button class="btn" id="toReviewBtn" disabled onclick="runMatching()">Match against factors →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: REVIEW -->
+    <div class="panel" id="panel-review">
+      <h1>Review matches</h1>
+      <p class="lede">Every row shows its match confidence, audit risk, and factor provenance. High-risk and placeholder rows sort to the top — approve or override each one before it counts toward the total.</p>
+      <div id="reviewTableWrap"></div>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="goToStep('import')">← Back</button>
+        <button class="btn" onclick="goToStep('results')">View results →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RESULTS -->
+    <div class="panel" id="panel-results">
+      <h1>Results</h1>
+      <p class="lede" id="resultsLede"></p>
+      <div class="totals-strip" id="totalsStrip"></div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">Export</div>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn secondary" onclick="exportData('csv')">Export CSV</button>
+          <button class="btn secondary" onclick="exportData('json')">Export JSON</button>
+        </div>
+        <div class="hint" style="margin-top:10px;" id="exportGate"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   REAL DATA — extracted directly from GHG_Calculator_RECTIFIED_v6.xlsx
+   ============================================================ */
+const FACTOR_DATA = [{"key": "Diesel_Fuel", "label": "Diesel Company Vehicles", "unit": "Liters", "factor": 2.6558, "source": "India GHG Program base CO2 factor (2.64) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 2.6558 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Petrol_Fuel", "label": "Petrol Company Cars", "unit": "Liters", "factor": 2.2836, "source": "India GHG Program base CO2 factor (2.27) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 2.2836 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "CNG_Fuel", "label": "CNG Vehicles", "unit": "kg", "factor": 2.686, "source": "India GHG Program base CO2 factor (2.67) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 2.686 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "LPG_Commercial", "label": "Commercial LPG", "unit": "kg", "factor": 2.9979, "source": "India GHG Program base CO2 factor (2.98) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 2.9979 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Coal_Indian", "label": "Indian Coal (Boilers)", "unit": "kg", "factor": 1.9919, "source": "India GHG Program base CO2 factor (1.98) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 1.9919 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Furnace_Oil", "label": "Furnace Oil (Boilers)", "unit": "Liters", "factor": 3.1186, "source": "India GHG Program base CO2 factor (3.1) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 3.1186 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Natural_Gas", "label": "Natural Gas", "unit": "scm", "factor": 1.8913, "source": "India GHG Program base CO2 factor (1.88) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 1.8913 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Acetylene_Welding", "label": "Acetylene Welding", "unit": "kg", "factor": 3.4003, "source": "India GHG Program base CO2 factor (3.38) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 3.4003 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Fire_Extinguisher_CO2", "label": "CO2 Fire Extinguisher Discharge", "unit": "kg", "factor": 1, "source": "GWP of CO2 = 1, all AR vintages (kgCO2e/kg)", "status": "clean"}, {"key": "Refrig_R32", "label": "Refrigerant Top-up - R-32", "unit": "kg", "factor": 675, "source": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework", "status": "clean"}, {"key": "Refrig_R410A", "label": "Refrigerant Top-up - R-410A", "unit": "kg", "factor": 2088, "source": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework", "status": "clean"}, {"key": "Refrig_R22", "label": "Refrigerant Top-up - R-22", "unit": "kg", "factor": 1810, "source": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework", "status": "clean"}, {"key": "Grid_India_CEA", "label": "Leased Office/Warehouse Electricity", "unit": "kWh", "factor": 0.7314, "source": "India GHG Program base CO2 factor (0.727) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.7314 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Grid_MarketBased_Default", "label": "Factory Electricity - Supplier/Residual Mix", "unit": "kWh", "factor": 0.7314, "source": "India GHG Program base CO2 factor (0.727) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.7314 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "REC_Backed_Electricity", "label": "Renewable/REC-Backed Electricity Purchased", "unit": "kWh", "factor": 0, "source": "Renewable Energy Certificate / PPA-backed electricity, zero-rated per market-based method (kgCO2/kWh) -- confirm REC is unbundled and not double-counted", "status": "clean"}, {"key": "Purchased_Steam", "label": "Purchased Steam", "unit": "kg", "factor": 0.1811, "source": "India GHG Program base CO2 factor (0.18) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.1811 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Transport_Truck_tkm", "label": "Outbound Trucking to Customers", "unit": "tonne-km", "factor": 0.09, "source": "India Road Logistics (kgCO2/tonne-km)", "status": "clean"}, {"key": "Transport_LCV_km", "label": "Inbound LCV Delivery", "unit": "km", "factor": 0.45, "source": "Light Commercial Vehicle (kgCO2/km)", "status": "clean"}, {"key": "Transport_HGV_km", "label": "Inbound HGV Delivery", "unit": "km", "factor": 0.85, "source": "Heavy Goods Vehicle (kgCO2/km)", "status": "clean"}, {"key": "Rail_Freight", "label": "Outbound Rail Distribution", "unit": "tonne-km", "factor": 0.015, "source": "Indian Railways Freight (kgCO2/tonne-km)", "status": "clean"}, {"key": "Rail_Passenger", "label": "Rail Travel", "unit": "p-km", "factor": 0.01, "source": "Indian Railways Passenger (kgCO2/p-km)", "status": "clean"}, {"key": "Air_Domestic", "label": "Domestic Flights", "unit": "p-km", "factor": 0.12, "source": "Domestic Flights India (kgCO2/p-km)", "status": "clean"}, {"key": "Air_International", "label": "International Flights", "unit": "p-km", "factor": 0.117, "source": "DEFRA/DESNZ 2025 UK Government GHG Conversion Factors -- long-haul economy, with radiative forcing (kgCO2e/passenger-km)", "status": "clean"}, {"key": "Air_Freight_Cargo", "label": "Outbound Air Freight to Customers", "unit": "tonne-km", "factor": 1.58, "source": "India GHG Program (kgCO2/tonne-km)", "status": "clean"}, {"key": "Taxi_Diesel", "label": "Taxi Travel", "unit": "km", "factor": 0.14, "source": "India GHG Program (kgCO2/km)", "status": "clean"}, {"key": "Commute_2Wheeler", "label": "Two-Wheeler Commute", "unit": "km", "factor": 0.04, "source": "Scooter/Bike Avg (kgCO2/km)", "status": "clean"}, {"key": "Commute_Car_Avg", "label": "Car Commute - Average", "unit": "km", "factor": 0.14, "source": "Avg Small Car (kgCO2/km)", "status": "clean"}, {"key": "Commute_Car_Small", "label": "Car Commute - Small Segment", "unit": "km", "factor": 0.11, "source": "Small Car Segment (kgCO2/km)", "status": "clean"}, {"key": "Commute_Car_Large", "label": "Car Commute - Large Segment", "unit": "km", "factor": 0.17, "source": "Large Car Segment (kgCO2/km)", "status": "clean"}, {"key": "Commute_Bus", "label": "Bus Commute", "unit": "p-km", "factor": 0.03, "source": "City Bus Service (kgCO2/p-km)", "status": "clean"}, {"key": "Metro_Rail", "label": "Metro Rail Commute", "unit": "p-km", "factor": 0.015, "source": "Metro Rail (kgCO2/p-km)", "status": "clean"}, {"key": "Waste_Landfill", "label": "Waste to Landfill", "unit": "kg", "factor": 0.85, "source": "Indian Landfill Methane (kgCO2e/kg waste)", "status": "clean"}, {"key": "Waste_Recycle", "label": "Waste Recycled", "unit": "kg", "factor": 0.021, "source": "Transport energy only (kgCO2/kg)", "status": "clean"}, {"key": "Waste_Incineration", "label": "Waste Incinerated", "unit": "kg", "factor": 0.4, "source": "India GHG Program estimate (kgCO2e/kg) -- verify locally", "status": "clean"}, {"key": "Wastewater_Treatment", "label": "Wastewater Treated", "unit": "m3", "factor": 0.708, "source": "India GHG Program (kgCO2/m3)", "status": "clean"}, {"key": "Water_Supply", "label": "Leased Facility Water Use", "unit": "m3", "factor": 0.31, "source": "Cross-validated against international benchmarks: NZ Water Sector 2020/21 national methodology (~1.6-2.8 MJ/m3 energy intensity) and US LCA estimates (0.34-0.46 kgCO2/m3) both converge near this value -- no India-specific published factor exists; treat as an international proxy, not an India-measured figure", "status": "proxy"}, {"key": "Paper_Virgin", "label": "Virgin Paper Procurement", "unit": "kg", "factor": 0.92, "source": "India GHG Program (kgCO2/kg)", "status": "clean"}, {"key": "Paper_Recycled", "label": "Recycled Paper Procurement", "unit": "kg", "factor": 0.6, "source": "India GHG Program (kgCO2/kg)", "status": "clean"}, {"key": "Plastic_Packaging", "label": "Plastic Packaging Procurement", "unit": "kg", "factor": 2.5, "source": "India GHG Program (kgCO2/kg)", "status": "clean"}, {"key": "Construction_Steel", "label": "Construction Steel Procurement", "unit": "kg", "factor": 2.33, "source": "World Steel Association -- integrated mill (BOF) production route (kgCO2e/kg); India's steel sector is majority BOF/integrated-mill with lower recycled content than EU/UK, so integrated-mill figure is the more representative default -- verify against specific supplier EPD where available", "status": "clean"}, {"key": "Cement_Portland", "label": "Cement Procurement", "unit": "kg", "factor": 0.9, "source": "India GHG Program (kgCO2/kg)", "status": "clean"}, {"key": "Spend_IT", "label": "IT / Professional Services (Spend)", "unit": "INR", "factor": 0.005, "source": "Proxy: 5 tCO2 per Million INR spend", "status": "clean"}, {"key": "Spend_Construction", "label": "Construction / Repairs (Spend)", "unit": "INR", "factor": 0.012, "source": "Proxy: 12 tCO2 per Million INR spend", "status": "clean"}, {"key": "Spend_Generic_Services", "label": "Generic Purchased Services (Spend)", "unit": "INR", "factor": 0.003, "source": "Proxy: 3 tCO2 per Million INR spend -- use only where no better data exists", "status": "clean"}, {"key": "Laptop_Unit", "label": "Laptops Purchased", "unit": "Units", "factor": 250, "source": "Embodied carbon per unit (kgCO2e/unit)", "status": "clean"}, {"key": "Desktop_Unit", "label": "Desktops Purchased", "unit": "Units", "factor": 350, "source": "Embodied carbon per unit (kgCO2e/unit)", "status": "clean"}, {"key": "Smartphone_Unit", "label": "Smartphones Purchased", "unit": "Units", "factor": 65, "source": "Embodied carbon per unit (kgCO2e/unit)", "status": "clean"}, {"key": "Furniture", "label": "Office Furniture Purchased", "unit": "kg", "factor": 3.5, "source": "Office furniture (kgCO2/kg)", "status": "clean"}, {"key": "Grid_TD_Loss", "label": "Grid T&D Losses", "unit": "kWh", "factor": 0.1459, "source": "India GHG Program base CO2 factor (0.145) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.1459 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "WTT_Diesel", "label": "Well-to-Tank: Diesel", "unit": "Liters", "factor": 0.5835, "source": "India GHG Program base CO2 factor (0.58) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.5835 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "WTT_Petrol", "label": "Well-to-Tank: Petrol", "unit": "Liters", "factor": 0.4628, "source": "India GHG Program base CO2 factor (0.46) + ~0.6% CH4/N2O uplift per US EPA GHG Equivalencies methodology (2024) = 0.4628 kgCO2e -- uplift is a documented approximation (CO2 is >99% of combustion CO2e per EPA), not an India-specific measured N2O/CH4 split", "status": "uplifted"}, {"key": "Hotel_5Star", "label": "Hotel Nights - 5 Star", "unit": "Nights", "factor": 75.5, "source": "India GHG Program (kgCO2e/night)", "status": "clean"}, {"key": "Hotel_Budget", "label": "Hotel Nights - Budget", "unit": "Nights", "factor": 25, "source": "India GHG Program (kgCO2e/night)", "status": "clean"}, {"key": "Product_Use_Phase_Energy", "label": "Estimated Product Use-Phase Energy", "unit": "Units Sold", "factor": 0, "source": "PLACEHOLDER -- Category 11 (Use of Sold Products); populate with product-specific energy-use profile (kgCO2e/unit sold)", "status": "placeholder"}, {"key": "Product_EndOfLife", "label": "Estimated End-of-Life Emissions", "unit": "Units Sold", "factor": 0, "source": "PLACEHOLDER -- Category 12 (End-of-Life); populate with disposal-method-weighted factor (kgCO2e/unit sold)", "status": "placeholder"}, {"key": "Investment_Equity_Share", "label": "Equity-Share-Weighted Investee Emissions", "unit": "INR Invested", "factor": 0, "source": "PLACEHOLDER -- Category 15 (Investments); populate with equity-share-weighted investee emissions (kgCO2e/INR invested)", "status": "placeholder"}, {"key": "Franchise_Estimate", "label": "Franchise Operations (if applicable)", "unit": "Franchises", "factor": 0, "source": "PLACEHOLDER -- Category 14 (Franchises); populate with franchise-reported or estimated emissions (kgCO2e/franchise)", "status": "placeholder"}, {"key": "Leased_Asset_Downstream", "label": "Assets Leased to Others - Energy Use", "unit": "Units", "factor": 0, "source": "PLACEHOLDER -- Category 13 (Downstream Leased Assets); populate with lessee-reported energy use (kgCO2e/unit)", "status": "placeholder"}, {"key": "Financed_Emissions_Passthrough", "label": "Financed Emissions (Financial Sector - direct pass-through)", "unit": "tCO2e Reported", "factor": 1, "source": "Direct pass-through of reported financed emissions (tCO2e/tCO2e)", "status": "clean"}, {"key": "Processing_Sold_Products_Proxy", "label": "Third-Party Processing of Intermediate Goods (if applicable)", "unit": "Units", "factor": 0, "source": "PLACEHOLDER -- Category 10 (Processing of Sold Products); relevant only if selling intermediate goods for further processing; populate with downstream processor energy data (kgCO2e/unit sold)", "status": "placeholder"}];
+/* ============================================================
+   UNIT CONVERSION — ported from the app's units.py, extended
+   ============================================================ */
+const UNIT_ALIASES = {
+  'kilogram':'kg','kilograms':'kg','kgs':'kg','pound':'lb','pounds':'lb','gram':'g','grams':'g',
+  'metric ton':'t','tonne':'t','tonnes':'t','kwh':'kWh','mj':'MJ','kj':'kJ',
+  'kilometer':'km','kilometers':'km','mile':'mi','miles':'mi','tonne-km':'tonne-km','ton-km':'tonne-km',
+  'liter':'L','liters':'L','litre':'L','litres':'L','l':'L',
+  'cubic meter':'m3','cubic meters':'m3','cubic metre':'m3','m³':'m3','scm':'m3',
+  'passenger-km':'p-km','pkm':'p-km','nights':'night','units':'unit'
+};
+const UNIT_BASE = {
+  'kg':['mass',1], 'lb':['mass',0.45359237], 'g':['mass',0.001], 't':['mass',1000], 'oz':['mass',0.0283495],
+  'kWh':['energy',3.6], 'MJ':['energy',1], 'kJ':['energy',0.001],
+  'km':['distance',1], 'mi':['distance',1.609344],
+  'tonne-km':['freight',1],
+  'L':['volume',1], 'm3':['volume',1000],
+  'p-km':['pax-distance',1],
+  'unit':['count',1], 'night':['count',1], 'INR':['spend',1], 'franchise':['count',1],
+  'unit sold':['count',1], 'INR invested':['spend',1], 'tCO2e reported':['count',1]
+};
+function normUnit(u){
+  const c = (u||'').trim();
+  return UNIT_ALIASES[c.toLowerCase()] || c;
+}
+function unitsCompatible(a,b){
+  const na = normUnit(a), nb = normUnit(b);
+  if(!UNIT_BASE[na] || !UNIT_BASE[nb]) return false;
+  return UNIT_BASE[na][0] === UNIT_BASE[nb][0];
+}
+function convertQty(qty, fromUnit, toUnit){
+  const na = normUnit(fromUnit), nb = normUnit(toUnit);
+  if(!unitsCompatible(na, nb)) return null;
+  const factor = UNIT_BASE[na][1] / UNIT_BASE[nb][1];
+  return qty * factor;
+}
+
+/* ============================================================
+   MATCHING ENGINE — ported from the app's matching.py logic:
+   tokenize + keyword overlap, unit-gated, DQR heuristic scoring
+   ============================================================ */
+function tokenize(s){ return (s||'').toLowerCase().match(/[a-z0-9]+/g) || []; }
+
+function scoreMatch(rawInput, factorEntry){
+  const rawTokens = new Set(tokenize(rawInput));
+  const targetTokens = new Set(tokenize(factorEntry.label + ' ' + factorEntry.key));
+  let overlap = 0;
+  rawTokens.forEach(t => { if(targetTokens.has(t)) overlap++; });
+  return overlap / Math.max(1, rawTokens.size);
+}
+
+function matchLine(rawInput, quantity, unit){
+  // Score every factor whose unit is compatible; if nothing is unit-compatible,
+  // fall back to scoring everything so there's still something to review.
+  let scored = FACTOR_DATA
+    .filter(f => unitsCompatible(unit, f.unit))
+    .map(f => ({factor: f, score: scoreMatch(rawInput, f)}))
+    .sort((a,b) => b.score - a.score);
+  let unitFallback = false;
+  if(scored.length === 0){
+    unitFallback = true;
+    scored = FACTOR_DATA
+      .map(f => ({factor: f, score: scoreMatch(rawInput, f)}))
+      .sort((a,b) => b.score - a.score);
+  }
+  const candidates = scored.slice(0, 5); // top 5, mirrors matching.py's retrieve_candidates()
+  const best = candidates.length ? candidates[0].factor : null;
+  const bestScore = candidates.length ? candidates[0].score : -1;
+  const convertedQty = best ? convertQty(quantity, unit, best.unit) : null;
+  const unitOk = convertedQty !== null && !unitFallback;
+  const techScore = bestScore >= 0.7 ? 1 : bestScore >= 0.4 ? 2 : 4;
+  const geoScore = 1; // India-specific source, target IN by default
+  const temporalScore = 2;
+  let risk = 'LOW';
+  if(!best || bestScore < 0.15 || !unitOk) risk = 'HIGH';
+  else if(best.status === 'placeholder') risk = 'HIGH';
+  else if(best.status === 'proxy' || techScore >= 3) risk = 'MEDIUM';
+  return {
+    factor: best, similarity: Math.round(bestScore*100)/100, convertedQty, unitOk,
+    dqr: {tech: techScore, geo: geoScore, temporal: temporalScore}, risk,
+    candidates: candidates.map(c => ({factor: c.factor, similarity: Math.round(c.score*100)/100}))
+  };
+}
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+let bomRows = [];      // {description, quantity, unit}
+let matchedRows = [];  // {..bom, match, approved, overridden}
+let currentStep = 'setup';
+
+function goToStep(step){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+step).classList.add('active');
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.remove('active');
+    if(s.dataset.step === step) s.classList.add('active');
+  });
+  currentStep = step;
+  if(step === 'results') renderResults();
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(()=> t.style.display='none', 2600);
+}
+
+/* ---- Provenance strip (signature element) ---- */
+function renderProvenance(){
+  const counts = {clean:0, uplifted:0, proxy:0, placeholder:0};
+  FACTOR_DATA.forEach(f => counts[f.status]++);
+  const total = FACTOR_DATA.length;
+  const bar = document.getElementById('provBar');
+  bar.innerHTML = '';
+  ['clean','uplifted','proxy','placeholder'].forEach(k => {
+    const seg = document.createElement('div');
+    seg.className = 'prov-seg ' + k;
+    seg.style.width = (counts[k]/total*100) + '%';
+    bar.appendChild(seg);
+  });
+  const legend = document.getElementById('provLegend');
+  const labels = {clean:'Fully cited', uplifted:'CO2e-adjusted', proxy:'Proxy/reconciled', placeholder:'Placeholder'};
+  legend.innerHTML = '';
+  ['clean','uplifted','proxy','placeholder'].forEach(k => {
+    const row = document.createElement('div');
+    row.className = 'prov-legend-item';
+    row.innerHTML = `<span class="prov-dot ${k}"></span>${labels[k]}<span class="prov-count">${counts[k]}</span>`;
+    legend.appendChild(row);
+  });
+}
+renderProvenance();
+
+/* ---- Import ---- */
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/);
+  const rows = [];
+  const header = lines[0].toLowerCase();
+  const startIdx = header.includes('description') || header.includes('quantity') ? 1 : 0;
+  for(let i=startIdx; i<lines.length; i++){
+    const parts = lines[i].split(',');
+    if(parts.length < 3) continue;
+    const description = parts[0].trim();
+    const quantity = parseFloat(parts[1]);
+    const unit = parts[2].trim();
+    if(description && !isNaN(quantity) && unit) rows.push({description, quantity, unit});
+  }
+  return rows;
+}
+
+function handleFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('dropLabel').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (ev) => { bomRows = parseCSV(ev.target.result); renderPreview(); };
+  reader.readAsText(file);
+}
+
+function loadPasted(){
+  const text = document.getElementById('pasteArea').value;
+  if(!text.trim()){ showToast('Paste some rows first'); return; }
+  bomRows = parseCSV(text);
+  renderPreview();
+}
+
+function renderPreview(){
+  const wrap = document.getElementById('loadedPreview');
+  const body = document.getElementById('previewBody');
+  if(bomRows.length === 0){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  document.getElementById('loadedCount').textContent = bomRows.length;
+  body.innerHTML = bomRows.map(r => `<tr><td>${r.description}</td><td class="num">${r.quantity}</td><td>${r.unit}</td></tr>`).join('');
+  document.getElementById('toReviewBtn').disabled = false;
+}
+
+/* ---- Matching ---- */
+function runMatching(){
+  matchedRows = bomRows.map(row => {
+    const match = matchLine(row.description, row.quantity, row.unit);
+    let resultTCO2e = null;
+    if(match.factor && match.unitOk){
+      resultTCO2e = (match.convertedQty * match.factor.factor) / 1000;
+    }
+    return {...row, match, resultTCO2e, approved:false, overridden:false, dqTier:'Not Yet Assessed'};
+  });
+  goToStep('review');
+  renderReview();
+  showToast(`Matched ${matchedRows.length} rows against 60 factors`);
+}
+
+function renderReview(){
+  const order = {HIGH:0, MEDIUM:1, LOW:2};
+  const sorted = [...matchedRows].sort((a,b) => order[a.match.risk] - order[b.match.risk]);
+  let html = `<table><thead><tr>
+    <th>BOM line</th><th>Qty</th><th>Matched factor</th><th>Provenance</th>
+    <th>Sim.</th><th class="num">Result (tCO2e)</th><th>Data quality</th><th>Risk</th><th></th>
+  </tr></thead><tbody>`;
+  sorted.forEach((row) => {
+    const idx = matchedRows.indexOf(row);
+    const f = row.match.factor;
+    html += `<tr class="risk-${row.match.risk} ${row.approved ? 'approved-row' : ''}">
+      <td>${row.description}</td>
+      <td class="num">${row.quantity} ${row.unit}</td>
+      <td>${f ? f.label : '<em>No candidate found</em>'}
+        ${!row.match.unitOk ? '<div class="flag-warning">⚠ unit incompatible — cannot compute</div>' : ''}
+        ${f && f.status==='placeholder' ? '<div class="flag-warning">⚠ placeholder factor — needs real data</div>' : ''}
+        <div class="candidate-list">
+          ${row.match.candidates.map(c => `
+            <button class="candidate-chip ${f && c.factor.key === f.key ? 'selected' : ''}"
+                    onclick="selectCandidate(${idx}, '${c.factor.key}')"
+                    title="${c.factor.source}">
+              ${c.factor.label} <span class="chip-sim">${(c.similarity*100).toFixed(0)}%</span>
+            </button>`).join('')}
+        </div>
+      </td>
+      <td>${f ? `<span class="badge status-${f.status}">${f.status}</span><div class="source-note">${f.source}</div>` : '—'}</td>
+      <td class="num">${(row.match.similarity*100).toFixed(0)}%</td>
+      <td class="num">${row.resultTCO2e !== null ? row.resultTCO2e.toFixed(4) : '—'}</td>
+      <td>
+        <select onchange="setDQ(${idx}, this.value)" style="font-size:11px; padding:4px 6px;">
+          ${['Not Yet Assessed','Metered','Invoiced/Utility Bill','Estimated','Industry-Average Proxy'].map(o=>`<option ${row.dqTier===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </td>
+      <td><span class="badge risk-${row.match.risk}">${row.match.risk}</span></td>
+      <td class="row-actions">
+        ${row.approved
+          ? `<button class="btn secondary small" onclick="unapprove(${idx})">Undo</button>`
+          : `<button class="btn small" onclick="approve(${idx})">Approve</button>`}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('reviewTableWrap').innerHTML = html;
+}
+
+function selectCandidate(idx, factorKey){
+  const row = matchedRows[idx];
+  const chosen = row.match.candidates.find(c => c.factor.key === factorKey);
+  if(!chosen) return;
+  row.match.factor = chosen.factor;
+  row.match.similarity = chosen.similarity;
+  row.match.convertedQty = convertQty(row.quantity, row.unit, chosen.factor.unit);
+  row.match.unitOk = row.match.convertedQty !== null;
+  row.match.userSelected = true; // this row's match was picked by a human, not just auto-scored
+  const techScore = chosen.similarity >= 0.7 ? 1 : chosen.similarity >= 0.4 ? 2 : 4;
+  let risk = 'LOW';
+  if(!row.match.unitOk) risk = 'HIGH';
+  else if(chosen.factor.status === 'placeholder') risk = 'HIGH';
+  else if(chosen.factor.status === 'proxy' || techScore >= 3) risk = 'MEDIUM';
+  row.match.risk = risk;
+  row.resultTCO2e = row.match.unitOk ? (row.match.convertedQty * chosen.factor.factor) / 1000 : null;
+  row.approved = false; // re-selecting a match requires re-approval
+  renderReview();
+}
+
+function setDQ(idx, val){ matchedRows[idx].dqTier = val; }
+function approve(idx){ matchedRows[idx].approved = true; renderReview(); }
+function unapprove(idx){ matchedRows[idx].approved = false; renderReview(); }
+
+/* ---- Results ---- */
+function renderResults(){
+  const total = matchedRows.reduce((sum, r) => sum + (r.resultTCO2e || 0), 0);
+  const approvedCount = matchedRows.filter(r => r.approved).length;
+  const allApproved = matchedRows.length > 0 && approvedCount === matchedRows.length;
+  const highRisk = matchedRows.filter(r => r.match.risk === 'HIGH').length;
+
+  document.getElementById('resultsLede').textContent =
+    matchedRows.length === 0
+      ? 'No rows matched yet — go back to Import and Review first.'
+      : `${matchedRows.length} lines matched, ${approvedCount} approved, ${highRisk} flagged high-risk.`;
+
+  document.getElementById('totalsStrip').innerHTML = matchedRows.length === 0 ? '' : `
+    <div class="stat"><div class="stat-label">Total footprint</div><div class="stat-value">${total.toFixed(3)} <small>tCO2e</small></div></div>
+    <div class="stat"><div class="stat-label">Lines matched</div><div class="stat-value">${matchedRows.length}</div></div>
+    <div class="stat"><div class="stat-label">Approved</div><div class="stat-value">${approvedCount} <small>/ ${matchedRows.length}</small></div></div>
+    <div class="stat"><div class="stat-label">High risk</div><div class="stat-value">${highRisk}</div></div>
+  `;
+
+  document.getElementById('exportGate').textContent = allApproved
+    ? 'All rows approved — export is unlocked.'
+    : `Export is blocked until every row is approved (${matchedRows.length - approvedCount} remaining) — this mirrors the app's export gate, so nothing unreviewed leaves this tool silently.`;
+}
+
+function exportData(format){
+  const approvedCount = matchedRows.filter(r => r.approved).length;
+  if(matchedRows.length === 0 || approvedCount < matchedRows.length){
+    showToast('Export blocked: approve every row first');
+    return;
+  }
+  const rows = matchedRows.map(r => ({
+    description: r.description, quantity: r.quantity, unit: r.unit,
+    matched_factor_key: r.match.factor ? r.match.factor.key : null,
+    matched_factor_label: r.match.factor ? r.match.factor.label : null,
+    provenance_status: r.match.factor ? r.match.factor.status : null,
+    result_tCO2e: r.resultTCO2e,
+    data_quality: r.dqTier,
+    audit_risk: r.match.risk
+  }));
+  let blob, filename;
+  if(format === 'csv'){
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(',')].concat(rows.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','))).join('\n');
+    blob = new Blob([csv], {type:'text/csv'});
+    filename = 'ghg_export.csv';
+  } else {
+    blob = new Blob([JSON.stringify(rows, null, 2)], {type:'application/json'});
+    filename = 'ghg_export.json';
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported ' + filename);
+}
+</script>
+</body>
+</html>

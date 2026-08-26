@@ -1,0 +1,215 @@
+[
+  {
+    "sector": "Aluminium",
+    "sectorCode": "AL",
+    "cnCode": "7601 10 00",
+    "productName": "Unwrought Aluminium, Non-Alloyed (Primary Smelter Ingot)",
+    "productionRoute": "Primary Smelting (Hall-Héroult Electrolysis)",
+    "directBenchmark": 1.464,
+    "euDefaultBenchmark": 14.5,
+    "euEtsBestInClass": 6.8,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2",
+      "PFCs (CF4, C2F6)"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "CBAM definitive phase requires actual verified emissions. EU default penalty assigns high indirect electricity factor from regional grid mix."
+  },
+  {
+    "sector": "Aluminium",
+    "sectorCode": "AL",
+    "cnCode": "7601 20 00",
+    "productName": "Unwrought Aluminium Alloys / Secondary Recycled Ingot",
+    "productionRoute": "Secondary Smelting & Scrap Refining",
+    "directBenchmark": 0.28,
+    "euDefaultBenchmark": 2.1,
+    "euEtsBestInClass": 0.45,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "Secondary aluminium has over 90% lower embedded emissions than primary virgin metal under CBAM methodology."
+  },
+  {
+    "sector": "Aluminium",
+    "sectorCode": "AL",
+    "cnCode": "7606 12 00",
+    "productName": "Aluminium Alloy Plates, Sheets & Strip (Thickness > 0.2mm)",
+    "productionRoute": "Rolling & Finishing from Ingot/Slab",
+    "directBenchmark": 0.35,
+    "euDefaultBenchmark": 15.2,
+    "euEtsBestInClass": 7.2,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2",
+      "PFCs"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "Complex good: includes precursor embedded emissions from unwrought aluminium ingot."
+  },
+  {
+    "sector": "Aluminium",
+    "sectorCode": "AL",
+    "cnCode": "7604 29 00",
+    "productName": "Aluminium Alloy Extruded Bars, Rods & Profiles",
+    "productionRoute": "Extrusion from Billet",
+    "directBenchmark": 0.42,
+    "euDefaultBenchmark": 15.4,
+    "euEtsBestInClass": 7.4,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2",
+      "PFCs"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "Calculated using precursor specific embedded emissions plus extrusion electricity intensity."
+  },
+  {
+    "sector": "Iron & Steel",
+    "sectorCode": "FE",
+    "cnCode": "7201 10 00",
+    "productName": "Pig Iron & Hot Metal (Blast Furnace)",
+    "productionRoute": "Blast Furnace - Basic Oxygen Furnace (BF-BOF)",
+    "directBenchmark": 1.288,
+    "euDefaultBenchmark": 2.15,
+    "euEtsBestInClass": 1.35,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2021/447",
+    "notes": "BF-BOF route has high coke and direct reduction emissions. DRI-EAF route reduces intensity significantly."
+  },
+  {
+    "sector": "Iron & Steel",
+    "sectorCode": "FE",
+    "cnCode": "7206 10 00",
+    "productName": "Crude Steel (Electric Arc Furnace - Scrap Route)",
+    "productionRoute": "Electric Arc Furnace (EAF - 100% Scrap)",
+    "directBenchmark": 0.21,
+    "euDefaultBenchmark": 0.65,
+    "euEtsBestInClass": 0.28,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2021/447",
+    "notes": "Scrap-based EAF steel achieves the lowest direct embedded emissions under EU ETS benchmarks."
+  },
+  {
+    "sector": "Iron & Steel",
+    "sectorCode": "FE",
+    "cnCode": "7208 51 00",
+    "productName": "Hot-Rolled Steel Flat Products & Heavy Plates",
+    "productionRoute": "Continuous Casting & Hot Strip Mill",
+    "directBenchmark": 0.31,
+    "euDefaultBenchmark": 2.33,
+    "euEtsBestInClass": 1.55,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "EU default penalty for flat steel imports based on regional average BF-BOF carbon intensity."
+  },
+  {
+    "sector": "Iron & Steel",
+    "sectorCode": "FE",
+    "cnCode": "7213 10 00",
+    "productName": "Steel Wire Rod & Rebars (Concrete Reinforcing Bars)",
+    "productionRoute": "EAF / Rolling Mill",
+    "directBenchmark": 0.29,
+    "euDefaultBenchmark": 2.1,
+    "euEtsBestInClass": 0.95,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "Includes heating furnace fuels and rolling electricity consumption."
+  },
+  {
+    "sector": "Cement",
+    "sectorCode": "CEM",
+    "cnCode": "2523 10 00",
+    "productName": "Cement Clinker (Dry Process)",
+    "productionRoute": "Rotary Kiln Calcination (Dry Process with Precalciner)",
+    "directBenchmark": 0.693,
+    "euDefaultBenchmark": 0.766,
+    "euEtsBestInClass": 0.68,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2021/447",
+    "notes": "Process emissions from limestone calcination (CaCO3 -> CaO + CO2) represent ~60% of total clinker emissions."
+  },
+  {
+    "sector": "Cement",
+    "sectorCode": "CEM",
+    "cnCode": "2523 29 00",
+    "productName": "Portland Pozzolana / Blended Cement (PPC)",
+    "productionRoute": "Clinker Grinding with Fly Ash / Slag Additives",
+    "directBenchmark": 0.48,
+    "euDefaultBenchmark": 0.65,
+    "euEtsBestInClass": 0.42,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "High fly-ash/slag blending ratio (clinker factor < 70%) delivers significant CBAM certificate savings."
+  },
+  {
+    "sector": "Fertilisers",
+    "sectorCode": "FERT",
+    "cnCode": "2814 10 00",
+    "productName": "Anhydrous Ammonia (Haber-Bosch)",
+    "productionRoute": "Natural Gas Steam Methane Reforming + Synthesis",
+    "directBenchmark": 1.573,
+    "euDefaultBenchmark": 1.85,
+    "euEtsBestInClass": 1.52,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2",
+      "N2O"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2021/447",
+    "notes": "Ammonia is the primary precursor for urea, nitric acid, and ammonium nitrate fertilisers."
+  },
+  {
+    "sector": "Fertilisers",
+    "sectorCode": "FERT",
+    "cnCode": "3102 10 00",
+    "productName": "Urea (Synthesized with CO2 recycling)",
+    "productionRoute": "Ammonia + CO2 Reaction & Prilling",
+    "directBenchmark": 0.35,
+    "euDefaultBenchmark": 1.25,
+    "euEtsBestInClass": 0.98,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2",
+      "N2O"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2023/1773",
+    "notes": "Embedded emissions include precursor ammonia consumption minus chemical CO2 bound in molecule."
+  },
+  {
+    "sector": "Hydrogen",
+    "sectorCode": "H2",
+    "cnCode": "2804 10 00",
+    "productName": "Hydrogen (Grey / SMR Process)",
+    "productionRoute": "Steam Methane Reforming (Natural Gas)",
+    "directBenchmark": 6.84,
+    "euDefaultBenchmark": 9.2,
+    "euEtsBestInClass": 0.5,
+    "unit": "tCO₂e / tonne product",
+    "includedGases": [
+      "CO2"
+    ],
+    "regulationRef": "Regulation (EU) 2023/956 Annex I; Commission Implementing Regulation (EU) 2021/447",
+    "notes": "Electrolytic green hydrogen (RE powered) has 0.00 tCO2e direct emissions, creating a major tariff advantage."
+  }
+]

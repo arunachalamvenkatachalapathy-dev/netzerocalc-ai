@@ -1,0 +1,38 @@
+  <!-- Spreadsheet Integration Modal -->
+  <div id="excelModal" class="modal-overlay">
+    <div class="bg-white rounded-2xl p-6 max-w-6xl w-full max-h-[92vh] flex flex-col sci-shadow relative border border-outline-variant">
+      <button onclick="closeExcelModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface font-bold text-xl">✕</button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+          <span class="material-symbols-outlined">table</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-on-surface">GHG Master Calculator (CSV Integration)</h2>
+          <p class="text-xs text-on-surface-variant">Enter quantities directly into the master sheet. Non-zero entries will sync seamlessly to your BOM.</p>
+        </div>
+      </div>
+      <div class="flex-1 overflow-auto border border-outline-variant rounded-xl mb-4">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low text-[10px] font-bold text-on-surface-variant uppercase sticky top-0 z-10">
+            <tr>
+              <th class="p-3 border-b border-outline-variant/60">Scope</th>
+              <th class="p-3 border-b border-outline-variant/60">Category</th>
+              <th class="p-3 border-b border-outline-variant/60">Emission Source / Process</th>
+              <th class="p-3 border-b border-outline-variant/60">Unit</th>
+              <th class="p-3 border-b border-outline-variant/60">Emission Factor</th>
+              <th class="p-3 border-b border-outline-variant/60 bg-emerald-50">Quantity (Input)</th>
+            </tr>
+          </thead>
+          <tbody id="excelTableBody" class="text-xs font-medium text-on-surface divide-y divide-outline-variant/30">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeExcelModal()" class="px-5 py-2 font-bold text-xs text-on-surface hover:bg-surface-container-low rounded-xl">Cancel</button>
+        <button onclick="syncExcelToBom()" class="px-5 py-2 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:bg-primary-container transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">sync</span> Sync to BOM
+        </button>
+      </div>
+    </div>
+  </div>
