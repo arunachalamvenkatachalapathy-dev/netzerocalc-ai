@@ -45,13 +45,27 @@ CBAM declaration or Scope 1-3 filing.
 # --- Tool declarations -------------------------------------------------
 
 _match_bom_line_decl = types.FunctionDeclaration(
-    name="match_bom_line",
+_get_project_context_decl = types.FunctionDeclaration(
+    name="get_project_context",
     description=(
-        "Runs a single BOM line through the real semantic matching and DQR "
-        "engine and persists the result. Returns the matched process, the "
-        "computed tCO2e figure, the DQR risk level, and up to 5 alternative "
-        "candidates. Use this when the user gives you a new material/"
-        "quantity to assess."
+        "Gets all BOM mapping audits for a project, including hotspot analysis and CBAM benchmark comparisons. "
+        "Call this when the user wants to analyze the current entities or know about the project footprint. "
+        "Returns all necessary information in one single call to save time."
+    ),
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "project_id": types.Schema(type="STRING"),
+        },
+        required=["project_id"]
+    )
+)
+
+_map_bom_line_decl = types.FunctionDeclaration(
+    name="map_bom_line",
+    description=(
+        "Maps a single raw BOM line to an LCI process, calculates its footprint, and automatically compares it to CBAM if applicable. "
+        "Use this when the user asks to map or analyze a specific new material."
     ),
     parameters=types.Schema(
         type="OBJECT",
@@ -71,51 +85,12 @@ _match_bom_line_decl = types.FunctionDeclaration(
     )
 )
 
-_list_audits_decl = types.FunctionDeclaration(
-    name="list_project_audits",
-    description=(
-        "Lists all real BOM mapping audit rows for a project, sorted "
-        "HIGH-risk first. Use this to find hotspots or answer 'what's in "
-        "this project' -- never invent line items."
-    ),
-    parameters=types.Schema(
-        type="OBJECT",
-        properties={
-            "project_id": types.Schema(type="STRING"),
-            "audit_risk_level": types.Schema(type="STRING", enum=["HIGH", "MEDIUM", "LOW"]),
-        },
-        required=["project_id"]
-    )
-)
-
-_cbam_compare_decl = types.FunctionDeclaration(
-    name="compare_to_cbam_benchmark",
-    description=(
-        "Compares an ALREADY-COMPUTED emission factor (from match_bom_line "
-        "or an existing audit row) against real EU CBAM benchmark values "
-        "for Aluminium, Iron & Steel, Cement, Fertilisers, or Hydrogen. "
-        "Does not compute a new footprint -- only compares one you already "
-        "have."
-    ),
-    parameters=types.Schema(
-        type="OBJECT",
-        properties={
-            "sector": types.Schema(type="STRING", enum=["Aluminium", "Iron & Steel", "Cement", "Fertilisers", "Hydrogen"]),
-            "computed_emission_factor_kg_co2e_per_unit": types.Schema(type="NUMBER"),
-            "quantity_tonnes": types.Schema(type="NUMBER"),
-            "product_hint": types.Schema(type="STRING"),
-        },
-        required=["sector", "computed_emission_factor_kg_co2e_per_unit", "quantity_tonnes"]
-    )
-)
-
 _override_decl = types.FunctionDeclaration(
     name="override_match",
     description=(
         "Switches an existing audit row to a different candidate process "
         "the user has chosen, and recomputes its tCO2e. Only call this when "
-        "the user explicitly picks an alternative -- never on your own "
-        "initiative."
+        "the user explicitly picks an alternative."
     ),
     parameters=types.Schema(
         type="OBJECT",
@@ -130,7 +105,7 @@ _override_decl = types.FunctionDeclaration(
 )
 
 TOOLS = types.Tool(function_declarations=[
-    _match_bom_line_decl, _list_audits_decl, _cbam_compare_decl, _override_decl,
+    _get_project_context_decl, _map_bom_line_decl, _override_decl,
 ])
 
 
@@ -144,27 +119,72 @@ def get_agent_client() -> genai.Client:
 def _execute_tool(name: str, args: dict, db: Session) -> dict:
     """Dispatches a model-requested tool call to the real backend logic."""
     try:
-        if name == "match_bom_line":
+        if name.startswith("default_api:"):
+            name = name.replace("default_api:", "", 1)
+            
+        if name == "get_project_context":
+            rows = list_project_audits(args["project_id"], db, None)
+            
+            results = []
+            for r in rows:
+                item = {
+                    "id": r.id, 
+                    "raw_bom_input": r.raw_bom_input, 
+                    "matched_process_name": r.matched_process_name,
+                    "result_tco2e": r.result_tco2e, 
+                    "audit_risk_level": r.audit_risk_level
+                }
+                
+                if r.result_tco2e is not None and r.converted_quantity is not None and r.converted_quantity > 0:
+                    sector_guess = None
+                    low_input = r.raw_bom_input.lower()
+                    if "aluminium" in low_input: sector_guess = "Aluminium"
+                    elif "steel" in low_input or "iron" in low_input: sector_guess = "Iron & Steel"
+                    elif "cement" in low_input: sector_guess = "Cement"
+                    
+                    if sector_guess:
+                        cbam = compare_to_cbam_benchmark(
+                            sector=sector_guess,
+                            computed_emission_factor_kg_co2e_per_unit=r.matched_emission_factor or 0,
+                            quantity_tonnes=r.converted_quantity,
+                            product_hint=r.raw_bom_input
+                        )
+                        if cbam.get("covered"):
+                            item["cbam_comparison"] = cbam
+                
+                results.append(item)
+            return {"project_audits_overview": results}
+            
+        elif name == "map_bom_line":
             payload = BomLineMatch(**args)
             audit = perform_bom_match(payload, db)
-            return {
+            result = {
                 "audit_id": audit.id,
                 "matched_process_name": audit.matched_process_name,
                 "result_tco2e": audit.result_tco2e,
                 "matched_emission_factor": audit.matched_emission_factor,
                 "audit_risk_level": audit.audit_risk_level,
                 "audit_reasoning": audit.audit_reasoning,
-                "candidate_options": audit.candidate_options,
             }
-        elif name == "list_project_audits":
-            rows = list_project_audits(args["project_id"], db, args.get("audit_risk_level"))
-            return {"audits": [
-                {"id": r.id, "raw_bom_input": r.raw_bom_input, "matched_process_name": r.matched_process_name,
-                 "result_tco2e": r.result_tco2e, "audit_risk_level": r.audit_risk_level}
-                for r in rows
-            ]}
-        elif name == "compare_to_cbam_benchmark":
-            return compare_to_cbam_benchmark(**args)
+            if audit.result_tco2e is not None and audit.converted_quantity is not None and audit.converted_quantity > 0:
+                sector_guess = None
+                low_input = audit.raw_bom_input.lower()
+                if "aluminium" in low_input: sector_guess = "Aluminium"
+                elif "steel" in low_input or "iron" in low_input: sector_guess = "Iron & Steel"
+                elif "cement" in low_input: sector_guess = "Cement"
+                
+                if sector_guess:
+                    cbam = compare_to_cbam_benchmark(
+                        sector=sector_guess,
+                        computed_emission_factor_kg_co2e_per_unit=audit.matched_emission_factor or 0,
+                        quantity_tonnes=audit.converted_quantity,
+                        product_hint=audit.raw_bom_input
+                    )
+                    if cbam.get("covered"):
+                        result["cbam_comparison"] = cbam
+            
+            return result
+            
         elif name == "override_match":
             payload = OverrideRequest(process_id=args["process_id"], user_id=args["user_id"], notes=args["notes"])
             audit = perform_override(args["audit_id"], payload, db)
@@ -218,12 +238,12 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
             config=config
         )
         
-        # Always append the model's response exactly as is (to preserve thought_signatures natively)
-        if response.candidates and response.candidates[0].content:
-            formatted_history.append(response.candidates[0].content)
-            
         if response.function_calls:
-            parts = []
+            # Bypass proxy corruption: Do not append the corrupted functionCall.
+            # Instead, simulate a text interaction.
+            formatted_history.append(types.Content(role="model", parts=[types.Part.from_text(text="Let me retrieve that information.")]))
+            
+            text_parts = []
             for fc in response.function_calls:
                 args = fc.args
                 if hasattr(args, "__dict__"):
@@ -232,17 +252,15 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
                 result = _execute_tool(fc.name, args, db)
                 tool_trace.append({"tool": fc.name, "args": args, "result": result})
                 
-                part = types.Part.from_function_response(
-                    name=fc.name,
-                    response=result
-                )
-                if hasattr(fc, 'id') and fc.id:
-                    part.function_response.id = fc.id
-                parts.append(part)
-            formatted_history.append(types.Content(role="user", parts=parts))
+                text_parts.append(f"System: Tool '{fc.name}' executed with result:\n{result}")
+                
+            formatted_history.append(types.Content(role="user", parts=[types.Part.from_text(text="\n\n".join(text_parts))]))
         else:
-            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
-                final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
+            # It's a text response, append normally
+            if response.candidates and response.candidates[0].content:
+                formatted_history.append(response.candidates[0].content)
+                if response.candidates[0].content.parts:
+                    final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
             break
 
     return {"answer": final_text, "tool_calls": tool_trace}
