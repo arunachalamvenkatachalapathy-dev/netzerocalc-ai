@@ -221,7 +221,7 @@ def run_agent_turn(client: Groq, chat_history: list, user_message: str, db: Sess
     
     for _ in range(max_hops):
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama3-70b-8192",
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
