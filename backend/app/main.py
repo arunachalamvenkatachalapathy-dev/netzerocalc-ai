@@ -440,8 +440,8 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
     except Exception as e:
         import traceback
         traceback.print_exc()
-        if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e):
-            raise HTTPException(status_code=429, detail="You have hit the Gemini Free Tier rate limit (20 requests per minute). Please wait 60 seconds and try again.")
+        if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e) or "rate_limit" in str(e).lower():
+            raise HTTPException(status_code=429, detail="You have hit the Groq API rate limit. Please wait a moment and try again.")
         raise HTTPException(status_code=500, detail=str(e))
 
 
