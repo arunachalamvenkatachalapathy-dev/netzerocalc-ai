@@ -218,10 +218,13 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
                 result = _execute_tool(fc.name, args, db)
                 tool_trace.append({"tool": fc.name, "args": args, "result": result})
                 
-                parts.append(types.Part.from_function_response(
+                part = types.Part.from_function_response(
                     name=fc.name,
                     response=result
-                ))
+                )
+                if hasattr(fc, 'id') and fc.id:
+                    part.function_response.id = fc.id
+                parts.append(part)
             response = chat.send_message(parts)
         else:
             break
