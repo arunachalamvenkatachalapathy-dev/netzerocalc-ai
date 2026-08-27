@@ -222,8 +222,7 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
                     name=fc.name,
                     response=result
                 )
-                if hasattr(fc, 'id') and fc.id:
-                    part.function_response.id = fc.id
+                part.function_response.id = "skip_thought_signature_validator"
                 parts.append(part)
             response = chat.send_message(parts)
         else:
