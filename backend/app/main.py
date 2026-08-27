@@ -1,11 +1,13 @@
 import os
+import time
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 
 import httpx
 import jwt
 import pandas as pd
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from passlib.context import CryptContext
@@ -406,14 +408,29 @@ async def ai_chat(payload: AiChatRequest):
 
 # removed
 
+# Simple in-memory rate limiter for the agent endpoint (protects GCP billing).
+# Since Cloud Run is capped at max-instances=1, this global dictionary works fine.
+agent_rate_limits = defaultdict(list)
+AGENT_RATE_LIMIT_WINDOW = 60  # seconds
+AGENT_RATE_LIMIT_MAX_REQS = 10  # 10 requests per minute per IP
+
 @app.post("/agent/chat")
-def agent_chat(payload: AgentChatRequest, db: Session = Depends(get_db)):
+def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depends(get_db)):
     """
     Multi-hop tool-calling agent. Unlike /ai/chat (single-shot, no tool
     access), this can call match_bom_line, list_project_audits,
     compare_to_cbam_benchmark, and override_match in sequence, grounded
     entirely in real project data via db.
     """
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    
+    # Cleanup old timestamps and check limit
+    agent_rate_limits[client_ip] = [ts for ts in agent_rate_limits[client_ip] if now - ts < AGENT_RATE_LIMIT_WINDOW]
+    if len(agent_rate_limits[client_ip]) >= AGENT_RATE_LIMIT_MAX_REQS:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Please wait a minute before sending more questions.")
+    agent_rate_limits[client_ip].append(now)
+
     model = get_agent_model()
     result = run_agent_turn(model, payload.history, payload.question, db)
     return {
