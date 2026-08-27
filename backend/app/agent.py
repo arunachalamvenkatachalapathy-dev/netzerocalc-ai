@@ -187,7 +187,13 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
     formatted_history = []
     for msg in chat_history:
         role = msg.get("role", "user")
-        parts = [types.Part.from_text(text=p.get("text", "")) for p in msg.get("parts", [])]
+        
+        # Handle frontend format (content as string) vs old backend format (parts array)
+        if "parts" in msg:
+            parts = [types.Part.from_text(text=p.get("text", "")) for p in msg["parts"] if p.get("text")]
+        else:
+            parts = [types.Part.from_text(text=msg.get("content", ""))]
+            
         formatted_history.append(types.Content(role=role, parts=parts))
 
     config = types.GenerateContentConfig(
