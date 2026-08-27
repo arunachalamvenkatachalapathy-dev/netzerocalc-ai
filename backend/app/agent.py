@@ -44,7 +44,6 @@ CBAM declaration or Scope 1-3 filing.
 
 # --- Tool declarations -------------------------------------------------
 
-_match_bom_line_decl = types.FunctionDeclaration(
 _get_project_context_decl = types.FunctionDeclaration(
     name="get_project_context",
     description=(
