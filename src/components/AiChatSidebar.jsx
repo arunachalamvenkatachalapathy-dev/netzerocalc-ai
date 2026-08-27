@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, Loader2, Info } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { sendAgentChatMessage } from '../services/api.js';
 
 export default function AiChatSidebar({ isOpen, onClose, activeProject }) {
@@ -98,7 +100,15 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject }) {
                   ? 'bg-emerald-600 text-white rounded-br-none' 
                   : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'
               }`}>
-                {msg.content}
+                {msg.role === 'user' ? (
+                  msg.content
+                ) : (
+                  <div className="prose prose-sm prose-emerald max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
               
               {/* Sources Tool Calls */}
