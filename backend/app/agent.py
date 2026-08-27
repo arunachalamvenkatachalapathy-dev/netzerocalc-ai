@@ -192,7 +192,7 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
         formatted_history.append(types.Content(role=role, parts=parts))
 
     chat = client.chats.create(
-        model="gemini-2.5-flash",
+        model="gemini-3.6-flash",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             tools=[TOOLS],
