@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, User, UserCheck, ChevronDown, Database, Activity, 
-  Edit3, Check, X, Server, Cloud, UserCog
+  Edit3, Check, X, Server, Cloud, UserCog, Settings
 } from 'lucide-react';
 import { checkBackendHealth } from '../services/api.js';
 import { isSupabaseConfigured } from '../lib/supabase.js';
@@ -173,14 +173,14 @@ export default function Header({
             <option value="US">US — United States</option>
           </select>
 
-          {/* Genuine User / Operator Profile */}
+          {/* Genuine User / Operator Profile (Settings) */}
           {userProfile.name ? (
             <button 
               onClick={() => setShowProfileModal(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300 active:scale-[0.98] group cursor-pointer"
-              title="Click to edit user profile"
+              title="Settings & Profile"
             >
-              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <Settings className="w-4 h-4 text-emerald-600" />
               <div className="text-left">
                 <div className="text-xs font-bold text-slate-900 leading-none">{userProfile.name}</div>
                 <div className="text-[10px] text-slate-500 leading-none mt-0.5">{userProfile.role}</div>
@@ -191,8 +191,8 @@ export default function Header({
               onClick={() => setShowProfileModal(true)}
               className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <UserCog className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Operator Profile</span>
+              <Settings className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Settings</span>
             </button>
           )}
 
@@ -207,7 +207,7 @@ export default function Header({
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-extrabold text-slate-900">User & Operator Profile</h3>
+                <h3 className="text-base font-extrabold text-slate-900">Settings & Profile</h3>
               </div>
               <button 
                 onClick={() => setShowProfileModal(false)}

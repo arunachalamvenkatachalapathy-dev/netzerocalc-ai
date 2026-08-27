@@ -154,9 +154,9 @@ export default function App() {
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('netzerocalc_user_profile');
     return saved ? JSON.parse(saved) : {
-      name: '',
+      name: 'Arunachalam Venkatachalapathy',
       role: 'Internal Analyst',
-      organization: ''
+      organization: 'ACME Corp'
     };
   });
 
