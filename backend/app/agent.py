@@ -96,7 +96,22 @@ TOOLS = [
     }
 ]
 
+import itertools
+_key_iterator = None
+
 def get_agent_client() -> Groq:
+    global _key_iterator
+    
+    # Check for multiple keys
+    keys_str = os.environ.get("GROQ_API_KEYS")
+    if keys_str:
+        keys = [k.strip() for k in keys_str.split(",") if k.strip()]
+        if keys:
+            if _key_iterator is None:
+                _key_iterator = itertools.cycle(keys)
+            return Groq(api_key=next(_key_iterator))
+            
+    # Fallback to single key
     api_key = os.environ.get("GROQ_API_KEY")
     return Groq(api_key=api_key)
 
@@ -211,13 +226,24 @@ def run_agent_turn(client: Groq, chat_history: list, user_message: str, db: Sess
             tools=TOOLS,
             tool_choice="auto",
             temperature=0.2,
-            max_completion_tokens=2000
+            max_tokens=2000
         )
         
         response_message = response.choices[0].message
         
         if response_message.tool_calls:
-            messages.append(response_message)
+            # Convert object to dict for Groq
+            msg_dict = {"role": "assistant", "content": response_message.content or "", "tool_calls": []}
+            for tc in response_message.tool_calls:
+                msg_dict["tool_calls"].append({
+                    "id": tc.id,
+                    "type": tc.type,
+                    "function": {
+                        "name": tc.function.name,
+                        "arguments": tc.function.arguments
+                    }
+                })
+            messages.append(msg_dict)
             
             for tool_call in response_message.tool_calls:
                 func_name = tool_call.function.name
