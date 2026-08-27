@@ -431,10 +431,17 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
     agent_rate_limits[client_ip].append(now)
 
     client = get_agent_client()
-    result = run_agent_turn(client, payload.history, payload.question, db, getattr(payload, 'project_id', None))
-    return {
-        "answer": result["answer"],
-        "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
-    }
+    try:
+        result = run_agent_turn(client, payload.history, payload.question, db, getattr(payload, 'project_id', None))
+        return {
+            "answer": result["answer"],
+            "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e):
+            raise HTTPException(status_code=429, detail="You have hit the Gemini Free Tier rate limit (20 requests per minute). Please wait 60 seconds and try again.")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
