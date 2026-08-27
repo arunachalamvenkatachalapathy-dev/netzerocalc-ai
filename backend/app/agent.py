@@ -178,10 +178,9 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
         return {"error": str(exc)}
 
 
-def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, db: Session, max_hops: int = 6) -> dict:
+def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, db: Session, project_id: str = None) -> dict:
     """
-    Runs one user turn through the agent, executing tool calls in a loop
-    until the model returns a final text answer or max_hops is hit.
+    Executes a single turn of the agent chat loop using the given history and user message.
     Returns {"answer": str, "tool_calls": [...]}
     """
     
@@ -191,28 +190,37 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
         parts = [types.Part.from_text(text=p.get("text", "")) for p in msg.get("parts", [])]
         formatted_history.append(types.Content(role=role, parts=parts))
 
-    chat = client.chats.create(
-        model="gemini-3.6-flash",
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_INSTRUCTION,
-            tools=[TOOLS],
-            temperature=0.2,
-        ),
-        history=formatted_history
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_INSTRUCTION,
+        tools=[TOOLS],
+        temperature=0.2
     )
-    
-    response = chat.send_message(user_message)
-    tool_trace = []
 
+    if project_id:
+        user_message = f"[System Context: The user is currently working on project_id '{project_id}'. Pass this ID to any tools that require it.]\n\n{user_message}"
+
+    formatted_history.append(types.Content(role="user", parts=[types.Part.from_text(text=user_message)]))
+
+    tool_trace = []
+    max_hops = 3
+    final_text = ""
+    
     for _ in range(max_hops):
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=formatted_history,
+            config=config
+        )
+        
+        # Always append the model's response exactly as is (to preserve thought_signatures natively)
+        if response.candidates and response.candidates[0].content:
+            formatted_history.append(response.candidates[0].content)
+            
         if response.function_calls:
             parts = []
             for fc in response.function_calls:
                 args = fc.args
-                # Ensure args is a dictionary (sometimes it's a structural type)
-                if hasattr(args, "model_dump"):
-                    args = args.model_dump()
-                elif hasattr(args, "__dict__"):
+                if hasattr(args, "__dict__"):
                     args = args.__dict__
                     
                 result = _execute_tool(fc.name, args, db)
@@ -222,14 +230,13 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
                     name=fc.name,
                     response=result
                 )
-                part.function_response.id = "skip_thought_signature_validator"
+                if hasattr(fc, 'id') and fc.id:
+                    part.function_response.id = fc.id
                 parts.append(part)
-            response = chat.send_message(parts)
+            formatted_history.append(types.Content(role="user", parts=parts))
         else:
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+                final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
             break
 
-    final_text = ""
-    if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
-        final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
-        
     return {"answer": final_text, "tool_calls": tool_trace}

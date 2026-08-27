@@ -432,7 +432,7 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
     agent_rate_limits[client_ip].append(now)
 
     client = get_agent_client()
-    result = run_agent_turn(client, payload.history, payload.question, db)
+    result = run_agent_turn(client, payload.history, payload.question, db, getattr(payload, 'project_id', None))
     return {
         "answer": result["answer"],
         "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
