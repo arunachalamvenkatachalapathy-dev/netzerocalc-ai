@@ -7,48 +7,19 @@ every number in its answer comes from a tool return value. This is the
 whole point: bom_service.py / cbam_tools.py stay authoritative, Gemini only
 orchestrates, explains, and recommends.
 
-Requires: google-cloud-aiplatform. Verify the exact import paths below
-against your installed SDK version before relying on them -- Vertex AI's
-GenAI SDK surface has moved more than once; treat this as the shape of the
-integration, confirm the imports match what `pip show google-cloud-aiplatform`
-actually gives you.
+Requires: google-genai. This file has been migrated to use the Free Gemini API
+instead of Vertex AI to eliminate GCP billing costs for the LLM.
 """
 
 import json
 import os
-
-import vertexai
-from vertexai.generative_models import (
-    FunctionDeclaration,
-    GenerativeModel,
-    Part,
-    Tool,
-)
+from google import genai
+from google.genai import types
 from sqlalchemy.orm import Session
 
 from .bom_service import list_project_audits, perform_bom_match, perform_override
 from .cbam_tools import compare_to_cbam_benchmark
 from .schemas import BomLineMatch, OverrideRequest
-
-_initialized = False
-_project_id = None
-_location = None
-
-
-def _ensure_init():
-    """
-    Reads GCP_PROJECT_ID lazily, only when the agent is actually invoked --
-    not at module import time. Previously this crashed the ENTIRE app
-    (every route, not just /agent/chat) if the env var wasn't set, because
-    it ran the instant main.py imported this file.
-    """
-    global _initialized, _project_id, _location
-    if not _initialized:
-        _project_id = os.environ["GCP_PROJECT_ID"]
-        _location = os.environ.get("GCP_LOCATION", "asia-south1")
-        vertexai.init(project=_project_id, location=_location)
-        _initialized = True
-
 
 SYSTEM_INSTRUCTION = """
 You are the NetZeroCalc AI copilot, embedded in a BOM-to-LCI carbon
@@ -73,7 +44,7 @@ CBAM declaration or Scope 1-3 filing.
 
 # --- Tool declarations -------------------------------------------------
 
-_match_bom_line_decl = FunctionDeclaration(
+_match_bom_line_decl = types.FunctionDeclaration(
     name="match_bom_line",
     description=(
         "Runs a single BOM line through the real semantic matching and DQR "
@@ -82,42 +53,42 @@ _match_bom_line_decl = FunctionDeclaration(
         "candidates. Use this when the user gives you a new material/"
         "quantity to assess."
     ),
-    parameters={
-        "type": "object",
-        "properties": {
-            "project_id": {"type": "string"},
-            "raw_bom_input": {"type": "string", "description": "Material/line description, e.g. 'Primary aluminium ingot'"},
-            "quantity": {"type": "number"},
-            "unit": {"type": "string"},
-            "required_unit": {"type": "string"},
-            "database_source": {"type": "string"},
-            "system_model": {"type": "string"},
-            "target_geography": {"type": "string"},
-            "target_year": {"type": "integer"},
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "project_id": types.Schema(type="STRING"),
+            "raw_bom_input": types.Schema(type="STRING", description="Material/line description, e.g. 'Primary aluminium ingot'"),
+            "quantity": types.Schema(type="NUMBER"),
+            "unit": types.Schema(type="STRING"),
+            "required_unit": types.Schema(type="STRING"),
+            "database_source": types.Schema(type="STRING"),
+            "system_model": types.Schema(type="STRING"),
+            "target_geography": types.Schema(type="STRING"),
+            "target_year": types.Schema(type="INTEGER"),
         },
-        "required": ["project_id", "raw_bom_input", "quantity", "unit", "required_unit",
-                     "database_source", "system_model", "target_geography", "target_year"],
-    },
+        required=["project_id", "raw_bom_input", "quantity", "unit", "required_unit",
+                     "database_source", "system_model", "target_geography", "target_year"]
+    )
 )
 
-_list_audits_decl = FunctionDeclaration(
+_list_audits_decl = types.FunctionDeclaration(
     name="list_project_audits",
     description=(
         "Lists all real BOM mapping audit rows for a project, sorted "
         "HIGH-risk first. Use this to find hotspots or answer 'what's in "
         "this project' -- never invent line items."
     ),
-    parameters={
-        "type": "object",
-        "properties": {
-            "project_id": {"type": "string"},
-            "audit_risk_level": {"type": "string", "enum": ["HIGH", "MEDIUM", "LOW"]},
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "project_id": types.Schema(type="STRING"),
+            "audit_risk_level": types.Schema(type="STRING", enum=["HIGH", "MEDIUM", "LOW"]),
         },
-        "required": ["project_id"],
-    },
+        required=["project_id"]
+    )
 )
 
-_cbam_compare_decl = FunctionDeclaration(
+_cbam_compare_decl = types.FunctionDeclaration(
     name="compare_to_cbam_benchmark",
     description=(
         "Compares an ALREADY-COMPUTED emission factor (from match_bom_line "
@@ -126,19 +97,19 @@ _cbam_compare_decl = FunctionDeclaration(
         "Does not compute a new footprint -- only compares one you already "
         "have."
     ),
-    parameters={
-        "type": "object",
-        "properties": {
-            "sector": {"type": "string", "enum": ["Aluminium", "Iron & Steel", "Cement", "Fertilisers", "Hydrogen"]},
-            "computed_emission_factor_kg_co2e_per_unit": {"type": "number"},
-            "quantity_tonnes": {"type": "number"},
-            "product_hint": {"type": "string"},
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "sector": types.Schema(type="STRING", enum=["Aluminium", "Iron & Steel", "Cement", "Fertilisers", "Hydrogen"]),
+            "computed_emission_factor_kg_co2e_per_unit": types.Schema(type="NUMBER"),
+            "quantity_tonnes": types.Schema(type="NUMBER"),
+            "product_hint": types.Schema(type="STRING"),
         },
-        "required": ["sector", "computed_emission_factor_kg_co2e_per_unit", "quantity_tonnes"],
-    },
+        required=["sector", "computed_emission_factor_kg_co2e_per_unit", "quantity_tonnes"]
+    )
 )
 
-_override_decl = FunctionDeclaration(
+_override_decl = types.FunctionDeclaration(
     name="override_match",
     description=(
         "Switches an existing audit row to a different candidate process "
@@ -146,30 +117,28 @@ _override_decl = FunctionDeclaration(
         "the user explicitly picks an alternative -- never on your own "
         "initiative."
     ),
-    parameters={
-        "type": "object",
-        "properties": {
-            "audit_id": {"type": "string"},
-            "process_id": {"type": "string"},
-            "user_id": {"type": "string"},
-            "notes": {"type": "string", "description": "Required: reason for the override"},
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "audit_id": types.Schema(type="STRING"),
+            "process_id": types.Schema(type="STRING"),
+            "user_id": types.Schema(type="STRING"),
+            "notes": types.Schema(type="STRING", description="Required: reason for the override"),
         },
-        "required": ["audit_id", "process_id", "user_id", "notes"],
-    },
+        required=["audit_id", "process_id", "user_id", "notes"]
+    )
 )
 
-TOOLS = Tool(function_declarations=[
+TOOLS = types.Tool(function_declarations=[
     _match_bom_line_decl, _list_audits_decl, _cbam_compare_decl, _override_decl,
 ])
 
 
-def get_agent_model() -> GenerativeModel:
-    _ensure_init()
-    return GenerativeModel(
-        model_name="gemini-2.5-pro",
-        system_instruction=SYSTEM_INSTRUCTION,
-        tools=[TOOLS],
-    )
+def get_agent_client() -> genai.Client:
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return genai.Client()
+    return genai.Client(api_key=api_key)
 
 
 def _execute_tool(name: str, args: dict, db: Session) -> dict:
@@ -205,32 +174,60 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
             return {"error": f"Unknown tool: {name}"}
     except ValueError as exc:
         return {"error": str(exc)}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
-def run_agent_turn(model: GenerativeModel, chat_history: list, user_message: str, db: Session, max_hops: int = 6) -> dict:
+def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, db: Session, max_hops: int = 6) -> dict:
     """
     Runs one user turn through the agent, executing tool calls in a loop
-    (multi-hop) until the model returns a final text answer or max_hops is
-    hit. Returns {"answer": str, "tool_calls": [...]} -- tool_calls is
-    surfaced to the frontend so the "Sources" panel can show exactly which
-    real backend calls produced the numbers in the answer.
+    until the model returns a final text answer or max_hops is hit.
+    Returns {"answer": str, "tool_calls": [...]}
     """
-    chat = model.start_chat(history=chat_history)
+    
+    formatted_history = []
+    for msg in chat_history:
+        role = msg.get("role", "user")
+        parts = [types.Part.from_text(text=p.get("text", "")) for p in msg.get("parts", [])]
+        formatted_history.append(types.Content(role=role, parts=parts))
+
+    chat = client.chats.create(
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            tools=[TOOLS],
+            temperature=0.2,
+        ),
+        history=formatted_history
+    )
+    
     response = chat.send_message(user_message)
     tool_trace = []
 
     for _ in range(max_hops):
-        candidate = response.candidates[0]
-        function_calls = [p.function_call for p in candidate.content.parts if p.function_call]
-        if not function_calls:
+        if response.function_calls:
+            parts = []
+            for fc in response.function_calls:
+                args = fc.args
+                # Ensure args is a dictionary (sometimes it's a structural type)
+                if hasattr(args, "model_dump"):
+                    args = args.model_dump()
+                elif hasattr(args, "__dict__"):
+                    args = args.__dict__
+                    
+                result = _execute_tool(fc.name, args, db)
+                tool_trace.append({"tool": fc.name, "args": args, "result": result})
+                
+                parts.append(types.Part.from_function_response(
+                    name=fc.name,
+                    response=result
+                ))
+            response = chat.send_message(parts)
+        else:
             break
-        parts = []
-        for fc in function_calls:
-            args = dict(fc.args)
-            result = _execute_tool(fc.name, args, db)
-            tool_trace.append({"tool": fc.name, "args": args, "result": result})
-            parts.append(Part.from_function_response(name=fc.name, response={"content": json.dumps(result)}))
-        response = chat.send_message(parts)
 
-    final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
-    return {"answer": final_text, "tool_calls": tool_trace, "history": chat.history}
+    final_text = ""
+    if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+        final_text = "".join(p.text for p in response.candidates[0].content.parts if p.text)
+        
+    return {"answer": final_text, "tool_calls": tool_trace}

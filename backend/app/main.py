@@ -17,7 +17,7 @@ from .database import Base, engine, get_db
 from .matching import EMBEDDING_MODEL, dqr_disambiguate, retrieve_candidates
 from .models import BomMappingAudit, GhgProject, LciProcess, Project, User, now_utc
 from .schemas import AiChatRequest, BomLineMatch, GhgProjectCreate, LoginRequest, OverrideRequest, ProjectCreate, RejectRequest, ReviewRequest, UserCreate, AgentChatRequest, BatchMatchRequest
-from .agent import get_agent_model, run_agent_turn
+from .agent import get_agent_client, run_agent_turn
 from .bom_service import perform_bom_match, perform_override
 from .units import convert_unit
 
@@ -431,8 +431,8 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please wait a minute before sending more questions.")
     agent_rate_limits[client_ip].append(now)
 
-    model = get_agent_model()
-    result = run_agent_turn(model, payload.history, payload.question, db)
+    client = get_agent_client()
+    result = run_agent_turn(client, payload.history, payload.question, db)
     return {
         "answer": result["answer"],
         "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
