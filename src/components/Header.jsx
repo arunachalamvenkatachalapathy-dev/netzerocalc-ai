@@ -172,16 +172,6 @@ export default function Header({
             <option value="EU">EU — European Union</option>
             <option value="US">US — United States</option>
           </select>
-
-          {/* Settings Button */}
-          <button 
-            onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300 active:scale-[0.98] group cursor-pointer text-slate-700 font-bold text-xs"
-            title="Settings & Profile"
-          >
-            <Settings className="w-4 h-4 text-emerald-600" />
-            <span>Settings</span>
-          </button>
         </div>
 
       </div>
