@@ -102,9 +102,59 @@ def compare_to_cbam_benchmark(
         "verified_data_advantage_tco2e_per_tonne": round(gap_vs_eu_default, 4),
         # Positive = your verified number is better than the EU penalty default,
         # i.e. reporting your real number (instead of letting the importer
-        # fall back to the default) saves this many tCO2e/tonne of exposure.
         "gap_to_best_in_class_tco2e_per_tonne": round(gap_vs_best_in_class, 4),
         "total_estimated_tco2e": round(computed_t_per_t * float(quantity_tonnes), 3),
         "regulation_reference": row["regulationRef"],
         "notes": row["notes"],
+    }
+
+
+def calculate_cbam_tax_financial_liability(
+    quantity_tonnes: float,
+    emission_factor_tco2e_per_tonne: float,
+    sector: str = "Aluminium",
+    eu_ets_carbon_price_eur: float = 85.00,
+    carbon_price_paid_abroad_eur: float = 0.00,
+    phase_in_year: int = 2026
+) -> dict:
+    """
+    AGENT TOOL. Calculates the estimated EU CBAM financial certificate liability in EUR (€).
+    Uses official EU Regulation 2023/956 phase-in free allowance rules.
+    """
+    total_embedded_tco2e = float(quantity_tonnes) * float(emission_factor_tco2e_per_tonne)
+    
+    free_allowance_rates = {
+        2026: 0.975,
+        2027: 0.950,
+        2028: 0.900,
+        2029: 0.775,
+        2030: 0.515,
+        2031: 0.390,
+        2032: 0.265,
+        2033: 0.140,
+        2034: 0.000
+    }
+    
+    free_rate = free_allowance_rates.get(phase_in_year, 0.975 if phase_in_year <= 2026 else 0.0)
+    payable_ratio = 1.0 - free_rate
+    
+    net_taxable_tco2e = max(0.0, total_embedded_tco2e * payable_ratio)
+    gross_liability_eur = net_taxable_tco2e * float(eu_ets_carbon_price_eur)
+    abroad_credit_eur = float(quantity_tonnes) * float(carbon_price_paid_abroad_eur)
+    final_cbam_tax_eur = max(0.0, gross_liability_eur - abroad_credit_eur)
+    full_tax_post_2034_eur = total_embedded_tco2e * float(eu_ets_carbon_price_eur)
+    
+    return {
+        "sector": sector,
+        "quantity_tonnes": round(quantity_tonnes, 2),
+        "emission_factor_tco2e_per_tonne": round(emission_factor_tco2e_per_tonne, 4),
+        "total_embedded_tco2e": round(total_embedded_tco2e, 3),
+        "phase_in_year": phase_in_year,
+        "free_allowance_percentage": f"{free_rate * 100:.1f}%",
+        "taxable_cbam_tco2e": round(net_taxable_tco2e, 3),
+        "eu_ets_carbon_price_eur_per_tonne": float(eu_ets_carbon_price_eur),
+        "estimated_cbam_tax_2026_phase_in_eur": round(final_cbam_tax_eur, 2),
+        "estimated_cbam_tax_full_post2034_eur": round(full_tax_post_2034_eur, 2),
+        "currency": "EUR (€)",
+        "regulation_reference": "EU CBAM Regulation 2023/956 & EU ETS Directive 2003/87/EC"
     }

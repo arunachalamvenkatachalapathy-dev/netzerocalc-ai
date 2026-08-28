@@ -17,7 +17,7 @@ from google.genai import types
 from sqlalchemy.orm import Session
 
 from .bom_service import list_project_audits, perform_bom_match, perform_override
-from .cbam_tools import compare_to_cbam_benchmark
+from .cbam_tools import compare_to_cbam_benchmark, calculate_cbam_tax_financial_liability
 from .schemas import BomLineMatch, OverrideRequest
 
 SYSTEM_INSTRUCTION = """
@@ -75,6 +75,21 @@ TOOLS = [{
                     "notes": {"type": "STRING", "description": "Required: reason for the override"}
                 },
                 "required": ["audit_id", "process_id", "user_id", "notes"]
+            }
+        },
+        {
+            "name": "calculate_cbam_tax",
+            "description": "Calculates the estimated EU CBAM tax and financial certificate liability in EUR (€) for a given material quantity and carbon footprint, using official EU ETS carbon price (€85/tCO2e baseline) and EU Regulation 2023/956 phase-in free allowance rules. Call this whenever the user asks to calculate or estimate CBAM tax, financial liability, or certificate costs.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "quantity_tonnes": {"type": "NUMBER", "description": "Quantity of imported goods in metric tonnes"},
+                    "emission_factor_tco2e_per_tonne": {"type": "NUMBER", "description": "Embedded emission factor in tCO2e per tonne of product"},
+                    "sector": {"type": "STRING", "description": "CBAM sector (Aluminium, Iron & Steel, Cement, Fertilisers, Hydrogen)"},
+                    "eu_ets_carbon_price_eur": {"type": "NUMBER", "description": "Optional EU ETS carbon price in EUR/tCO2e (defaults to 85.00)"},
+                    "carbon_price_paid_abroad_eur": {"type": "NUMBER", "description": "Optional carbon price already paid in country of origin per tonne"}
+                },
+                "required": ["quantity_tonnes", "emission_factor_tco2e_per_tonne"]
             }
         }
     ]
@@ -171,6 +186,19 @@ def _execute_tool(name: str, args: dict, db: Session, default_project_id: str = 
             audit = perform_override(args["audit_id"], payload, db)
             return {"audit_id": audit.id, "matched_process_name": audit.matched_process_name,
                     "result_tco2e": audit.result_tco2e}
+        elif name == "calculate_cbam_tax":
+            qty = float(args.get("quantity_tonnes", 1.0))
+            ef = float(args.get("emission_factor_tco2e_per_tonne", 1.0))
+            sec = str(args.get("sector", "Aluminium"))
+            ets_price = float(args.get("eu_ets_carbon_price_eur", 85.00))
+            abroad_price = float(args.get("carbon_price_paid_abroad_eur", 0.0))
+            return calculate_cbam_tax_financial_liability(
+                quantity_tonnes=qty,
+                emission_factor_tco2e_per_tonne=ef,
+                sector=sec,
+                eu_ets_carbon_price_eur=ets_price,
+                carbon_price_paid_abroad_eur=abroad_price
+            )
         else:
             return {"error": f"Unknown tool: {name}"}
     except Exception as exc:
