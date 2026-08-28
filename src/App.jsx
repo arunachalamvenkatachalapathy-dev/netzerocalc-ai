@@ -657,6 +657,11 @@ export default function App() {
         </button>
       )}
 
+      {/* Footer */}
+      <footer className="mt-12 py-6 text-center text-xs font-medium text-slate-400">
+        &copy; {new Date().getFullYear()} Arunachalam Venkatachalapathy. All rights reserved.
+      </footer>
+
     </div>
   );
 }
