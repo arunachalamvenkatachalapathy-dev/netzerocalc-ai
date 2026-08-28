@@ -104,7 +104,7 @@ def compare_to_cbam_benchmark(
         # i.e. reporting your real number (instead of letting the importer
         # fall back to the default) saves this many tCO2e/tonne of exposure.
         "gap_to_best_in_class_tco2e_per_tonne": round(gap_vs_best_in_class, 4),
-        "total_estimated_tco2e": round(computed_t_per_t * quantity_tonnes, 3),
+        "total_estimated_tco2e": round(computed_t_per_t * float(quantity_tonnes), 3),
         "regulation_reference": row["regulationRef"],
         "notes": row["notes"],
     }
