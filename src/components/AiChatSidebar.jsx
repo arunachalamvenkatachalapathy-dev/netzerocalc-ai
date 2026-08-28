@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { sendAgentChatMessage } from '../services/api.js';
 
-export default function AiChatSidebar({ isOpen, onClose, activeProject }) {
+export default function AiChatSidebar({ isOpen, onClose, activeProject, screenContext }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -39,7 +39,8 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject }) {
       const response = await sendAgentChatMessage(
         activeProject?.id || 'default_project',
         userMessage.content,
-        messages.map(m => ({ role: m.role, content: m.content }))
+        messages.map(m => ({ role: m.role, content: m.content })),
+        screenContext
       );
 
       setMessages([...newHistory, { 

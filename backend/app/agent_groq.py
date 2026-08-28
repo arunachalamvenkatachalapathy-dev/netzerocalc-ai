@@ -12,8 +12,8 @@ Migrated to Groq (LLaMA 3) to eliminate rate limit constraints.
 
 import json
 import os
-from google import genai
-from google.genai import types
+from groq import Groq
+
 from sqlalchemy.orm import Session
 
 from .bom_service import list_project_audits, perform_bom_match, perform_override
@@ -163,7 +163,7 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
         return {"error": str(exc)}
 
 
-def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, db: Session, project_id: str = None, screen_context: dict = None) -> dict:
+def run_agent_turn_groq(client: Groq, chat_history: list, user_message: str, db: Session, project_id: str = None, screen_context: dict = None) -> dict:
     messages = []
     
     for msg in chat_history:

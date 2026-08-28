@@ -411,7 +411,7 @@ async def ai_chat(payload: AiChatRequest):
 # Since Cloud Run is capped at max-instances=1, this global dictionary works fine.
 agent_rate_limits = defaultdict(list)
 AGENT_RATE_LIMIT_WINDOW = 60  # seconds
-AGENT_RATE_LIMIT_MAX_REQS = 10  # 10 requests per minute per IP
+AGENT_RATE_LIMIT_MAX_REQS = 60  # increased to match Gemini's generous rate limit
 
 @app.post("/agent/chat")
 def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depends(get_db)):
@@ -432,16 +432,34 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
 
     client = get_agent_client()
     try:
-        result = run_agent_turn(client, payload.history, payload.question, db, getattr(payload, 'project_id', None))
+        result = run_agent_turn(client, payload.history, payload.question, db, getattr(payload, 'project_id', None), screen_context=payload.screen_context)
         return {
             "answer": result["answer"],
             "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
         }
     except Exception as e:
         import traceback
+        print("Gemini API failed, falling back to Groq...")
         traceback.print_exc()
-        if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e) or "rate_limit" in str(e).lower():
-            raise HTTPException(status_code=429, detail="You have hit the Groq API rate limit. Please wait a moment and try again.")
-        raise HTTPException(status_code=500, detail=str(e))
+        
+        try:
+            from app.agent_groq import get_groq_client, run_agent_turn_groq
+            groq_client = get_groq_client()
+            result = run_agent_turn_groq(groq_client, payload.history, payload.question, db, getattr(payload, 'project_id', None), screen_context=payload.screen_context)
+            return {
+                "answer": result["answer"],
+                "tool_calls": result["tool_calls"],
+            }
+        except Exception as groq_e:
+            print("Groq fallback also failed:")
+            traceback.print_exc()
+            if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e) or "rate_limit" in str(e).lower():
+                raise HTTPException(status_code=429, detail="You have hit the Gemini API rate limit, and the Groq fallback also failed. Please wait a moment and try again.")
+            raise HTTPException(status_code=500, detail=str(e))
 
 
+
+@app.get('/debug/version')
+def debug_version():
+    import google.genai as genai_pkg
+    return {'google_genai': genai_pkg.__version__}

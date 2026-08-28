@@ -645,6 +645,30 @@ export default function App() {
         isOpen={isAiPanelOpen}
         onClose={() => setIsAiPanelOpen(false)}
         activeProject={activeProject}
+        screenContext={{
+          activeTab,
+          activeProjectId: activeProject.id,
+          projectName: activeProject.projectName,
+          companyName: activeProject.companyName,
+          activePeriodYear,
+          totalFootprintTco2e: Number(currentPeriodTotal.toFixed(3)),
+          scopeBreakdownTco2e: {
+            scope1: Number(currentBOM.filter(i => i.scope === 'Scope 1').reduce((acc, i) => acc + (((Number(i.qty) || 0) * (Number(i.ef) || 0)) / 1000), 0).toFixed(3)),
+            scope2: Number(currentBOM.filter(i => i.scope === 'Scope 2').reduce((acc, i) => acc + (((Number(i.qty) || 0) * (Number(i.ef) || 0)) / 1000), 0).toFixed(3)),
+            scope3: Number(currentBOM.filter(i => i.scope === 'Scope 3').reduce((acc, i) => acc + (((Number(i.qty) || 0) * (Number(i.ef) || 0)) / 1000), 0).toFixed(3)),
+          },
+          baseYearTotalTco2e: Number(baseYearTotal.toFixed(3)),
+          yoyDeltaPct: Number(yoyDeltaPct.toFixed(1)),
+          displayedBomItems: currentBOM.map(i => ({
+            name: i.name,
+            qty: i.qty,
+            unit: i.unit,
+            process: i.process,
+            emissionFactor: i.ef,
+            scope: i.scope,
+            calculatedTco2e: Number((((Number(i.qty) || 0) * (Number(i.ef) || 0)) / 1000).toFixed(3))
+          }))
+        }}
       />
       
       {!isAiPanelOpen && (

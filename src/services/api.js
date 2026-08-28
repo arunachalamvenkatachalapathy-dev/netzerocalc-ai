@@ -54,11 +54,11 @@ export async function matchFactorsBatch(lines) {
 
   return await res.json();
 }
-export async function sendAgentChatMessage(project_id, question, history = []) {
+export async function sendAgentChatMessage(project_id, question, history = [], screen_context = null) {
   const res = await fetch(`${API_BASE}/agent/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ project_id, question, history })
+    body: JSON.stringify({ project_id, question, history, screen_context })
   });
 
   if (!res.ok) {

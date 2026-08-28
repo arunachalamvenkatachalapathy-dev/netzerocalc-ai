@@ -74,6 +74,7 @@ class AgentChatRequest(BaseModel):
     project_id: str
     question: str
     history: list[dict] = []
+    screen_context: dict | None = None
 
 class BatchMatchRequest(BaseModel):
     lines: list[BomLineMatch]
