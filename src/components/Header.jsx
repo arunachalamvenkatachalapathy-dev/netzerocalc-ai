@@ -173,35 +173,17 @@ export default function Header({
             <option value="US">US — United States</option>
           </select>
 
-
-
-        </div>
-
-      </div>
-      
-      {/* Floating Settings Button in Top Right Corner */}
-      <div className="fixed top-3 right-4 z-[60]">
-        {userProfile.name ? (
+          {/* Settings Button */}
           <button 
             onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all duration-300 active:scale-[0.98] group cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300 active:scale-[0.98] group cursor-pointer text-slate-700 font-bold text-xs"
             title="Settings & Profile"
           >
             <Settings className="w-4 h-4 text-emerald-600" />
-            <div className="text-left hidden sm:block">
-              <div className="text-xs font-bold text-slate-900 leading-none">{userProfile.name}</div>
-              <div className="text-[10px] text-slate-500 leading-none mt-0.5">{userProfile.role}</div>
-            </div>
+            <span>Settings</span>
           </button>
-        ) : (
-          <button 
-            onClick={() => setShowProfileModal(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <Settings className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Settings</span>
-          </button>
-        )}
+        </div>
+
       </div>
 
       {/* User Profile Modal */}
