@@ -69,7 +69,7 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
       )}
 
       {/* Sidebar Panel */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-[480px] lg:w-[540px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         
@@ -81,7 +81,7 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
             </div>
             <div>
               <h2 className="font-bold text-slate-800 text-sm">AI Copilot</h2>
-              <p className="text-[10px] text-slate-500 font-medium">Powered by Gemini Vertex AI</p>
+              <p className="text-[10px] text-slate-500 font-medium">Powered by Gemma 4 26B & Groq Fallback</p>
             </div>
           </div>
           <button 
@@ -96,16 +96,33 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+              <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${
                 msg.role === 'user' 
-                  ? 'bg-emerald-600 text-white rounded-br-none' 
-                  : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'
+                  ? 'bg-emerald-600 text-white rounded-br-none shadow-sm' 
+                  : 'bg-white border border-slate-200/90 text-slate-700 rounded-bl-none shadow-sm'
               }`}>
                 {msg.role === 'user' ? (
                   msg.content
                 ) : (
-                  <div className="prose prose-sm prose-emerald max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-800">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <div className="prose prose-sm prose-emerald max-w-none prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:text-slate-100">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({node, ...props}) => (
+                          <div className="overflow-x-auto my-3 rounded-lg border border-slate-200 shadow-sm bg-white">
+                            <table className="min-w-full divide-y divide-slate-200 text-xs text-left border-collapse" {...props} />
+                          </div>
+                        ),
+                        thead: ({node, ...props}) => <thead className="bg-slate-100/90 font-bold text-slate-700 border-b border-slate-200" {...props} />,
+                        th: ({node, ...props}) => <th className="px-3 py-2.5 font-bold text-slate-700 border-b border-slate-200 text-xs tracking-wider" {...props} />,
+                        td: ({node, ...props}) => <td className="px-3 py-2 text-slate-600 border-b border-slate-100 text-xs align-top whitespace-normal" {...props} />,
+                        code: ({node, inline, ...props}) => (
+                          inline 
+                            ? <code className="bg-slate-100 text-emerald-700 font-mono text-[11px] px-1.5 py-0.5 rounded border border-slate-200" {...props} />
+                            : <code className="font-mono text-xs" {...props} />
+                        )
+                      }}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   </div>
@@ -114,9 +131,9 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
               
               {/* Sources Tool Calls */}
               {msg.sources && msg.sources.length > 0 && (
-                <div className="mt-2 flex flex-col gap-1.5 w-[85%]">
+                <div className="mt-2 flex flex-col gap-1.5 w-[92%]">
                   {msg.sources.map((source, sIdx) => (
-                    <div key={sIdx} className="flex items-start gap-1.5 bg-slate-100/80 px-2 py-1.5 rounded-md border border-slate-200">
+                    <div key={sIdx} className="flex items-start gap-1.5 bg-slate-100/80 px-2.5 py-1.5 rounded-md border border-slate-200">
                       <Info size={12} className="text-emerald-600 mt-0.5 shrink-0" />
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-slate-600">{source.tool_name}</span>
