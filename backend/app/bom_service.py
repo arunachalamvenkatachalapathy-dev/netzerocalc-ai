@@ -26,8 +26,17 @@ def perform_bom_match(payload: BomLineMatch, db: Session) -> BomMappingAudit:
     (callers translate this to whatever error shape they need — HTTPException
     for the route, a tool-error string for the agent).
     """
-    if not db.get(Project, payload.project_id):
-        raise ValueError(f"Project not found: {payload.project_id}")
+    proj = db.get(Project, payload.project_id)
+    if not proj:
+        proj = Project(
+            id=payload.project_id,
+            project_name="Corporate Carbon Audit & Decarbonization Plan",
+            default_target_geography=payload.target_geography or "US",
+            default_target_year=payload.target_year or 2024
+        )
+        db.add(proj)
+        db.commit()
+        db.refresh(proj)
 
     try:
         converted = convert_unit(payload.quantity, payload.unit, payload.required_unit)

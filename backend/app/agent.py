@@ -84,13 +84,14 @@ def get_agent_client() -> genai.Client:
     api_key = os.environ.get('GEMINI_API_KEY')
     return genai.Client(api_key=api_key)
 
-def _execute_tool(name: str, args: dict, db: Session) -> dict:
+def _execute_tool(name: str, args: dict, db: Session, default_project_id: str = "proj_default") -> dict:
     try:
         if name.startswith("default_api:"):
             name = name.replace("default_api:", "", 1)
             
         if name == "get_project_context":
-            rows = list_project_audits(args["project_id"], db, None)
+            proj_id = args.get("project_id") or default_project_id
+            rows = list_project_audits(proj_id, db, None)
             
             results = []
             for r in rows:
@@ -123,6 +124,19 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
             return {"project_audits_overview": results}
             
         elif name == "map_bom_line":
+            if not args.get("project_id"):
+                args["project_id"] = default_project_id
+            if "required_unit" not in args:
+                args["required_unit"] = "kg"
+            if "database_source" not in args:
+                args["database_source"] = "USLCI"
+            if "system_model" not in args:
+                args["system_model"] = "Cut-off"
+            if "target_geography" not in args:
+                args["target_geography"] = "US"
+            if "target_year" not in args:
+                args["target_year"] = 2024
+
             payload = BomLineMatch(**args)
             audit = perform_bom_match(payload, db)
             result = {
@@ -214,7 +228,7 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
                 func_name = tc.name
                 func_args = tc.args
                 
-                result = _execute_tool(func_name, func_args, db)
+                result = _execute_tool(func_name, func_args, db, project_id or "proj_default")
                 tool_trace.append({"tool": func_name, "args": func_args, "result": result})
                 
                 function_responses.append(

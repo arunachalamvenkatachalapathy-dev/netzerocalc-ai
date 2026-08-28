@@ -630,6 +630,7 @@ export default function App() {
         onClose={() => setIsImportModalOpen(false)}
         onImportItems={handleImportItems}
         showToast={showToast}
+        onOpenAiCopilot={() => setIsAiPanelOpen(true)}
       />
 
       <GoogleSheetsModal 
