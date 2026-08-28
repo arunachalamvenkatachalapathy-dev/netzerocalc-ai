@@ -60,7 +60,7 @@ def perform_bom_match(payload: BomLineMatch, db: Session) -> BomMappingAudit:
 
     result_tco2e = None
     if matched is not None and matched.emission_factor is not None:
-        result_tco2e = (converted.quantity * matched.emission_factor) / 1000
+        result_tco2e = (float(converted.quantity) * matched.emission_factor) / 1000
 
     candidate_options = [
         {
