@@ -221,7 +221,7 @@ def run_agent_turn(client: Groq, chat_history: list, user_message: str, db: Sess
     
     for _ in range(max_hops):
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
