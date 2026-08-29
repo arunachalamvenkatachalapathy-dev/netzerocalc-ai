@@ -39,15 +39,14 @@ def geography_tier(candidate_geo: str, target_geo: str) -> int:
 def retrieve_candidates(processes: list[LciProcess], query: str, unit: str, source: str, system_model: str, target_geo: str) -> list[dict]:
     query_embedding = embed_text(query)
     candidates = []
+    
+    # Relax strict matching so unit or source variations match the closest active LCI process
     for process in processes:
         if not process.is_active:
             continue
-        if process.database_source != source or process.system_model != system_model:
-            continue
-        if process.reference_unit != unit or process.embedding_model != EMBEDDING_MODEL:
-            continue
         score = cosine_similarity(query_embedding, process.embedding or [])
         candidates.append({"process": process, "similarity_score": round(score, 4), "geography_tier": geography_tier(process.geography, target_geo)})
+
     return sorted(candidates, key=lambda item: (item["geography_tier"], -item["similarity_score"]))[:5]
 
 
