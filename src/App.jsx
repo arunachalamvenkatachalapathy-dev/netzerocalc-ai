@@ -8,7 +8,7 @@ import ProjectsView from './components/ProjectsView.jsx';
 import ComplianceView from './components/ComplianceView.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import GoogleSheetsModal from './components/GoogleSheetsModal.jsx';
-import TutorialModal from './components/TutorialModal.jsx';
+import TutorialGuideDock from './components/TutorialGuideDock.jsx';
 import CbamView from './components/CbamView.jsx';
 import DqrDashboard from './components/DqrDashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -132,14 +132,21 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState('workbench');
   const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('netzerocalc_projects');
-    if (!saved) return INITIAL_PROJECTS;
-    try {
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed.map(normalizeProject) : INITIAL_PROJECTS;
-    } catch {
-      return INITIAL_PROJECTS;
+    const saved = localStorage.getItem('netzerocalc_v3_projects');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(normalizeProject);
+        }
+      } catch {}
     }
+    // Clean up any legacy dummy cache from prior sessions
+    try {
+      localStorage.removeItem('netzerocalc_projects');
+      localStorage.removeItem('netzerocalc_v2_projects');
+    } catch {}
+    return INITIAL_PROJECTS;
   });
   const [activeProjectId, setActiveProjectId] = useState(() => {
     return localStorage.getItem('netzerocalc_active_proj_id') || 'proj_default';
@@ -177,11 +184,9 @@ export default function App() {
   };
 
   const handleStartTutorial = () => {
-    if (currentBOM.length === 0) {
-      setCurrentBOM(DEMO_BOM_2024);
-      showToast('Loaded sample demo dataset for interactive tutorial.');
-    }
+    setCurrentBOM(DEMO_BOM_2024);
     setIsTutorialOpen(true);
+    showToast('Loaded demonstration dataset for interactive walkthrough.');
   };
 
   const handleClearAllData = () => {
@@ -370,7 +375,7 @@ export default function App() {
 
   // LocalStorage Persist
   useEffect(() => {
-    localStorage.setItem('netzerocalc_projects', JSON.stringify(projects));
+    localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
   }, [projects]);
 
   useEffect(() => {
@@ -658,9 +663,10 @@ export default function App() {
         showToast={showToast}
       />
 
-      <TutorialModal 
+      <TutorialGuideDock 
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
+        activeTab={activeTab}
         onNavigateTab={(tab) => setActiveTab(tab)}
         onLoadDemoData={() => setCurrentBOM(DEMO_BOM_2024)}
         onClearData={handleClearAllData}
