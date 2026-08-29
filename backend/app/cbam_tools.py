@@ -81,11 +81,9 @@ def compare_to_cbam_benchmark(
                       f"Fertilisers, Hydrogen).",
         }
 
-    # Benchmarks are tCO2e/tonne; computed factor is assumed kgCO2e/unit
-    # already converted to a per-tonne basis by the caller via bom_service's
-    # unit conversion -- if the caller's unit isn't tonnes, this comparison
-    # is not meaningful and the agent should say so, not silently convert.
-    computed_t_per_t = computed_emission_factor_kg_co2e_per_unit / 1000.0
+    # Benchmarks are tCO2e/tonne.
+    # Note: 1 kgCO2e/kg is mathematically equal to 1 tCO2e/tonne (1000 kgCO2e / 1000 kg = 1 tCO2e/tonne).
+    computed_t_per_t = float(computed_emission_factor_kg_co2e_per_unit)
 
     gap_vs_eu_default = row["euDefaultBenchmark"] - computed_t_per_t
     gap_vs_best_in_class = computed_t_per_t - row["euEtsBestInClass"]

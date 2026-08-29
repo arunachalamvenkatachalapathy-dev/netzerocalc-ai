@@ -69,7 +69,13 @@ def perform_bom_match(payload: BomLineMatch, db: Session) -> BomMappingAudit:
 
     result_tco2e = None
     if matched is not None and matched.emission_factor is not None:
-        result_tco2e = (float(converted.quantity) * float(matched.emission_factor)) / 1000
+        qty = float(converted.quantity)
+        ef = float(matched.emission_factor)
+        unit = (converted.unit or "").lower()
+        if unit in ["t", "tonne", "tonnes"]:
+            result_tco2e = qty * ef
+        else:
+            result_tco2e = (qty * ef) / 1000.0
 
     candidate_options = [
         {
@@ -136,7 +142,13 @@ def perform_override(audit_id: str, payload: OverrideRequest, db: Session) -> Bo
     audit.matched_emission_factor = process.emission_factor
     audit.matched_data_quality_status = process.data_quality_status
     if audit.converted_quantity is not None and process.emission_factor is not None:
-        audit.result_tco2e = (float(audit.converted_quantity) * process.emission_factor) / 1000
+        qty = float(audit.converted_quantity)
+        ef = float(process.emission_factor)
+        unit = (audit.converted_unit or "").lower()
+        if unit in ["t", "tonne", "tonnes"]:
+            audit.result_tco2e = qty * ef
+        else:
+            audit.result_tco2e = (qty * ef) / 1000.0
     else:
         audit.result_tco2e = None
     audit.is_human_approved = True

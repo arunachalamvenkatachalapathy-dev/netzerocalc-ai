@@ -233,7 +233,7 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
     final_text = ""
     
     chat = client.chats.create(
-        model="gemma-4-26b-a4b-it",
+        model="gemini-3.5-flash",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             tools=TOOLS,
@@ -275,4 +275,4 @@ def run_agent_turn(client: genai.Client, chat_history: list, user_message: str, 
             final_text = response.text
             break
 
-    return {"answer": final_text, "tool_calls": tool_trace}
+    return {"answer": final_text, "tool_calls": tool_trace, "model_used": "gemini-3.5-flash"}

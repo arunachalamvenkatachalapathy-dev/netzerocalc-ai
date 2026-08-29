@@ -17,7 +17,7 @@ from groq import Groq
 from sqlalchemy.orm import Session
 
 from .bom_service import list_project_audits, perform_bom_match, perform_override
-from .cbam_tools import compare_to_cbam_benchmark
+from .cbam_tools import compare_to_cbam_benchmark, calculate_cbam_tax_financial_liability
 from .schemas import BomLineMatch, OverrideRequest
 
 SYSTEM_INSTRUCTION = """
@@ -76,6 +76,21 @@ TOOLS = [{
                 },
                 "required": ["audit_id", "process_id", "user_id", "notes"]
             }
+        },
+        {
+            "name": "calculate_cbam_tax",
+            "description": "Calculates the estimated EU CBAM tax and financial certificate liability in EUR (€) for a given material quantity and carbon footprint, using official EU ETS carbon price (€85/tCO2e baseline) and EU Regulation 2023/956 phase-in free allowance rules. Call this whenever the user asks to calculate or estimate CBAM tax, financial liability, or certificate costs.",
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "quantity_tonnes": {"type": "NUMBER", "description": "Quantity of imported goods in metric tonnes"},
+                    "emission_factor_tco2e_per_tonne": {"type": "NUMBER", "description": "Embedded emission factor in tCO2e per tonne of product"},
+                    "sector": {"type": "STRING", "description": "CBAM sector (Aluminium, Iron & Steel, Cement, Fertilisers, Hydrogen)"},
+                    "eu_ets_carbon_price_eur": {"type": "NUMBER", "description": "Optional EU ETS carbon price in EUR/tCO2e (defaults to 85.00)"},
+                    "carbon_price_paid_abroad_eur": {"type": "NUMBER", "description": "Optional carbon price already paid in country of origin per tonne"}
+                },
+                "required": ["quantity_tonnes", "emission_factor_tco2e_per_tonne"]
+            }
         }
     ]
 }]
@@ -84,13 +99,14 @@ def get_agent_client() -> genai.Client:
     api_key = os.environ.get('GEMINI_API_KEY')
     return genai.Client(api_key=api_key)
 
-def _execute_tool(name: str, args: dict, db: Session) -> dict:
+def _execute_tool(name: str, args: dict, db: Session, default_project_id: str = "proj_default") -> dict:
     try:
         if name.startswith("default_api:"):
             name = name.replace("default_api:", "", 1)
             
         if name == "get_project_context":
-            rows = list_project_audits(args["project_id"], db, None)
+            proj_id = args.get("project_id") or default_project_id
+            rows = list_project_audits(proj_id, db, None)
             
             results = []
             for r in rows:
@@ -123,6 +139,19 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
             return {"project_audits_overview": results}
             
         elif name == "map_bom_line":
+            if not args.get("project_id"):
+                args["project_id"] = default_project_id
+            if "required_unit" not in args:
+                args["required_unit"] = "kg"
+            if "database_source" not in args:
+                args["database_source"] = "USLCI"
+            if "system_model" not in args:
+                args["system_model"] = "Cut-off"
+            if "target_geography" not in args:
+                args["target_geography"] = "US"
+            if "target_year" not in args:
+                args["target_year"] = 2024
+
             payload = BomLineMatch(**args)
             audit = perform_bom_match(payload, db)
             result = {
@@ -157,6 +186,19 @@ def _execute_tool(name: str, args: dict, db: Session) -> dict:
             audit = perform_override(args["audit_id"], payload, db)
             return {"audit_id": audit.id, "matched_process_name": audit.matched_process_name,
                     "result_tco2e": audit.result_tco2e}
+        elif name == "calculate_cbam_tax":
+            qty = float(args.get("quantity_tonnes", 1.0))
+            ef = float(args.get("emission_factor_tco2e_per_tonne", 1.0))
+            sec = str(args.get("sector", "Aluminium"))
+            ets_price = float(args.get("eu_ets_carbon_price_eur", 85.00))
+            abroad_price = float(args.get("carbon_price_paid_abroad_eur", 0.0))
+            return calculate_cbam_tax_financial_liability(
+                quantity_tonnes=qty,
+                emission_factor_tco2e_per_tonne=ef,
+                sector=sec,
+                eu_ets_carbon_price_eur=ets_price,
+                carbon_price_paid_abroad_eur=abroad_price
+            )
         else:
             return {"error": f"Unknown tool: {name}"}
     except Exception as exc:
@@ -191,7 +233,7 @@ def run_agent_turn_groq(client: Groq, chat_history: list, user_message: str, db:
     final_text = ""
     
     chat = client.chats.create(
-        model="gemma-4-26b-a4b-it",
+        model="groq-llama-3.3-70b-versatile",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             tools=TOOLS,
@@ -214,7 +256,7 @@ def run_agent_turn_groq(client: Groq, chat_history: list, user_message: str, db:
                 func_name = tc.name
                 func_args = tc.args
                 
-                result = _execute_tool(func_name, func_args, db)
+                result = _execute_tool(func_name, func_args, db, project_id or "proj_default")
                 tool_trace.append({"tool": func_name, "args": func_args, "result": result})
                 
                 function_responses.append(
@@ -233,4 +275,19 @@ def run_agent_turn_groq(client: Groq, chat_history: list, user_message: str, db:
             final_text = response.text
             break
 
-    return {"answer": final_text, "tool_calls": tool_trace}
+    return {"answer": final_text, "tool_calls": tool_trace, "model_used": "groq-llama-3.3-70b-versatile"}
+
+
+import itertools
+_key_iterator = None
+def get_groq_client() -> Groq:
+    global _key_iterator
+    keys_str = os.environ.get('GROQ_API_KEYS')
+    if keys_str:
+        keys = [k.strip() for k in keys_str.split(',') if k.strip()]
+        if keys:
+            if _key_iterator is None:
+                _key_iterator = itertools.cycle(keys)
+            return Groq(api_key=next(_key_iterator))
+    api_key = os.environ.get('GROQ_API_KEY')
+    return Groq(api_key=api_key)

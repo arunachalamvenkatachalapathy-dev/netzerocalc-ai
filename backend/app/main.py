@@ -436,9 +436,11 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
         return {
             "answer": result["answer"],
             "tool_calls": result["tool_calls"],  # frontend renders this as "Sources"
+            "model_used": result.get("model_used", "gemini-3.5-flash")
         }
     except Exception as e:
         import traceback
+        err_msg = str(e)
         print("Gemini API failed, falling back to Groq...")
         traceback.print_exc()
         
@@ -449,13 +451,15 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
             return {
                 "answer": result["answer"],
                 "tool_calls": result["tool_calls"],
+                "model_used": result.get("model_used", "groq-llama-3.3-70b-versatile"),
+                "primary_model_error": err_msg
             }
         except Exception as groq_e:
             print("Groq fallback also failed:")
             traceback.print_exc()
             if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e) or "rate_limit" in str(e).lower():
                 raise HTTPException(status_code=429, detail="You have hit the Gemini API rate limit, and the Groq fallback also failed. Please wait a moment and try again.")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=f"Gemini error: {err_msg} | Groq error: {str(groq_e)}")
 
 
 
