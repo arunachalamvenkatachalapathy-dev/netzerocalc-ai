@@ -8,6 +8,7 @@ import ProjectsView from './components/ProjectsView.jsx';
 import ComplianceView from './components/ComplianceView.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import GoogleSheetsModal from './components/GoogleSheetsModal.jsx';
+import TutorialModal from './components/TutorialModal.jsx';
 import CbamView from './components/CbamView.jsx';
 import DqrDashboard from './components/DqrDashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -18,8 +19,8 @@ import { Bot } from 'lucide-react';
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
 
-// Default Initial Items
-const INITIAL_BOM_2024 = [
+// Interactive Tutorial Demo Items (Loaded on-demand when Tutorial is launched)
+export const DEMO_BOM_2024 = [
   { id: 1, name: "Aluminum Sheet, Primary Ingot 5052-H32", qty: 1450, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: false },
   { id: 2, name: "Custom Polyurethane Foam Insert", qty: 320, unit: "pcs", process: "Polyurethane Flexible Foam Fabrication", ef: 4.8, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: false },
   { id: 3, name: "Copper Wire Drawing 12 AWG", qty: 50, unit: "kg", process: "Copper Wire Drawing 12 AWG", ef: 6.5, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: false },
@@ -27,31 +28,32 @@ const INITIAL_BOM_2024 = [
   { id: 5, name: "Diesel Fuel (DG Sets & Power Generators)", qty: 500, unit: "Liters", process: "Diesel Fuel Thermal Combustion", ef: 2.6558, scope: "Scope 1", scope3Category: "N/A (Scope 1 Direct)", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] India GHG Factor", approved: false }
 ];
 
-const INITIAL_BOM_2023 = [
+export const DEMO_BOM_2023 = [
   { id: 101, name: "Aluminum Sheet, Primary Ingot 5052-H32", qty: 1850, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: false },
   { id: 102, name: "Grid Electricity (CEA India Grid Mix 2024)", qty: 15500, unit: "kWh", process: "Grid Electricity (CEA India Grid Mix 2024)", ef: 0.716, scope: "Scope 2", scope3Category: "N/A (Scope 2 Location-Based)", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] CEA Verified", approved: false },
   { id: 103, name: "Diesel Fuel (DG Sets & Power Generators)", qty: 850, unit: "Liters", process: "Diesel Fuel Thermal Combustion", ef: 2.6558, scope: "Scope 1", scope3Category: "N/A (Scope 1 Direct)", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] India GHG Factor", approved: false }
 ];
 
+// Clean Initial Projects (Clean Blank Slate by Default)
 const INITIAL_PROJECTS = [
   {
     id: 'proj_default',
     projectName: 'Corporate Carbon Audit & Decarbonization Plan',
-    companyName: 'ACME Manufacturing Ltd.',
+    companyName: 'My Enterprise Organization',
     standard: 'ISO 14064-1 & Scope 1-3',
-    declarationSerial: 'DECL-GHG-2024-482910',
+    declarationSerial: 'DECL-GHG-2024-000001',
     periods: [
       {
         year: 2023,
         isBaseYear: true,
         label: 'FY2023 (Base Year)',
-        bom: INITIAL_BOM_2023
+        bom: []
       },
       {
         year: 2024,
         isBaseYear: false,
         label: 'FY2024 (Current Period)',
-        bom: INITIAL_BOM_2024
+        bom: []
       }
     ]
   }
@@ -163,6 +165,7 @@ export default function App() {
   // Modals & Sidebars
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isGoogleSheetsModalOpen, setIsGoogleSheetsModalOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
 
   // Toast
@@ -171,6 +174,19 @@ export default function App() {
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3500);
+  };
+
+  const handleStartTutorial = () => {
+    if (currentBOM.length === 0) {
+      setCurrentBOM(DEMO_BOM_2024);
+      showToast('Loaded sample demo dataset for interactive tutorial.');
+    }
+    setIsTutorialOpen(true);
+  };
+
+  const handleClearAllData = () => {
+    setCurrentBOM([]);
+    showToast('Cleared inventory. Starting with a clean blank canvas.');
   };
 
   // Active Project & Multi-Period Calculations
@@ -467,6 +483,7 @@ export default function App() {
         setGeography={setGeography}
         onGoHome={() => setShowLanding(true)}
         onUpdateProject={updateActiveProject}
+        onStartTutorial={handleStartTutorial}
       />
 
       {/* Navigation Bar */}
@@ -639,6 +656,15 @@ export default function App() {
         currentBOM={currentBOM}
         activeProject={activeProject}
         showToast={showToast}
+      />
+
+      <TutorialModal 
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onLoadDemoData={() => setCurrentBOM(DEMO_BOM_2024)}
+        onClearData={handleClearAllData}
+        onOpenAiCopilot={() => setIsAiPanelOpen(true)}
       />
 
       {/* AI Copilot Sidebar & FAB */}

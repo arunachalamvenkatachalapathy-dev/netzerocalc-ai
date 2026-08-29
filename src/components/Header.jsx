@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, User, UserCheck, ChevronDown, Database, Activity, 
-  Edit3, Check, X, Server, Cloud, UserCog, Settings
+  Edit3, Check, X, Server, Cloud, UserCog, Settings, Sparkles
 } from 'lucide-react';
 import { checkBackendHealth } from '../services/api.js';
 import { isSupabaseConfigured } from '../lib/supabase.js';
@@ -15,7 +15,8 @@ export default function Header({
   geography,
   setGeography,
   onGoHome,
-  onUpdateProject
+  onUpdateProject,
+  onStartTutorial
 }) {
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [companyName, setCompanyName] = useState(activeProject?.companyName || 'ACME Corp');
@@ -172,6 +173,17 @@ export default function Header({
             <option value="EU">EU — European Union</option>
             <option value="US">US — United States</option>
           </select>
+          {/* Interactive Tutorial Button */}
+          {onStartTutorial && (
+            <button
+              onClick={onStartTutorial}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95 hover:scale-105"
+              title="Launch interactive feature guide and demo dataset"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-white/30" />
+              <span>Tutorial & Demo Guide</span>
+            </button>
+          )}
         </div>
 
       </div>
