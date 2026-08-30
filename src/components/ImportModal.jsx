@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { INDIA_GHG_FACTORS } from '../data/indiaGhgFactors.js';
 
 const BACKEND_URL = 'https://netzerocalc-backend-398062217408.us-central1.run.app';
-const EXTERNAL_API_KEY = 'nzc-api-key-2024-secure';
+const EXTERNAL_API_KEY = import.meta.env.VITE_BOM_PUSH_API_KEY || '<YOUR_API_KEY>';
 
 export default function ImportModal({ isOpen, onClose, onImportItems, showToast, onOpenAiCopilot, currentProjectId }) {
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'pdf' | 'preset' | 'paste' | 'api'

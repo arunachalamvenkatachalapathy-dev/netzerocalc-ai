@@ -39,12 +39,10 @@ import uuid, threading
 _BOM_PUSH_QUEUE: dict[str, deque] = defaultdict(deque)
 _QUEUE_LOCK = threading.Lock()
 
-# Static shared API key (also readable from env for production override)
-EXTERNAL_API_KEY = os.getenv("EXTERNAL_API_KEY", "nzc-api-key-2024-secure")
-
 def _verify_api_key(request: Request):
     key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
-    if key != EXTERNAL_API_KEY:
+    expected_key = os.environ.get("BOM_PUSH_API_KEY")
+    if not expected_key or key != expected_key:
         raise HTTPException(status_code=401, detail="Invalid or missing API key. Pass X-API-Key header.")
     return True
 
@@ -506,12 +504,12 @@ async def bom_push(payload: BomPushPayload, request: Request):
     External API endpoint for MCP agents, ERP systems, or any external software
     to push BOM line items directly into a NetZeroCalc project inventory.
 
-    Authentication: Pass header  X-API-Key: nzc-api-key-2024-secure
+    Authentication: Pass header  X-API-Key: <YOUR_API_KEY>
 
     Example (curl):
-      curl -X POST https://netzerocalc-backend-398062217408.us-central1.run.app/api/v1/bom/push \\
-           -H "Content-Type: application/json" \\
-           -H "X-API-Key: nzc-api-key-2024-secure" \\
+      curl -X POST https://netzerocalc-backend-398062217408.us-central1.run.app/api/v1/bom/push \
+           -H "Content-Type: application/json" \
+           -H "X-API-Key: <YOUR_API_KEY>" \
            -d '{
              "project_id": "proj_default",
              "items": [
