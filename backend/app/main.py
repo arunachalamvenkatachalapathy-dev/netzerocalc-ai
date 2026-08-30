@@ -31,6 +31,23 @@ DEFAULT_AI_URL = os.getenv("AI_CHAT_URL", "http://localhost:11434/v1/chat/comple
 DEFAULT_AI_MODEL = os.getenv("AI_CHAT_MODEL", "llama3.1")
 DEFAULT_AI_KEY = os.getenv("AI_CHAT_API_KEY", "ollama")
 
+# ── External API / MCP Automation Layer ──────────────────────────────────────
+# In-memory queue: per project_id → list of pending BOM items pushed via API
+from collections import deque
+import uuid, threading
+
+_BOM_PUSH_QUEUE: dict[str, deque] = defaultdict(deque)
+_QUEUE_LOCK = threading.Lock()
+
+# Static shared API key (also readable from env for production override)
+EXTERNAL_API_KEY = os.getenv("EXTERNAL_API_KEY", "nzc-api-key-2024-secure")
+
+def _verify_api_key(request: Request):
+    key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
+    if key != EXTERNAL_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key. Pass X-API-Key header.")
+    return True
+
 
 @app.get("/health")
 def health():
@@ -461,6 +478,127 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
                 raise HTTPException(status_code=429, detail="You have hit the Gemini API rate limit, and the Groq fallback also failed. Please wait a moment and try again.")
             raise HTTPException(status_code=500, detail=f"Gemini error: {err_msg} | Groq error: {str(groq_e)}")
 
+
+
+# ── External API / MCP Automation Endpoints ──────────────────────────────────
+
+from typing import List, Optional
+from pydantic import BaseModel as PydanticBaseModel
+
+class ExternalBomItem(PydanticBaseModel):
+    name: str
+    qty: float
+    unit: str
+    process: Optional[str] = None
+    ef: Optional[float] = None
+    scope: Optional[str] = "Scope 3"
+    scope3Category: Optional[str] = "Cat 1: Purchased Goods & Services"
+    source_system: Optional[str] = "External API"
+    notes: Optional[str] = None
+
+class BomPushPayload(PydanticBaseModel):
+    project_id: str
+    items: List[ExternalBomItem]
+
+@app.post("/api/v1/bom/push", summary="Push BOM items from external system / MCP agent")
+async def bom_push(payload: BomPushPayload, request: Request):
+    """
+    External API endpoint for MCP agents, ERP systems, or any external software
+    to push BOM line items directly into a NetZeroCalc project inventory.
+
+    Authentication: Pass header  X-API-Key: nzc-api-key-2024-secure
+
+    Example (curl):
+      curl -X POST https://netzerocalc-backend-398062217408.us-central1.run.app/api/v1/bom/push \\
+           -H "Content-Type: application/json" \\
+           -H "X-API-Key: nzc-api-key-2024-secure" \\
+           -d '{
+             "project_id": "proj_default",
+             "items": [
+               {"name": "Steel Plate S275", "qty": 500, "unit": "kg", "scope": "Scope 3"},
+               {"name": "Diesel Fuel", "qty": 200, "unit": "Liters", "scope": "Scope 1"}
+             ]
+           }'
+    """
+    _verify_api_key(request)
+    accepted = []
+    with _QUEUE_LOCK:
+        for item in payload.items:
+            row = {
+                "id": str(uuid.uuid4()),
+                "name": item.name,
+                "qty": item.qty,
+                "unit": item.unit,
+                "process": item.process or item.name,
+                "ef": item.ef or 0,
+                "scope": item.scope or "Scope 3",
+                "scope3Category": item.scope3Category or "Cat 1: Purchased Goods & Services",
+                "status": f"[API PUSH] via {item.source_system or 'External API'}",
+                "approved": False,
+                "risk": "LOW",
+                "gwpBasis": "IPCC AR6",
+                "ter": 1, "ger": 1, "tir": 1,
+                "notes": item.notes or "",
+                "pushed_at": datetime.now(timezone.utc).isoformat()
+            }
+            _BOM_PUSH_QUEUE[payload.project_id].append(row)
+            accepted.append(row["id"])
+    return {
+        "status": "accepted",
+        "project_id": payload.project_id,
+        "items_queued": len(accepted),
+        "item_ids": accepted,
+        "message": f"{len(accepted)} item(s) queued. The NetZeroCalc dashboard will pick them up within 3 seconds."
+    }
+
+@app.get("/api/v1/bom/pending/{project_id}", summary="Poll for pending BOM items pushed by external systems")
+async def bom_pending(project_id: str):
+    """
+    Frontend polls this endpoint every 3 seconds.
+    Returns all queued items and clears the queue.
+    No auth required (project_id acts as the namespace).
+    """
+    with _QUEUE_LOCK:
+        queue = _BOM_PUSH_QUEUE.get(project_id, deque())
+        items = list(queue)
+        if project_id in _BOM_PUSH_QUEUE:
+            _BOM_PUSH_QUEUE[project_id].clear()
+    return {
+        "project_id": project_id,
+        "count": len(items),
+        "items": items
+    }
+
+@app.get("/api/v1/info", summary="External API information and usage guide")
+async def api_info():
+    """Public endpoint: returns API documentation and connection details."""
+    base = "https://netzerocalc-backend-398062217408.us-central1.run.app"
+    return {
+        "api_name": "NetZeroCalc External Automation API",
+        "version": "1.0.0",
+        "description": "Push BOM/GHG inventory items from any external system, ERP, or MCP agent directly into the NetZeroCalc dashboard.",
+        "base_url": base,
+        "authentication": {
+            "type": "API Key",
+            "header": "X-API-Key",
+            "key": EXTERNAL_API_KEY
+        },
+        "endpoints": {
+            "push_items": {
+                "method": "POST",
+                "path": "/api/v1/bom/push",
+                "description": "Push BOM items from external software into a project",
+                "requires_auth": True
+            },
+            "poll_pending": {
+                "method": "GET",
+                "path": "/api/v1/bom/pending/{project_id}",
+                "description": "Frontend polls this to receive externally pushed items",
+                "requires_auth": False
+            }
+        },
+        "example_curl": f'curl -X POST {base}/api/v1/bom/push -H "Content-Type: application/json" -H "X-API-Key: {EXTERNAL_API_KEY}" -d \'{{"project_id":"proj_default","items":[{{"name":"Primary Steel","qty":1000,"unit":"kg","scope":"Scope 3"}}]}}\''
+    }
 
 
 @app.get('/debug/version')

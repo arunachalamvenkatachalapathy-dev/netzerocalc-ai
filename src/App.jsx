@@ -653,6 +653,7 @@ export default function App() {
         onImportItems={handleImportItems}
         showToast={showToast}
         onOpenAiCopilot={() => setIsAiPanelOpen(true)}
+        currentProjectId={activeProject?.id || 'proj_default'}
       />
 
       <GoogleSheetsModal 
