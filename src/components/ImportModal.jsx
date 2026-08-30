@@ -524,110 +524,87 @@ print(response.json())`;
         {/* ── API & MCP Connect Tab ────────────────────────────────────────── */}
         {activeTab === 'api' && (
           <div className="space-y-4">
-            {/* Header / Status */}
-            <div className={`rounded-xl p-4 border-2 ${apiListening ? 'border-violet-400 bg-violet-50' : 'border-slate-200 bg-slate-50'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Radio size={18} className={apiListening ? 'text-violet-600 animate-pulse' : 'text-slate-400'} />
-                  <div>
-                    <p className="text-sm font-extrabold text-slate-900">
-                      {apiListening ? '🟢 Listening for incoming data...' : '⚪ API Listener (Stopped)'}
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      {apiListening
-                        ? `Polling every 3s — Project: ${projectId}`
-                        : 'Click "Start Listening" to receive data pushed from external systems'}
-                    </p>
+            {/* Big Connect Button */}
+            <div className={`rounded-2xl p-5 text-center border-2 transition-all ${apiListening ? 'border-violet-400 bg-violet-50' : 'border-dashed border-slate-300 bg-slate-50'}`}>
+              {apiListening ? (
+                <>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
+                    <span className="text-sm font-extrabold text-slate-900">Listening for incoming data</span>
                   </div>
-                </div>
-                <button
-                  onClick={apiListening ? stopApiListening : startApiListening}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm ${
-                    apiListening
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                      : 'bg-violet-600 text-white hover:bg-violet-700'
-                  }`}
-                >
-                  {apiListening ? '⏹ Stop Listening' : '▶ Start Listening'}
-                </button>
-              </div>
+                  <p className="text-[11px] text-slate-500 mb-3">Checking every 3 seconds for new items pushed to <span className="font-bold text-violet-600">{projectId}</span></p>
+                  <button onClick={stopApiListening} className="px-5 py-2 bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-200 transition-colors">
+                    ⏹ Stop
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Zap size={28} className="text-violet-400 mx-auto mb-2" />
+                  <p className="text-sm font-extrabold text-slate-800 mb-1">Automate via API / MCP</p>
+                  <p className="text-[11px] text-slate-500 mb-4">Any external system can push items directly into your BOM table</p>
+                  <button onClick={startApiListening} className="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-bold shadow-sm transition-colors">
+                    ▶ Start Listening
+                  </button>
+                </>
+              )}
               {apiLastReceived && (
-                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg text-xs text-green-800 font-semibold flex items-center gap-2">
+                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg text-xs text-green-800 font-semibold flex items-center justify-center gap-2">
                   <CheckCircle size={14} />
-                  Last received: {apiLastReceived.count} item(s) at {apiLastReceived.time} — added to BOM table ✅
+                  {apiLastReceived.count} item(s) added to your BOM at {apiLastReceived.time} ✅
                 </div>
               )}
             </div>
 
-            {/* API Key */}
-            <div className="bg-slate-900 text-slate-100 rounded-xl p-3 text-xs font-mono space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">API Credentials</span>
-              </div>
-              <div className="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-3 py-2">
-                <div>
-                  <span className="text-violet-400">Endpoint: </span>
-                  <span className="text-white break-all">https://netzerocalc-backend-398062217408.us-central1.run.app/api/v1/bom/push</span>
-                </div>
-                <button onClick={() => copyToClipboard(`${BACKEND_URL}/api/v1/bom/push`, 'url')} className="ml-2 text-slate-400 hover:text-white flex-shrink-0">
-                  {apiCopied === 'url' ? <CheckCircle size={14} className="text-green-400" /> : <Copy size={14} />}
-                </button>
-              </div>
-              <div className="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-3 py-2">
-                <div>
-                  <span className="text-violet-400">X-API-Key: </span>
-                  <span className="text-yellow-300">{EXTERNAL_API_KEY}</span>
-                </div>
-                <button onClick={() => copyToClipboard(EXTERNAL_API_KEY, 'key')} className="ml-2 text-slate-400 hover:text-white flex-shrink-0">
-                  {apiCopied === 'key' ? <CheckCircle size={14} className="text-green-400" /> : <Copy size={14} />}
-                </button>
-              </div>
-              <div className="flex items-center justify-between gap-2 bg-slate-800 rounded-lg px-3 py-2">
-                <div>
-                  <span className="text-violet-400">Project ID: </span>
-                  <span className="text-green-300">{projectId}</span>
-                </div>
-                <button onClick={() => copyToClipboard(projectId, 'pid')} className="ml-2 text-slate-400 hover:text-white flex-shrink-0">
-                  {apiCopied === 'pid' ? <CheckCircle size={14} className="text-green-400" /> : <Copy size={14} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Code Examples */}
+            {/* Simple 3-step guide */}
             <div className="space-y-2">
-              <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Integration Code</p>
-              {/* cURL */}
-              <div className="bg-slate-900 rounded-xl p-3 relative">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">cURL / Terminal</span>
-                  <button onClick={() => copyToClipboard(curlExample, 'curl')} className="text-slate-400 hover:text-white flex items-center gap-1 text-[10px]">
-                    {apiCopied === 'curl' ? <><CheckCircle size={12} className="text-green-400" /> Copied!</> : <><Copy size={12} /> Copy</>}
-                  </button>
-                </div>
-                <pre className="text-[10px] text-green-300 font-mono whitespace-pre-wrap leading-relaxed overflow-auto max-h-28">{curlExample}</pre>
-              </div>
-              {/* Python */}
-              <div className="bg-slate-900 rounded-xl p-3 relative">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Python / MCP Agent</span>
-                  <button onClick={() => copyToClipboard(pythonExample, 'python')} className="text-slate-400 hover:text-white flex items-center gap-1 text-[10px]">
-                    {apiCopied === 'python' ? <><CheckCircle size={12} className="text-green-400" /> Copied!</> : <><Copy size={12} /> Copy</>}
-                  </button>
-                </div>
-                <pre className="text-[10px] text-blue-300 font-mono whitespace-pre-wrap leading-relaxed overflow-auto max-h-28">{pythonExample}</pre>
-              </div>
-            </div>
 
-            {/* Docs link */}
-            <div className="text-center text-[11px] text-slate-500">
-              Full API docs at{' '}
-              <a href={`${BACKEND_URL}/api/v1/info`} target="_blank" rel="noreferrer" className="text-violet-600 underline font-semibold hover:text-violet-800">
-                /api/v1/info
-              </a>
-              {' '}·{' '}
-              <a href={`${BACKEND_URL}/docs`} target="_blank" rel="noreferrer" className="text-violet-600 underline font-semibold hover:text-violet-800">
-                Swagger UI (/docs)
-              </a>
+              {/* Step 1 */}
+              <div className="flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Click "Start Listening" above</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">The dashboard will watch for incoming data every 3 seconds</p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-800 mb-2">Use these credentials to connect from any system</p>
+                  <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-1.5">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">API Key</p>
+                      <p className="text-xs font-mono font-bold text-violet-700">{EXTERNAL_API_KEY}</p>
+                    </div>
+                    <button onClick={() => copyToClipboard(EXTERNAL_API_KEY, 'key')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:border-violet-300 text-slate-400 hover:text-violet-600 transition-colors">
+                      {apiCopied === 'key' ? <CheckCircle size={13} className="text-green-500" /> : <Copy size={13} />}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Project ID</p>
+                      <p className="text-xs font-mono font-bold text-emerald-700">{projectId}</p>
+                    </div>
+                    <button onClick={() => copyToClipboard(projectId, 'pid')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:border-violet-300 text-slate-400 hover:text-violet-600 transition-colors">
+                      {apiCopied === 'pid' ? <CheckCircle size={13} className="text-green-500" /> : <Copy size={13} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Items appear in your BOM table — no refresh needed</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Works from any tool: curl, Python, Postman, or MCP agent</p>
+                  <button onClick={() => copyToClipboard(curlExample, 'curl')} className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-600 hover:text-violet-800 bg-violet-50 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors border border-violet-200">
+                    {apiCopied === 'curl' ? <><CheckCircle size={11} className="text-green-500" /> Copied!</> : <><Copy size={11} /> Copy example command</>}
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
         )}
