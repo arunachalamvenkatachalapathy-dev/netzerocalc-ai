@@ -15,6 +15,10 @@ import LandingPage from './components/LandingPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AiChatSidebar from './components/AiChatSidebar.jsx';
 import { Bot } from 'lucide-react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from './lib/firebase.js';
+import { loadUserProjects, saveUserProject, deleteUserProject } from './lib/firestore.js';
+import AuthScreen from './components/AuthScreen.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -127,6 +131,13 @@ const normalizeProject = (p) => {
 };
 
 export default function App() {
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  useEffect(() => {
+    if (!auth || !isFirebaseConfigured()) { setAuthLoading(false); return undefined; }
+    return onAuthStateChanged(auth, (user) => { setFirebaseUser(user); setAuthLoading(false); });
+  }, []);
+
   const [showLanding, setShowLanding] = useState(() => {
     return localStorage.getItem('netzerocalc_has_visited') !== 'true';
   });
@@ -168,6 +179,13 @@ export default function App() {
       organization: 'ACME Corp'
     };
   });
+
+  useEffect(() => {
+    if (!firebaseUser) return;
+    loadUserProjects(firebaseUser.uid).then((remoteProjects) => {
+      if (remoteProjects?.length) setProjects(remoteProjects.map(normalizeProject));
+    }).catch((error) => console.warn('Firestore project load failed:', error.message));
+  }, [firebaseUser]);
 
   // Modals & Sidebars
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -376,7 +394,8 @@ export default function App() {
   // LocalStorage Persist
   useEffect(() => {
     localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
-  }, [projects]);
+    if (firebaseUser) projects.forEach((project) => saveUserProject(firebaseUser.uid, project).catch((error) => console.warn('Firestore save failed:', error.message)));
+  }, [projects, firebaseUser]);
 
   useEffect(() => {
     localStorage.setItem('netzerocalc_active_proj_id', activeProjectId);
@@ -385,6 +404,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('netzerocalc_user_profile', JSON.stringify(userProfile));
   }, [userProfile]);
+
+  if (authLoading) return <div className="min-h-screen grid place-items-center bg-slate-950 text-white">Loading secure workspace...</div>;
+  if (isFirebaseConfigured() && !firebaseUser) return <AuthScreen />;
 
   // Handlers
   const handleUpdateUserProfile = (updatedProfile) => {
@@ -435,6 +457,7 @@ export default function App() {
     if (projects.length <= 1) return;
     const filtered = projects.filter(p => p.id !== projId);
     setProjects(filtered);
+    if (firebaseUser) deleteUserProject(firebaseUser.uid, projId).catch((error) => console.warn('Firestore delete failed:', error.message));
     if (activeProjectId === projId) {
       setActiveProjectId(filtered[0].id);
     }
@@ -489,6 +512,7 @@ export default function App() {
         onGoHome={() => setShowLanding(true)}
         onUpdateProject={updateActiveProject}
         onStartTutorial={handleStartTutorial}
+        onSignOut={() => signOut(auth)}
       />
 
       {/* Navigation Bar */}

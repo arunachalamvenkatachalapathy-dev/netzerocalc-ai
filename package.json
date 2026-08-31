@@ -15,6 +15,7 @@
     "@fortune-sheet/react": "^1.0.4",
     "@react-pdf/renderer": "^4.6.1",
     "@supabase/supabase-js": "^2.112.3",
+    "firebase": "^12.1.0",
     "lucide-react": "^1.31.0",
     "luckyexcel": "^1.0.1",
     "papaparse": "^5.5.4",

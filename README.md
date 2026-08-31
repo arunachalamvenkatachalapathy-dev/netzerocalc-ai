@@ -94,3 +94,6 @@ npm run build
 
 **Author:** [Arunachalam Venkatachalapathy](https://github.com/arunachalamvenkatachalapathy-dev)  
 **License:** [MIT License](LICENSE)
+## Authenticated Cloud Run deployment
+
+NetZeroCalc supports Firebase email/password authentication and stores workspaces in user-isolated Firestore paths. The AI Copilot calls Gemini server-side; its key is supplied to Cloud Run through Google Cloud Secret Manager and is never shipped to the browser. See [docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md](docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md) for the deployment and verification runbook.

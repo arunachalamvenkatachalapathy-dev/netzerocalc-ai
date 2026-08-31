@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
@@ -8,8 +9,12 @@ import httpx
 import jwt
 import pandas as pd
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import firebase_admin
+from firebase_admin import auth as firebase_auth
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -30,6 +35,23 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me")
 DEFAULT_AI_URL = os.getenv("AI_CHAT_URL", "http://localhost:11434/v1/chat/completions")
 DEFAULT_AI_MODEL = os.getenv("AI_CHAT_MODEL", "llama3.1")
 DEFAULT_AI_KEY = os.getenv("AI_CHAT_API_KEY", "ollama")
+bearer_scheme = HTTPBearer(auto_error=False)
+try:
+    firebase_admin.get_app()
+except ValueError:
+    try:
+        firebase_admin.initialize_app()
+    except Exception:
+        # Local development can run without ADC; Cloud Run receives ADC automatically.
+        pass
+
+def require_firebase_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Firebase sign-in required")
+    try:
+        return firebase_auth.verify_id_token(credentials.credentials)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid Firebase ID token") from exc
 
 # ── External API / MCP Automation Layer ──────────────────────────────────────
 # In-memory queue: per project_id → list of pending BOM items pushed via API
@@ -390,7 +412,7 @@ $$\\Delta E = \\text{{Baseline}} - \\text{{Project}} = {baseline_total:.4f} - {p
 
 
 @app.post("/ai/chat")
-async def ai_chat(payload: AiChatRequest):
+async def ai_chat(payload: AiChatRequest, user=Depends(require_firebase_user)):
     api_url = payload.api_url or DEFAULT_AI_URL
     model = payload.model or DEFAULT_AI_MODEL
     api_key = payload.api_key or DEFAULT_AI_KEY
@@ -429,7 +451,7 @@ AGENT_RATE_LIMIT_WINDOW = 60  # seconds
 AGENT_RATE_LIMIT_MAX_REQS = 60  # increased to match Gemini's generous rate limit
 
 @app.post("/agent/chat")
-def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depends(get_db)):
+def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depends(get_db), user=Depends(require_firebase_user)):
     """
     Multi-hop tool-calling agent. Unlike /ai/chat (single-shot, no tool
     access), this can call match_bom_line, list_project_audits,
@@ -477,6 +499,7 @@ def agent_chat(request: Request, payload: AgentChatRequest, db: Session = Depend
             raise HTTPException(status_code=500, detail=f"Gemini error: {err_msg} | Groq error: {str(groq_e)}")
 
 
+# Serve the Vite build from the same Cloud Run service as the API.
 
 # ── External API / MCP Automation Endpoints ──────────────────────────────────
 
@@ -603,3 +626,9 @@ async def api_info():
 def debug_version():
     import google.genai as genai_pkg
     return {'google_genai': genai_pkg.__version__}
+
+
+# Mount after API routes so the frontend fallback cannot intercept API calls.
+static_dir = Path(__file__).resolve().parent.parent / "static"
+if static_dir.exists():
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")

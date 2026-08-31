@@ -1,5 +1,10 @@
 // E-Credits Backend API Client Integration
-const API_BASE = import.meta.env.VITE_API_URL || 'https://netzerocalc-backend-398062217408.us-central1.run.app';
+import { auth } from '../lib/firebase.js';
+const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+async function authHeaders(json = false) {
+  const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+  return { ...(json ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
 
 export async function checkBackendHealth() {
   try {
@@ -43,7 +48,7 @@ export async function uploadBomFile(file) {
 export async function matchFactorsBatch(lines) {
   const res = await fetch(`${API_BASE}/match/batch`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await authHeaders(true),
     body: JSON.stringify({ lines })
   });
 
@@ -57,7 +62,7 @@ export async function matchFactorsBatch(lines) {
 export async function sendAgentChatMessage(project_id, question, history = [], screen_context = null) {
   const res = await fetch(`${API_BASE}/agent/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await authHeaders(true),
     body: JSON.stringify({ project_id, question, history, screen_context })
   });
 

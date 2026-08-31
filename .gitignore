@@ -10,6 +10,8 @@ node_modules/
 .agents/
 dist/
 .wrangler/
+pnpm-store/
+tools/
 
 env.yaml
 backend/env.yaml

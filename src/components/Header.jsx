@@ -16,7 +16,8 @@ export default function Header({
   setGeography,
   onGoHome,
   onUpdateProject,
-  onStartTutorial
+  onStartTutorial,
+  onSignOut
 }) {
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [companyName, setCompanyName] = useState(activeProject?.companyName || 'ACME Corp');
@@ -134,6 +135,7 @@ export default function Header({
 
         {/* Global Metadata & Operator Profile */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          {onSignOut && <button onClick={onSignOut} className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100" title="Sign out">Sign out</button>}
           
           {/* Cloud Sync Status */}
           <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 shadow-xs ${
