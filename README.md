@@ -73,8 +73,8 @@ NetZeroCalc ships with verified open-access reference datasets and supports Brin
 
 ```bash
 # Clone repository
-git clone https://github.com/arunachalamvenkatachalapathy-dev/e-credits.git
-cd e-credits
+git clone https://github.com/arunachalamvenkatachalapathy-dev/netzerocalc-ai.git
+cd netzerocalc-ai
 
 # Install dependencies
 npm install

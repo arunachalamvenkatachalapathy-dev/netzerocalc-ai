@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, ChevronDown, MoreHorizontal, Award 
+  Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
+  ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database 
 } from 'lucide-react';
 
-export default function NavigationTabs({ activeTab, setActiveTab }) {
+export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -25,7 +26,7 @@ export default function NavigationTabs({ activeTab, setActiveTab }) {
     { id: 'ghg-calculator', label: 'GHG Master Sheet', icon: FileSpreadsheet },
   ];
 
-  // Secondary Tools & Registry (4 Items in Dropdown)
+  // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
     { id: 'dqr', label: 'DQR & Pedigree', icon: Award, desc: 'ISO 14044 Pedigree Matrix & Quality Scores' },
     { id: 'cbam', label: 'EU CBAM Benchmark', icon: Globe, desc: 'EU Implementing Regs 2021/447 & 2024/873' },
@@ -93,6 +94,49 @@ export default function NavigationTabs({ activeTab, setActiveTab }) {
           {/* Dropdown Menu */}
           {isToolsOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5 border-b border-slate-100 mb-1">
+                Corporate GHG Boundary
+              </div>
+              <button
+                onClick={() => {
+                  if (onOpenFacilityModal) onOpenFacilityModal();
+                  setIsToolsOpen(false);
+                }}
+                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700"
+              >
+                <Building2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                <div>
+                  <div className="text-xs font-bold text-slate-900">Facility Registry</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Operational Sites & Grid Region Mapping</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  if (onOpenPeriodModal) onOpenPeriodModal();
+                  setIsToolsOpen(false);
+                }}
+                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700"
+              >
+                <Calendar className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                <div>
+                  <div className="text-xs font-bold text-slate-900">Reporting Periods</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Arbitrary Timelines, Base Year & Locks</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  if (onOpenFactorRegistryModal) onOpenFactorRegistryModal();
+                  setIsToolsOpen(false);
+                }}
+                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700 mb-1 pb-2 border-b border-slate-100"
+              >
+                <Database className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                <div>
+                  <div className="text-xs font-bold text-slate-900">Emission Factor Registry</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Authoritative Factors, Overrides & Provenance</div>
+                </div>
+              </button>
+
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5 border-b border-slate-100 mb-1">
                 Calculators & Database Tools
               </div>
