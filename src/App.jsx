@@ -14,7 +14,11 @@ import DqrDashboard from './components/DqrDashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AiChatSidebar from './components/AiChatSidebar.jsx';
-import { Bot } from 'lucide-react';
+import { Bot, Building2, Calendar } from 'lucide-react';
+import FacilityManagementModal from './components/ghg/FacilityManagementModal.jsx';
+import PeriodManagementModal from './components/ghg/PeriodManagementModal.jsx';
+import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
+import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -91,39 +95,9 @@ const computeBomTotal = (bom = []) => {
   }, 0);
 };
 
-// Project normalizer for multi-period and change log compatibility
+// Project normalizer for multi-period, change log, and corporate GHG compatibility
 const normalizeProject = (p) => {
-  let normPeriods = p.periods;
-  if (!normPeriods || !Array.isArray(normPeriods) || normPeriods.length === 0) {
-    const baseYear = parseInt(p.coverBoundary?.baseYear) || 2023;
-    const repYear = parseInt(p.coverBoundary?.reportingPeriod) || 2024;
-    normPeriods = [
-      {
-        year: repYear,
-        isBaseYear: repYear === baseYear,
-        label: `FY${repYear}${repYear === baseYear ? ' (Base Year)' : ''}`,
-        bom: p.bom || []
-      }
-    ];
-  }
-
-  const normLogs = (p.changeLog && Array.isArray(p.changeLog))
-    ? p.changeLog
-    : (p.id === 'proj_default' ? INITIAL_LOGS : [
-        {
-          id: `log_${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          action: 'WORKSPACE_INITIALIZED',
-          summary: `Created workspace for ${p.projectName || 'Corporate Inventory'}.`,
-          author: 'System'
-        }
-      ]);
-
-  return {
-    ...p,
-    periods: normPeriods,
-    changeLog: normLogs
-  };
+  return normalizeProjectWithCorporate(p);
 };
 
 export default function App() {
@@ -132,21 +106,7 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState('workbench');
   const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('netzerocalc_v3_projects');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(normalizeProject);
-        }
-      } catch {}
-    }
-    // Clean up any legacy dummy cache from prior sessions
-    try {
-      localStorage.removeItem('netzerocalc_projects');
-      localStorage.removeItem('netzerocalc_v2_projects');
-    } catch {}
-    return INITIAL_PROJECTS;
+    return loadAndMigrateProjects(INITIAL_PROJECTS);
   });
   const [activeProjectId, setActiveProjectId] = useState(() => {
     return localStorage.getItem('netzerocalc_active_proj_id') || 'proj_default';
@@ -174,6 +134,8 @@ export default function App() {
   const [isGoogleSheetsModalOpen, setIsGoogleSheetsModalOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+  const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
+  const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
 
   // Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -272,6 +234,16 @@ export default function App() {
       }
       return proj;
     }));
+  };
+
+  const handleUpdateFacilities = (updatedFacilities) => {
+    updateActiveProject({ facilities: updatedFacilities });
+    appendChangeLog('FACILITY_REGISTRY_UPDATE', `Updated facilities registry (${updatedFacilities.length} total sites).`);
+  };
+
+  const handleUpdatePeriods = (updatedPeriods) => {
+    updateActiveProject({ periods: updatedPeriods });
+    appendChangeLog('REPORTING_PERIODS_UPDATE', `Updated reporting periods configuration (${updatedPeriods.length} total periods).`);
   };
 
   const handleSwitchPeriod = (year) => {
@@ -373,8 +345,9 @@ export default function App() {
     showToast(`✅ Synced ${formattedBOM.length} items from GHG Master Sheet to FY${activePeriod.year} BOM.`);
   };
 
-  // LocalStorage Persist
+  // LocalStorage Persist (v4 Schema + Legacy v3 fallback)
   useEffect(() => {
+    localStorage.setItem('netzerocalc_v4_projects', JSON.stringify(projects));
     localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
   }, [projects]);
 
@@ -492,7 +465,12 @@ export default function App() {
       />
 
       {/* Navigation Bar */}
-      <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <NavigationTabs 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        onOpenFacilityModal={() => setIsFacilityModalOpen(true)}
+        onOpenPeriodModal={() => setIsPeriodModalOpen(true)}
+      />
 
       {/* UI Fix B: Fixed Sticky Workspace & Period Context Bar */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-slate-200/90 shadow-xs px-4 py-2.5">
@@ -524,6 +502,26 @@ export default function App() {
                 ))}
               </select>
             </div>
+
+            {/* Manage Periods Button */}
+            <button
+              onClick={() => setIsPeriodModalOpen(true)}
+              className="text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+              title="Manage all reporting periods, dates, and locking status"
+            >
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <span>Periods</span>
+            </button>
+
+            {/* Facilities Registry Button */}
+            <button
+              onClick={() => setIsFacilityModalOpen(true)}
+              className="text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+              title="Manage operational facilities and active boundary dates"
+            >
+              <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Sites ({getActiveFacilitiesForPeriod(activeProject.facilities || [], activePeriod).length} Active)</span>
+            </button>
 
             {/* Quick Add Year Button */}
             <button
@@ -714,6 +712,30 @@ export default function App() {
           <Bot size={24} className="group-hover:animate-pulse" />
         </button>
       )}
+
+      {/* Corporate GHG Inventory Phase 1 Modals */}
+      <FacilityManagementModal 
+        isOpen={isFacilityModalOpen}
+        onClose={() => setIsFacilityModalOpen(false)}
+        facilities={activeProject.facilities || []}
+        onUpdateFacilities={handleUpdateFacilities}
+        activePeriod={activePeriod}
+        organizationId={activeProject.organization?.id || 'org_default'}
+        showToast={showToast}
+      />
+
+      <PeriodManagementModal 
+        isOpen={isPeriodModalOpen}
+        onClose={() => setIsPeriodModalOpen(false)}
+        periods={periods}
+        onUpdatePeriods={handleUpdatePeriods}
+        activePeriod={activePeriod}
+        onSwitchPeriod={handleSwitchPeriod}
+        facilities={activeProject.facilities || []}
+        currentBOM={currentBOM}
+        organizationId={activeProject.organization?.id || 'org_default'}
+        showToast={showToast}
+      />
 
       {/* Footer */}
       <footer className="mt-12 py-6 text-center text-xs font-medium text-slate-400">
