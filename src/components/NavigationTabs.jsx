@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
-  ChevronDown, MoreHorizontal, Award, Building2, Calendar 
+  ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database 
 } from 'lucide-react';
 
-export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal }) {
+export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -115,12 +115,25 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
                   if (onOpenPeriodModal) onOpenPeriodModal();
                   setIsToolsOpen(false);
                 }}
-                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700 mb-1 pb-2 border-b border-slate-100"
+                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700"
               >
                 <Calendar className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
                 <div>
                   <div className="text-xs font-bold text-slate-900">Reporting Periods</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">Arbitrary Timelines, Base Year & Locks</div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  if (onOpenFactorRegistryModal) onOpenFactorRegistryModal();
+                  setIsToolsOpen(false);
+                }}
+                className="w-full text-left p-2.5 rounded-xl transition-colors flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-700 mb-1 pb-2 border-b border-slate-100"
+              >
+                <Database className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                <div>
+                  <div className="text-xs font-bold text-slate-900">Emission Factor Registry</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Authoritative Factors, Overrides & Provenance</div>
                 </div>
               </button>
 

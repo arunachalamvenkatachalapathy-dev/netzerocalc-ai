@@ -121,8 +121,9 @@ export function normalizeProjectWithCorporate(p = {}) {
     snapshots: {}
   };
 
-  // 6. Factor Overrides
+  // 6. Factor Overrides & Custom Factors
   const factorOverrides = Array.isArray(p.factorOverrides) ? p.factorOverrides : [];
+  const customFactors = Array.isArray(p.customFactors) ? p.customFactors : [];
 
   return {
     ...p,
@@ -137,7 +138,8 @@ export function normalizeProjectWithCorporate(p = {}) {
     periods: normalizedPeriods,
     changeLog,
     corporateInventory,
-    factorOverrides
+    factorOverrides,
+    customFactors
   };
 }
 

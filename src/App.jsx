@@ -14,9 +14,10 @@ import DqrDashboard from './components/DqrDashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AiChatSidebar from './components/AiChatSidebar.jsx';
-import { Bot, Building2, Calendar } from 'lucide-react';
+import { Bot, Building2, Calendar, Database } from 'lucide-react';
 import FacilityManagementModal from './components/ghg/FacilityManagementModal.jsx';
 import PeriodManagementModal from './components/ghg/PeriodManagementModal.jsx';
+import FactorRegistryModal from './components/ghg/FactorRegistryModal.jsx';
 import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
 
@@ -136,6 +137,7 @@ export default function App() {
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
   const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
+  const [isFactorRegistryModalOpen, setIsFactorRegistryModalOpen] = useState(false);
 
   // Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -470,6 +472,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenFacilityModal={() => setIsFacilityModalOpen(true)}
         onOpenPeriodModal={() => setIsPeriodModalOpen(true)}
+        onOpenFactorRegistryModal={() => setIsFactorRegistryModalOpen(true)}
       />
 
       {/* UI Fix B: Fixed Sticky Workspace & Period Context Bar */}
@@ -481,19 +484,20 @@ export default function App() {
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span className="truncate max-w-[200px] sm:max-w-xs">{activeProject.projectName}</span>
             </span>
-            <span className="text-slate-300">|</span>
-            <span className="text-slate-500 font-medium">{activeProject.companyName}</span>
+            <span className="text-slate-400">|</span>
+            <span className="text-slate-600 font-medium">
+              {activeProject.organization?.name || activeProject.companyName}
+            </span>
           </div>
 
-          {/* Period Selector & Target Tracking */}
-          <div className="flex items-center gap-3">
-            {/* Period Switcher Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Period:</span>
+          {/* Period Selector & Quick Period Cloning */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1">
+              <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Period:</span>
               <select
-                value={activePeriod.year}
+                value={activePeriodYear}
                 onChange={(e) => handleSwitchPeriod(e.target.value)}
-                className="bg-transparent font-bold text-slate-900 outline-none text-xs cursor-pointer font-mono"
+                className="font-bold text-slate-800 bg-transparent border-none outline-none cursor-pointer text-xs"
               >
                 {periods.map(p => (
                   <option key={p.year} value={p.year}>
@@ -503,7 +507,7 @@ export default function App() {
               </select>
             </div>
 
-            {/* Manage Periods Button */}
+            {/* Reporting Periods Registry Button */}
             <button
               onClick={() => setIsPeriodModalOpen(true)}
               className="text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
@@ -521,6 +525,16 @@ export default function App() {
             >
               <Building2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Sites ({getActiveFacilitiesForPeriod(activeProject.facilities || [], activePeriod).length} Active)</span>
+            </button>
+
+            {/* Emission Factor Registry Button (Phase 2) */}
+            <button
+              onClick={() => setIsFactorRegistryModalOpen(true)}
+              className="text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+              title="Open central Emission Factor Registry, immutable versions, and overrides"
+            >
+              <Database className="w-3.5 h-3.5 text-blue-600" />
+              <span>EF Registry</span>
             </button>
 
             {/* Quick Add Year Button */}
@@ -735,6 +749,23 @@ export default function App() {
         currentBOM={currentBOM}
         organizationId={activeProject.organization?.id || 'org_default'}
         showToast={showToast}
+      />
+
+      <FactorRegistryModal
+        isOpen={isFactorRegistryModalOpen}
+        onClose={() => setIsFactorRegistryModalOpen(false)}
+        customFactors={activeProject.customFactors || []}
+        onUpdateCustomFactors={(nextCustoms) => {
+          updateActiveProject({ customFactors: nextCustoms });
+          appendChangeLog('FACTOR_REGISTRY_UPDATE', `Updated custom emission factors library (${nextCustoms.length} factors).`);
+        }}
+        overrides={activeProject.factorOverrides || []}
+        onUpdateOverrides={(nextOverrides) => {
+          updateActiveProject({ factorOverrides: nextOverrides });
+          appendChangeLog('FACTOR_OVERRIDE_UPDATE', `Updated factor overrides (${nextOverrides.length} active overrides).`);
+        }}
+        organization={activeProject.organization}
+        facilities={activeProject.facilities || []}
       />
 
       {/* Footer */}
