@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
-  ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database 
+  ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database, Scale 
 } from 'lucide-react';
 
 export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
@@ -24,6 +24,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
     { id: 'simulator', label: 'What-If Simulator', icon: Sliders },
     { id: 'compliance', label: 'PCF Declaration', icon: FileCheck },
     { id: 'ghg-calculator', label: 'GHG Master Sheet', icon: FileSpreadsheet },
+    { id: 'regulations', label: 'Regulations 2026', icon: Scale },
   ];
 
   // Secondary Tools & Registry (Dropdown)

@@ -24,6 +24,7 @@ import PeriodManagementModal from './components/ghg/PeriodManagementModal.jsx';
 import FactorRegistryModal from './components/ghg/FactorRegistryModal.jsx';
 import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
+import RegulationsTrackerView from './components/regulations/RegulationsTrackerView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -678,6 +679,12 @@ export default function App() {
                 onCancel={() => setActiveTab('workbench')}
               />
             </Suspense>
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'regulations' && (
+          <ErrorBoundary>
+            <RegulationsTrackerView />
           </ErrorBoundary>
         )}
       </main>
