@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Sliders,
   Sparkles,
-  Target
+  Target,
+  DollarSign
 } from 'lucide-react';
 import {
   GHG_FACTOR_LIBRARY,
@@ -34,6 +35,7 @@ import {
 } from '../../services/ghg/calculationEngine.js';
 import TrendsVisualizerView from './TrendsVisualizerView.jsx';
 import SbtiTrajectorySimulatorView from './SbtiTrajectorySimulatorView.jsx';
+import CarbonCostSimulatorView from '../carbon/CarbonCostSimulatorView.jsx';
 
 export default function CorporateGhgLedgerView({
   activeProject,
@@ -343,6 +345,18 @@ export default function CorporateGhgLedgerView({
           >
             <Target className="w-4 h-4 text-emerald-400" />
             SBTi &amp; Net-Zero 2050
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('carbon-cost')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSubTab === 'carbon-cost'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <DollarSign className="w-4 h-4 text-amber-400" />
+            Carbon Cost Exposure
           </button>
         </div>
 
@@ -1028,6 +1042,14 @@ export default function CorporateGhgLedgerView({
       {/* SUB-TAB 6: SBTI & NET-ZERO 2050 */}
       {activeSubTab === 'sbti' && (
         <SbtiTrajectorySimulatorView
+          activeProject={activeProject}
+          activePeriodYear={activePeriodYear}
+        />
+      )}
+
+      {/* SUB-TAB 7: CARBON COST & SHADOW PRICING */}
+      {activeSubTab === 'carbon-cost' && (
+        <CarbonCostSimulatorView
           activeProject={activeProject}
           activePeriodYear={activePeriodYear}
         />

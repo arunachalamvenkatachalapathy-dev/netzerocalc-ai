@@ -25,6 +25,7 @@ import FactorRegistryModal from './components/ghg/FactorRegistryModal.jsx';
 import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
 import RegulationsTrackerView from './components/regulations/RegulationsTrackerView.jsx';
+import CarbonCostSimulatorView from './components/carbon/CarbonCostSimulatorView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -689,6 +690,15 @@ export default function App() {
         {activeTab === 'regulations' && (
           <ErrorBoundary>
             <RegulationsTrackerView />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'carbon-cost' && (
+          <ErrorBoundary>
+            <CarbonCostSimulatorView 
+              activeProject={activeProject}
+              activePeriodYear={activePeriodYear}
+            />
           </ErrorBoundary>
         )}
       </main>
