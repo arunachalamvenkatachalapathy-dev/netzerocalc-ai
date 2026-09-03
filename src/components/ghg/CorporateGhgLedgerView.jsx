@@ -31,6 +31,7 @@ import {
   exportLineageToCSV,
   exportWorkspaceToJson
 } from '../../services/ghg/calculationEngine.js';
+import TrendsVisualizerView from './TrendsVisualizerView.jsx';
 
 export default function CorporateGhgLedgerView({
   activeProject,
@@ -316,6 +317,18 @@ export default function CorporateGhgLedgerView({
             <span className="ml-1 px-1.5 py-0.2 rounded bg-black/20 text-[10px]">
               {calculation.lineage.length}
             </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('trends')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSubTab === 'trends'
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <TrendingDown className="w-4 h-4 text-emerald-400" />
+            Trends &amp; YoY Trajectory
           </button>
         </div>
 
@@ -988,6 +1001,14 @@ export default function CorporateGhgLedgerView({
           </div>
 
         </div>
+      )}
+
+      {/* SUB-TAB 5: TRENDS & YOY TRAJECTORY */}
+      {activeSubTab === 'trends' && (
+        <TrendsVisualizerView
+          activeProject={activeProject}
+          activePeriodYear={activePeriodYear}
+        />
       )}
 
     </div>
