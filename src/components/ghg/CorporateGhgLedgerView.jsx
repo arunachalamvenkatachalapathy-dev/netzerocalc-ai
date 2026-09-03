@@ -20,7 +20,8 @@ import {
   TrendingDown,
   RefreshCw,
   Sliders,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import {
   GHG_FACTOR_LIBRARY,
@@ -32,6 +33,7 @@ import {
   exportWorkspaceToJson
 } from '../../services/ghg/calculationEngine.js';
 import TrendsVisualizerView from './TrendsVisualizerView.jsx';
+import SbtiTrajectorySimulatorView from './SbtiTrajectorySimulatorView.jsx';
 
 export default function CorporateGhgLedgerView({
   activeProject,
@@ -329,6 +331,18 @@ export default function CorporateGhgLedgerView({
           >
             <TrendingDown className="w-4 h-4 text-emerald-400" />
             Trends &amp; YoY Trajectory
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('sbti')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeSubTab === 'sbti'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Target className="w-4 h-4 text-emerald-400" />
+            SBTi &amp; Net-Zero 2050
           </button>
         </div>
 
@@ -1006,6 +1020,14 @@ export default function CorporateGhgLedgerView({
       {/* SUB-TAB 5: TRENDS & YOY TRAJECTORY */}
       {activeSubTab === 'trends' && (
         <TrendsVisualizerView
+          activeProject={activeProject}
+          activePeriodYear={activePeriodYear}
+        />
+      )}
+
+      {/* SUB-TAB 6: SBTI & NET-ZERO 2050 */}
+      {activeSubTab === 'sbti' && (
+        <SbtiTrajectorySimulatorView
           activeProject={activeProject}
           activePeriodYear={activePeriodYear}
         />
