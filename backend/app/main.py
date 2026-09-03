@@ -27,12 +27,14 @@ from .bom_service import perform_bom_match, perform_override
 from .units import convert_unit
 
 from .regulations import router as regulations_router
+from .ghg_engine import router as ghg_engine_router
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="BOM-to-LCI Semantic Mapping Tool")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 app.include_router(regulations_router)
+app.include_router(ghg_engine_router)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me")
 DEFAULT_AI_URL = os.getenv("AI_CHAT_URL", "http://localhost:11434/v1/chat/completions")

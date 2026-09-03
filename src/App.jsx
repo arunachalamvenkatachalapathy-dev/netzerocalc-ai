@@ -675,6 +675,10 @@ export default function App() {
               </div>
             }>
               <GhgCalculatorView 
+                activeProject={activeProject}
+                activePeriodYear={activePeriodYear}
+                onUpdateProject={updateActiveProject}
+                showToast={showToast}
                 onSave={handleSaveCalculator}
                 onCancel={() => setActiveTab('workbench')}
               />

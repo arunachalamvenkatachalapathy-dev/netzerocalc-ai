@@ -4,12 +4,21 @@ import '@fortune-sheet/react/dist/index.css';
 import LuckyExcel from 'luckyexcel';
 import { 
   Monitor, Smartphone, ArrowRight, AlertCircle, Table, 
-  Maximize2, Minimize2, RotateCcw, Save, CheckCircle2, FileSpreadsheet, RefreshCw
+  Maximize2, Minimize2, RotateCcw, Save, CheckCircle2, FileSpreadsheet, RefreshCw, Calculator
 } from 'lucide-react';
+import CorporateGhgLedgerView from './ghg/CorporateGhgLedgerView.jsx';
 
 const EDITS_STORAGE_KEY = 'netzerocalc_excel_cell_edits';
 
-export default function GhgCalculatorView({ onSave, onCancel }) {
+export default function GhgCalculatorView({ 
+  activeProject, 
+  activePeriodYear = '2024', 
+  onUpdateProject, 
+  showToast, 
+  onSave, 
+  onCancel 
+}) {
+  const [viewMode, setViewMode] = useState('ledger'); // 'ledger' or 'spreadsheet'
   const [sheetData, setSheetData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -285,7 +294,41 @@ export default function GhgCalculatorView({ onSave, onCancel }) {
     }
   };
 
-  // Mobile Fallback Screen
+  // Interactive Scope 1–3 Ledger View (Default)
+  if (viewMode === 'ledger') {
+    return (
+      <div className="space-y-2">
+        {/* Top View Mode Switcher */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 pt-2">
+          <div className="inline-flex items-center gap-1.5 p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
+            <button
+              onClick={() => setViewMode('ledger')}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-xs cursor-pointer"
+            >
+              <Calculator className="w-3.5 h-3.5" />
+              <span>Interactive Scope 1–3 Ledger</span>
+            </button>
+            <button
+              onClick={() => setViewMode('spreadsheet')}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Excel Workbench (FortuneSheet)</span>
+            </button>
+          </div>
+        </div>
+
+        <CorporateGhgLedgerView
+          activeProject={activeProject}
+          activePeriodYear={activePeriodYear}
+          onUpdateProject={onUpdateProject}
+          showToast={showToast}
+        />
+      </div>
+    );
+  }
+
+  // Mobile Fallback Screen for Spreadsheet
   if (isMobile) {
     return (
       <div className="max-w-2xl mx-auto my-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm text-center space-y-5">
@@ -369,6 +412,16 @@ export default function GhgCalculatorView({ onSave, onCancel }) {
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Excel</span>
+          </button>
+
+          {/* Switch to Ledger Button */}
+          <button
+            onClick={() => setViewMode('ledger')}
+            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Switch to Interactive Scope 1–3 Ledger"
+          >
+            <Calculator className="w-3.5 h-3.5" />
+            <span>Interactive Ledger</span>
           </button>
 
           {/* Cancel */}
