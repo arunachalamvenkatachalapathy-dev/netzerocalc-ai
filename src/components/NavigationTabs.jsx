@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
   ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database, Scale,
-  DollarSign, FileCheck2, ShieldCheck
+  DollarSign, FileCheck2, ShieldCheck, Compass
 } from 'lucide-react';
 
 export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
@@ -30,6 +30,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
 
   // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
+    { id: 'eu-navigator', label: 'EU ESG Regulation Navigator', icon: Compass, desc: '60 Directives & Regulations Across 8 Policy Areas' },
     { id: 'csrd-materiality', label: 'CSRD Double Materiality', icon: FileCheck2, desc: '325 ESRS Post-Omnibus Datapoints & Matrix' },
     { id: 'omnibus-csddd', label: 'Omnibus & CSDDD Readiness', icon: ShieldCheck, desc: '61% Datapoint Cut & CSDDD 6-Step Due Diligence' },
     { id: 'carbon-cost', label: 'Carbon Cost & Shadow Pricing', icon: DollarSign, desc: 'EUA Trajectories to 2035 & Balance Sheet Liability' },

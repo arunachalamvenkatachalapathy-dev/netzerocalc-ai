@@ -28,6 +28,7 @@ import RegulationsTrackerView from './components/regulations/RegulationsTrackerV
 import CarbonCostSimulatorView from './components/carbon/CarbonCostSimulatorView.jsx';
 import CsrdDoubleMaterialityView from './components/csrd/CsrdDoubleMaterialityView.jsx';
 import OmnibusCsdddReadinessView from './components/csrd/OmnibusCsdddReadinessView.jsx';
+import EuRegulationNavigatorView from './components/regulations/EuRegulationNavigatorView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -691,7 +692,17 @@ export default function App() {
 
         {activeTab === 'regulations' && (
           <ErrorBoundary>
-            <RegulationsTrackerView />
+            <RegulationsTrackerView onNavigateToTab={(tabId) => setActiveTab(tabId)} />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'eu-navigator' && (
+          <ErrorBoundary>
+            <EuRegulationNavigatorView 
+              activeProject={activeProject}
+              activePeriodYear={activePeriodYear}
+              onNavigateToTab={(tabId) => setActiveTab(tabId)}
+            />
           </ErrorBoundary>
         )}
 
