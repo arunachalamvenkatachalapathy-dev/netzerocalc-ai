@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
   ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database, Scale,
-  DollarSign
+  DollarSign, FileCheck2
 } from 'lucide-react';
 
 export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
@@ -30,6 +30,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
 
   // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
+    { id: 'csrd-materiality', label: 'CSRD Double Materiality', icon: FileCheck2, desc: '325 ESRS Post-Omnibus Datapoints & Matrix' },
     { id: 'carbon-cost', label: 'Carbon Cost & Shadow Pricing', icon: DollarSign, desc: 'EUA Trajectories to 2035 & Balance Sheet Liability' },
     { id: 'dqr', label: 'DQR & Pedigree', icon: Award, desc: 'ISO 14044 Pedigree Matrix & Quality Scores' },
     { id: 'cbam', label: 'EU CBAM Benchmark', icon: Globe, desc: 'EU Implementing Regs 2021/447 & 2024/873' },

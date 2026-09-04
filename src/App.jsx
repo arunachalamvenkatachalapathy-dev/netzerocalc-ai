@@ -26,6 +26,7 @@ import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './service
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
 import RegulationsTrackerView from './components/regulations/RegulationsTrackerView.jsx';
 import CarbonCostSimulatorView from './components/carbon/CarbonCostSimulatorView.jsx';
+import CsrdDoubleMaterialityView from './components/csrd/CsrdDoubleMaterialityView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -696,6 +697,15 @@ export default function App() {
         {activeTab === 'carbon-cost' && (
           <ErrorBoundary>
             <CarbonCostSimulatorView 
+              activeProject={activeProject}
+              activePeriodYear={activePeriodYear}
+            />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'csrd-materiality' && (
+          <ErrorBoundary>
+            <CsrdDoubleMaterialityView 
               activeProject={activeProject}
               activePeriodYear={activePeriodYear}
             />
