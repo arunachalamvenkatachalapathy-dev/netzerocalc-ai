@@ -31,7 +31,8 @@ import { CSRD_DATAPOINTS } from '../../data/csrdDatapoints.js';
 
 export default function CsrdDoubleMaterialityView({
   activeProject,
-  activePeriodYear = '2024'
+  activePeriodYear = '2024',
+  onNavigateToTab
 }) {
   const companyName = activeProject?.companyName || 'My Enterprise Organization';
 
@@ -204,6 +205,25 @@ export default function CsrdDoubleMaterialityView({
           </div>
         </div>
       </div>
+
+      {/* CSDDD & Omnibus Cross-Link Banner */}
+      {onNavigateToTab && (
+        <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 p-3.5 rounded-xl flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-2.5 text-indigo-900 dark:text-indigo-200 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>
+              <strong>EU Omnibus Simplification &amp; CSDDD Due Diligence: </strong>
+              34 of your CSRD datapoints directly duplicate CSDDD statutory duties. Unify both under a single corporate workstream.
+            </span>
+          </div>
+          <button
+            onClick={() => onNavigateToTab('omnibus-csddd')}
+            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs transition"
+          >
+            Open Omnibus &amp; CSDDD Tool →
+          </button>
+        </div>
+      )}
 
       {/* 2. Top Secondary Navigation Sub-Tabs */}
       <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex-wrap">
