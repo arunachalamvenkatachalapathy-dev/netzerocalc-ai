@@ -130,13 +130,22 @@ export default function RegulationsTrackerView({ onNavigateToTab }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => onNavigateToTab('eu-navigator')}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer whitespace-nowrap"
-          >
-            Launch Navigator
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigateToTab('vsme')}
+              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer whitespace-nowrap"
+            >
+              VSME SME Tool
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onNavigateToTab('eu-navigator')}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer whitespace-nowrap"
+            >
+              Launch Navigator
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

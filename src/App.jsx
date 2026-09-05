@@ -29,6 +29,7 @@ import CarbonCostSimulatorView from './components/carbon/CarbonCostSimulatorView
 import CsrdDoubleMaterialityView from './components/csrd/CsrdDoubleMaterialityView.jsx';
 import OmnibusCsdddReadinessView from './components/csrd/OmnibusCsdddReadinessView.jsx';
 import EuRegulationNavigatorView from './components/regulations/EuRegulationNavigatorView.jsx';
+import VsmeReportingView from './components/vsme/VsmeReportingView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -731,6 +732,17 @@ export default function App() {
               activeProject={activeProject}
               activePeriodYear={activePeriodYear}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
+            />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'vsme' && (
+          <ErrorBoundary>
+            <VsmeReportingView 
+              activeProject={activeProject}
+              activePeriodYear={activePeriodYear}
+              onNavigateToTab={(tabId) => setActiveTab(tabId)}
+              showToast={showToast}
             />
           </ErrorBoundary>
         )}
