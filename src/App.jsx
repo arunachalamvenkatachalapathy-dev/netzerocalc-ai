@@ -30,6 +30,7 @@ import CsrdDoubleMaterialityView from './components/csrd/CsrdDoubleMaterialityVi
 import OmnibusCsdddReadinessView from './components/csrd/OmnibusCsdddReadinessView.jsx';
 import EuRegulationNavigatorView from './components/regulations/EuRegulationNavigatorView.jsx';
 import VsmeReportingView from './components/vsme/VsmeReportingView.jsx';
+import CeoInsightsView from './components/insights/CeoInsightsView.jsx';
 
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
@@ -739,6 +740,17 @@ export default function App() {
         {activeTab === 'vsme' && (
           <ErrorBoundary>
             <VsmeReportingView 
+              activeProject={activeProject}
+              activePeriodYear={activePeriodYear}
+              onNavigateToTab={(tabId) => setActiveTab(tabId)}
+              showToast={showToast}
+            />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'ceo-insights' && (
+          <ErrorBoundary>
+            <CeoInsightsView 
               activeProject={activeProject}
               activePeriodYear={activePeriodYear}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}

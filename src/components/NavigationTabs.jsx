@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
   ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database, Scale,
-  DollarSign, FileCheck2, ShieldCheck, Compass
+  DollarSign, FileCheck2, ShieldCheck, Compass, BookOpen
 } from 'lucide-react';
 
 export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
@@ -30,6 +30,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
 
   // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
+    { id: 'ceo-insights', label: 'Executive CEO Insights', icon: BookOpen, desc: '5 Boardroom Strategic Briefs & Decision Frameworks' },
     { id: 'vsme', label: 'VSME Voluntary SME Reporting', icon: FileSpreadsheet, desc: 'EFRAG C(2026) 5011 Voluntary Standard & VC Cap Shield' },
     { id: 'eu-navigator', label: 'EU ESG Regulation Navigator', icon: Compass, desc: '60 Directives & Regulations Across 8 Policy Areas' },
     { id: 'csrd-materiality', label: 'CSRD Double Materiality', icon: FileCheck2, desc: '325 ESRS Post-Omnibus Datapoints & Matrix' },
