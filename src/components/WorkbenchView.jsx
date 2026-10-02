@@ -197,7 +197,7 @@ export default function WorkbenchView({
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `ECredits_BOM_LCI_Inventory_${Date.now()}.csv`;
+    link.download = `NetZeroCalc_BOM_LCI_Inventory_${Date.now()}.csv`;
     link.click();
     showToast("Exported CBAM Inventory CSV.");
   };
