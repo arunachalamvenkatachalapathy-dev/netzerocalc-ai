@@ -148,7 +148,7 @@ export default function ComplianceView({
           </div>
           <h2 className="text-xl font-black text-white">Pre-Audit Internal GHG Inventory Declaration</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Downloadable audit-ready PDF declaration and assurance summary formatted for ISO 14064, BRSR Core, and EU CBAM pre-verification.
+            Downloadable PDF declaration and summary laid out for ISO 14064, BRSR Core and EU CBAM preparation. Not a verified or certified document; it needs third-party review.
           </p>
         </div>
 
