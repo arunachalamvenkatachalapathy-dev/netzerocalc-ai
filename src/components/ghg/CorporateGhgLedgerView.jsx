@@ -344,7 +344,7 @@ export default function CorporateGhgLedgerView({
             }`}
           >
             <Target className="w-4 h-4 text-emerald-400" />
-            SBTi &amp; Net-Zero 2050
+            SBTi pathway (experimental)
           </button>
 
           <button
