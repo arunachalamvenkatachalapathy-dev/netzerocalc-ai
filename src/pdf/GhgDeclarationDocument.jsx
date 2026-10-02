@@ -333,8 +333,8 @@ export default function GhgDeclarationDocument({
 
   return (
     <Document 
-      title={`GHG_Declaration_${activeProject?.projectName || 'E-Credits'}_FY${activePeriod?.year || 2024}`}
-      author={userProfile?.name || 'E-Credits Internal Analyst'}
+      title={`GHG_Declaration_${activeProject?.projectName || 'NetZeroCalc'}_FY${activePeriod?.year || 2024}`}
+      author={userProfile?.name || 'NetZeroCalc'}
       subject="Corporate GHG Inventory Internal Declaration (ISO 14064-1)"
     >
       
@@ -358,7 +358,7 @@ export default function GhgDeclarationDocument({
         <View style={styles.disclaimerBox}>
           <Text style={styles.disclaimerTitle}>REGULATORY ADVISORY & COMPLIANCE POSTURE:</Text>
           <Text style={styles.disclaimerText}>
-            This document represents an internal self-declaration of quantified greenhouse gas emissions prepared for management planning, target tracking, and audit preparation. It is based on internal activity data and emission factors from India GHG Factors v6. It does not constitute a third-party assurance statement or formal verification under ISO 14064-3.
+            This document represents an internal self-declaration of quantified greenhouse gas emissions prepared for management planning, target tracking, and audit preparation. It is based on internal activity data and emission factors from the sources listed per line item. It does not constitute a third-party assurance statement or formal verification under ISO 14064-3.
           </Text>
         </View>
 
@@ -423,7 +423,7 @@ export default function GhgDeclarationDocument({
 
         {/* Footer */}
         <View style={styles.pageFooter} fixed>
-          <Text>{serial} | E-Credits BOM-to-LCI GHG Inventory</Text>
+          <Text>{serial} | NetZeroCalc GHG Inventory</Text>
           <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>
 
@@ -440,7 +440,7 @@ export default function GhgDeclarationDocument({
           <Text>ISO 14064-1 Statement</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>1. Operational Boundary & Quantification Methodology</Text>
+        <Text minPresenceAhead={60} style={styles.sectionTitle}>1. Operational Boundary & Quantification Methodology</Text>
         <Text style={styles.paragraph}>
           This quantified carbon inventory has been compiled in conformance with ISO 14064-1:2018 and the GHG Protocol Corporate Accounting and Reporting Standard. The consolidation approach is based on operational control across all owned and operated manufacturing installations, logistics hubs, and corporate facilities.
         </Text>
@@ -460,11 +460,11 @@ export default function GhgDeclarationDocument({
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>LCI Factor Source Database</Text>
-            <Text style={styles.metaVal}>India GHG Factors v6 & CEA Grid Mix 2024</Text>
+            <Text style={styles.metaVal}>Per-line sources: India GHG Program, CEA grid, IPCC, DEFRA and other published sets (see ledger)</Text>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>2. Scope 1, 2, and 3 Consolidated Summary</Text>
+        <Text minPresenceAhead={60} style={styles.sectionTitle}>2. Scope 1, 2, and 3 Consolidated Summary</Text>
         
         <View style={styles.table}>
           <View style={styles.tableHeader}>
@@ -512,7 +512,7 @@ export default function GhgDeclarationDocument({
         {/* Multi-Period Trend Table */}
         {trendPeriods.length > 1 && (
           <View>
-            <Text style={styles.sectionTitle}>3. Multi-Period Historical Carbon Trend</Text>
+            <Text minPresenceAhead={60} style={styles.sectionTitle}>3. Multi-Period Historical Carbon Trend</Text>
             <View style={styles.table}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Period</Text>
@@ -546,27 +546,10 @@ export default function GhgDeclarationDocument({
           </View>
         )}
 
-        {/* Footer */}
-        <View style={styles.pageFooter} fixed>
-          <Text>{serial} | E-Credits BOM-to-LCI GHG Inventory</Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
-        </View>
-
-      </Page>
-
-      {/* ========================================================================= */}
-      {/* PAGE 3: SCOPE 3 CATEGORY DISTRIBUTION */}
-      {/* ========================================================================= */}
       {scope3Categories.length > 0 && (
-        <Page size="A4" style={styles.page}>
-          
-          {/* Header */}
-          <View style={styles.pageHeader} fixed>
-            <Text>{activeProject?.companyName || 'Corporate Entity'} | Scope 3 Breakdown</Text>
-            <Text>GHG Protocol Value Chain Standard</Text>
-          </View>
+        <View>
 
-          <Text style={styles.sectionTitle}>4. Scope 3 Category Breakdown (Categories 1-15)</Text>
+          <Text minPresenceAhead={60} style={styles.sectionTitle}>4. Scope 3 Category Breakdown (Categories 1-15)</Text>
           <Text style={styles.paragraph}>
             Scope 3 indirect emissions represent value chain activities upstream and downstream of operational facilities. The distribution below outlines quantified contributions aligned with the 15 categories defined under the GHG Protocol Scope 3 Standard and EU CSRD / CBAM requirements.
           </Text>
@@ -615,27 +598,10 @@ export default function GhgDeclarationDocument({
             })}
           </View>
 
-          {/* Footer */}
-          <View style={styles.pageFooter} fixed>
-            <Text>{serial} | E-Credits BOM-to-LCI GHG Inventory</Text>
-            <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
-          </View>
-
-        </Page>
+        </View>
       )}
 
-      {/* ========================================================================= */}
-      {/* PAGES 4+: COMPREHENSIVE LINE-ITEM INVENTORY */}
-      {/* ========================================================================= */}
-      <Page size="A4" style={styles.page}>
-        
-        {/* Header */}
-        <View style={styles.pageHeader} fixed>
-          <Text>{activeProject?.companyName || 'Corporate Entity'} | Activity Inventory</Text>
-          <Text>FY{activePeriod?.year || 2024} Activity Ledger</Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>5. Activity Data & Emission Factor Ledger</Text>
+        <Text break style={styles.sectionTitle}>5. Activity Data & Emission Factor Ledger</Text>
         <Text style={styles.paragraph}>
           The complete line-item inventory table below enumerates all operational activities, measured activity quantities, emission factor ratings, and resulting tCO2e outputs across Scopes 1, 2, and 3.
         </Text>
@@ -645,7 +611,7 @@ export default function GhgDeclarationDocument({
             <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Scope</Text>
             <Text style={[styles.tableHeaderCell, { width: '28%' }]}>Activity / Item Name</Text>
             <Text style={[styles.tableHeaderCell, styles.tableCellNumber, { width: '18%' }]}>Activity Data</Text>
-            <Text style={[styles.tableHeaderCell, { width: '22%' }]}>LCI Factor Process</Text>
+            <Text style={[styles.tableHeaderCell, { width: '22%', paddingLeft: 10 }]}>LCI Factor Process</Text>
             <Text style={[styles.tableHeaderCell, styles.tableCellNumber, { width: '10%' }]}>EF</Text>
             <Text style={[styles.tableHeaderCell, styles.tableCellNumber, { width: '10%' }]}>tCO2e</Text>
           </View>
@@ -660,7 +626,7 @@ export default function GhgDeclarationDocument({
                 <Text style={[styles.tableCell, styles.tableCellBold, { width: '12%' }]}>{item.scope || 'Scope 3'}</Text>
                 <Text style={[styles.tableCell, { width: '28%' }]}>{item.name}</Text>
                 <Text style={[styles.tableCell, styles.tableCellNumber, { width: '18%' }]}>{item.qty} {item.unit}</Text>
-                <Text style={[styles.tableCell, { width: '22%' }]}>{item.process || 'Generic Factor'}</Text>
+                <Text style={[styles.tableCell, { width: '22%', paddingLeft: 10 }]}>{item.process || 'Generic Factor'}</Text>
                 <Text style={[styles.tableCell, styles.tableCellNumber, { width: '10%' }]}>{item.ef}</Text>
                 <Text style={[styles.tableCell, styles.tableCellBold, styles.tableCellNumber, { width: '10%', color: '#065f46' }]}>{co2e}</Text>
               </View>
@@ -668,27 +634,8 @@ export default function GhgDeclarationDocument({
           })}
         </View>
 
-        {/* Footer */}
-        <View style={styles.pageFooter} fixed>
-          <Text>{serial} | E-Credits BOM-to-LCI GHG Inventory</Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
-        </View>
-
-      </Page>
-
-      {/* ========================================================================= */}
-      {/* LAST PAGE: SCENARIOS, AUDIT TRAIL & SIGN-OFF */}
-      {/* ========================================================================= */}
-      <Page size="A4" style={styles.page}>
-        
-        {/* Header */}
-        <View style={styles.pageHeader} fixed>
-          <Text>{activeProject?.companyName || 'Corporate Entity'} | Audit Trail & Verification</Text>
-          <Text>ISO 14064-3 Evidentiary Record</Text>
-        </View>
-
         {/* Decarbonization Scenario Section */}
-        <Text style={styles.sectionTitle}>6. ISO 14064-2 Decarbonization Project Simulation</Text>
+        <Text minPresenceAhead={60} style={styles.sectionTitle}>6. ISO 14064-2 Decarbonization Project Simulation</Text>
         {appliedScenario ? (
           <View style={styles.metaGrid}>
             <View style={styles.metaItem}>
@@ -715,7 +662,7 @@ export default function GhgDeclarationDocument({
         )}
 
         {/* Evidentiary Change Log Table */}
-        <Text style={styles.sectionTitle}>7. Evidentiary Change Log & Audit History</Text>
+        <Text minPresenceAhead={60} style={styles.sectionTitle}>7. Evidentiary Change Log & Audit History</Text>
         {changeLogs.length > 0 ? (
           <View style={styles.table}>
             <View style={styles.tableHeader}>
@@ -743,10 +690,10 @@ export default function GhgDeclarationDocument({
         )}
 
         {/* Preparer Sign-Off Box */}
-        <Text style={styles.sectionTitle}>8. Internal Declaration Attestation</Text>
+        <Text minPresenceAhead={60} style={styles.sectionTitle}>8. Internal Declaration Attestation</Text>
         <View style={styles.signBox}>
           <Text style={{ fontSize: 7.5, color: '#334155', lineHeight: 1.35, marginBottom: 8 }}>
-            "I hereby attest that the emission factors and activity quantities compiled in this document represent the verified internal accounting records of the reporting installation for the stated period."
+            "I hereby attest that the emission factors and activity quantities in this document are the ones entered by the preparer for the stated period. They have not been verified by a third party."
           </Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTopWidth: 0.5, borderTopColor: '#cbd5e1' }}>
             <View>
@@ -761,14 +708,14 @@ export default function GhgDeclarationDocument({
               <Text style={{ fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: '#0f172a', marginTop: 1 }}>
                 {serial}
               </Text>
-              <Text style={{ fontSize: 7, color: '#059669', fontFamily: 'Helvetica-Bold' }}>SELF-REPORTED / UNVERIFIED</Text>
+              <Text style={{ fontSize: 7, color: '#b45309', fontFamily: 'Helvetica-Bold' }}>SELF-REPORTED / UNVERIFIED</Text>
             </View>
           </View>
         </View>
 
         {/* Footer */}
         <View style={styles.pageFooter} fixed>
-          <Text>{serial} | E-Credits BOM-to-LCI GHG Inventory</Text>
+          <Text>{serial} | NetZeroCalc GHG Inventory</Text>
           <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>
 
