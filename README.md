@@ -56,8 +56,7 @@ The data is static. There is no automatic update path, so check the vintage on e
 
 - Frontend: React 19, Vite, Tailwind CSS, Recharts, FortuneSheet, `@react-pdf/renderer`
 - Parsing and export: PapaParse, SheetJS, custom BRSR Core and openLCA serialisers
-- Backend: FastAPI (`backend/`), SQLite by default
-- Auth and storage: Firebase Auth and Firestore (rules in `firestore.rules`)
+- Backend: Supabase (Postgres with row level security, Auth, one Edge Function for the AI copilot). Schema in `supabase/migrations/`, function in `supabase/functions/ai-chat/`
 
 ## Run locally
 
@@ -69,25 +68,17 @@ npm install
 npm run dev              # http://localhost:5173
 ```
 
-Backend (optional):
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+The app works without any backend setup: use "Try it without an account" and data stays in your browser. To use accounts, cloud sync and the AI copilot, create a Supabase project, apply `supabase/migrations/`, deploy `supabase/functions/ai-chat` with a `GROQ_API_KEY` secret, and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`.
 
 ## Known limitations
 
-- **Backend migration to Supabase is in progress.** The old Cloud Run backend is offline, so the live demo runs client-side with data in your browser's local storage. There are no accounts, no sync between devices, and the AI copilot does not work there until the migration lands.
+- **Accounts and cloud sync use Supabase** (row level security, own rows only). Guest mode keeps data in your browser's local storage instead. The AI copilot needs a signed-in account and is rate limited.
 - **Tests are not yet run in CI.** Test files are in `tests/ghg` and need Bun. There is no CI check for them yet.
-- **The backend is not hardened for real client data.** Several endpoints lack authentication and CORS is open. Treat it as a demo until that is fixed.
 - **Emission factors are static** and some modules use simplified methods. This is a screening tool, not an assured reporting system.
 - The deploy setup is cluttered (several hosting configs live in the repo).
 
 ## Documentation
 
-- [Cloud Run and Firebase deployment](docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md)
 - [Emission factor governance](docs/EMISSION_FACTOR_GOVERNANCE.md)
 - [Roadmap](docs/ROADMAP.md)
 
