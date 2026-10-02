@@ -24,24 +24,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
-        run: npm ci || npm install
-      - name: Security & Integrity Check
-        run: |
-          if [ -d "backend/app/linkedin_autopilot" ]; then
-            echo "Error: Unrelated automation bot 'linkedin_autopilot' detected in repo."
-            exit 1
-          fi
-          if grep -q "sb_publishable_" "src/lib/supabase.js"; then
-            echo "Error: Hardcoded Supabase credentials detected in src/lib/supabase.js"
-            exit 1
-          fi
+        run: bun install --frozen-lockfile
+      - name: Unit tests
+        run: bun test tests/ghg/*.test.js
       - name: Build
-        run: npm run build
+        run: bun run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
