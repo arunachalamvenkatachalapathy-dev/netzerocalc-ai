@@ -25,7 +25,7 @@ export function createLineageEntry({
     activity_unit: activityUnit,
     ef_value: ef.value,
     ef_unit: ef.unit,
-    ef_source: ef.source || 'Authoritative Registry',
+    ef_source: ef.source || 'Factor Registry',
     ef_version: ef.version || '1.0',
     ef_tier: ef.tier || 2,
     co2e_kg: Number(co2eKg.toFixed(4)),
