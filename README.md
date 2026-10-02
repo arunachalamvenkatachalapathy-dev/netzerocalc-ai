@@ -84,12 +84,24 @@ bun test                 # run the test suite
 
 The app works without any backend: use "Try it without an account" and data stays in your browser. To use accounts, cloud sync and the AI copilot, create a Supabase project, apply `supabase/migrations/`, deploy `supabase/functions/ai-chat`, and set the keys in `.env`.
 
+## API and MCP
+
+Signed-in users can create a personal token in the app (Tools & Registry > API & MCP). The token only sees your own projects. An MCP server (Streamable HTTP) and a small REST API run as a Supabase Edge Function (`supabase/functions/api`).
+
+MCP tools: `list_projects`, `get_project_summary`, `search_emission_factors`, `add_bom_items`. Lines added through the API are marked unapproved and high risk until you review them in the app.
+
+```json
+{ "mcpServers": { "netzerocalc": { "type": "http", "url": "https://gxzrfngjypmijvfhtjiv.supabase.co/functions/v1/api/mcp", "headers": { "Authorization": "Bearer YOUR_TOKEN" } } } }
+```
+
+REST: `GET /functions/v1/api/factors?q=diesel&region=IN`, `GET /functions/v1/api/projects`, `GET /functions/v1/api/projects/{id}/summary`. The factor library inside the function is a snapshot and must be regenerated when `src/data/globalLciDatabase.js` changes.
+
 ## Known limitations
 
 - **Screening tool.** Some calculations are simplified. It is not an assured reporting system.
 - **Static factors.** No automatic updates. Several material factors are rounded industry averages marked Illustrative.
 - **Guest mode** keeps data in your browser only. Signed-in data syncs to Supabase with row level security (your own rows only).
-- **No public API or MCP server yet.** Both are planned, see the [roadmap](docs/ROADMAP.md).
+- **API and MCP are early alpha.** Four tools (list projects, project summary, factor search, add BOM lines). No report generation or PDF export over the API yet, and tokens have no scopes or expiry. See [API and MCP](#api-and-mcp).
 - **Alpha.** Expect rough edges and changes between versions.
 
 ## Documentation
