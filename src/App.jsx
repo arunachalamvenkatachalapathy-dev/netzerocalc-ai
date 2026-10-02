@@ -1,36 +1,36 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Header from './components/Header.jsx';
 import NavigationTabs from './components/NavigationTabs.jsx';
-import WorkbenchView from './components/WorkbenchView.jsx';
-import LciSearchTab from './components/LciSearchTab.jsx';
-import SimulatorView from './components/SimulatorView.jsx';
-import ProjectsView from './components/ProjectsView.jsx';
-import ComplianceView from './components/ComplianceView.jsx';
-import ImportModal from './components/ImportModal.jsx';
-import GoogleSheetsModal from './components/GoogleSheetsModal.jsx';
-import TutorialGuideDock from './components/TutorialGuideDock.jsx';
-import CbamView from './components/CbamView.jsx';
-import DqrDashboard from './components/DqrDashboard.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import AiChatSidebar from './components/AiChatSidebar.jsx';
 import { Bot, Building2, Calendar, Database } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase.js';
 import { loadUserProjects, saveUserProjects, deleteUserProject } from './lib/projectsRepo.js';
 import AuthScreen from './components/AuthScreen.jsx';
-import FacilityManagementModal from './components/ghg/FacilityManagementModal.jsx';
-import PeriodManagementModal from './components/ghg/PeriodManagementModal.jsx';
-import FactorRegistryModal from './components/ghg/FactorRegistryModal.jsx';
 import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
-import RegulationsTrackerView from './components/regulations/RegulationsTrackerView.jsx';
-import CarbonCostSimulatorView from './components/carbon/CarbonCostSimulatorView.jsx';
-import CsrdDoubleMaterialityView from './components/csrd/CsrdDoubleMaterialityView.jsx';
-import OmnibusCsdddReadinessView from './components/csrd/OmnibusCsdddReadinessView.jsx';
-import EuRegulationNavigatorView from './components/regulations/EuRegulationNavigatorView.jsx';
-import VsmeReportingView from './components/vsme/VsmeReportingView.jsx';
-import CeoInsightsView from './components/insights/CeoInsightsView.jsx';
 
+const WorkbenchView = lazy(() => import('./components/WorkbenchView.jsx'));
+const LciSearchTab = lazy(() => import('./components/LciSearchTab.jsx'));
+const SimulatorView = lazy(() => import('./components/SimulatorView.jsx'));
+const ProjectsView = lazy(() => import('./components/ProjectsView.jsx'));
+const ComplianceView = lazy(() => import('./components/ComplianceView.jsx'));
+const ImportModal = lazy(() => import('./components/ImportModal.jsx'));
+const GoogleSheetsModal = lazy(() => import('./components/GoogleSheetsModal.jsx'));
+const TutorialGuideDock = lazy(() => import('./components/TutorialGuideDock.jsx'));
+const CbamView = lazy(() => import('./components/CbamView.jsx'));
+const DqrDashboard = lazy(() => import('./components/DqrDashboard.jsx'));
+const AiChatSidebar = lazy(() => import('./components/AiChatSidebar.jsx'));
+const FacilityManagementModal = lazy(() => import('./components/ghg/FacilityManagementModal.jsx'));
+const PeriodManagementModal = lazy(() => import('./components/ghg/PeriodManagementModal.jsx'));
+const FactorRegistryModal = lazy(() => import('./components/ghg/FactorRegistryModal.jsx'));
+const RegulationsTrackerView = lazy(() => import('./components/regulations/RegulationsTrackerView.jsx'));
+const CarbonCostSimulatorView = lazy(() => import('./components/carbon/CarbonCostSimulatorView.jsx'));
+const CsrdDoubleMaterialityView = lazy(() => import('./components/csrd/CsrdDoubleMaterialityView.jsx'));
+const OmnibusCsdddReadinessView = lazy(() => import('./components/csrd/OmnibusCsdddReadinessView.jsx'));
+const EuRegulationNavigatorView = lazy(() => import('./components/regulations/EuRegulationNavigatorView.jsx'));
+const VsmeReportingView = lazy(() => import('./components/vsme/VsmeReportingView.jsx'));
+const CeoInsightsView = lazy(() => import('./components/insights/CeoInsightsView.jsx'));
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
 
@@ -602,6 +602,7 @@ export default function App() {
 
       {/* Main View Container */}
       <main className="max-w-7xl mx-auto px-4 pt-6">
+        <Suspense fallback={<div className="py-24 text-center text-sm text-slate-400">Loading...</div>}>
         {activeTab === 'workbench' && (
           <WorkbenchView 
             currentBOM={currentBOM}
@@ -764,9 +765,11 @@ export default function App() {
             />
           </ErrorBoundary>
         )}
+        </Suspense>
       </main>
 
       {/* Modals */}
+      <Suspense fallback={null}>
       <ImportModal 
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
@@ -875,6 +878,8 @@ export default function App() {
         organization={activeProject.organization}
         facilities={activeProject.facilities || []}
       />
+
+      </Suspense>
 
       {/* Footer */}
       <footer className="mt-12 py-6 text-center text-xs font-medium text-slate-400">
