@@ -408,7 +408,7 @@ export default function GhgCalculatorView({
           <button 
             onClick={handleResetTemplate}
             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 border border-slate-700 cursor-pointer"
-            title="Reset sheet to fresh template"
+            title="Reset sheet to fresh template" aria-label="Reset sheet to fresh template"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Excel</span>
