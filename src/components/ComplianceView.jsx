@@ -19,6 +19,7 @@ export default function ComplianceView({
   periods = [],
   baseYearPeriod,
   accountingStandard, 
+  setAccountingStandard,
   appliedScenario, 
   showToast 
 }) {
@@ -150,6 +151,18 @@ export default function ComplianceView({
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
             Downloadable PDF declaration and summary laid out for ISO 14064, BRSR Core and EU CBAM preparation. Not a verified or certified document; it needs third-party review.
           </p>
+          <label className="flex items-center gap-2 mt-3 text-[11px] font-semibold text-slate-300">
+            Framework named on the declaration
+            <select
+              value={accountingStandard}
+              onChange={(e) => setAccountingStandard && setAccountingStandard(e.target.value)}
+              className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2 py-1 text-xs outline-none focus:border-emerald-500"
+            >
+              <option value="ISO 14064-1 & Scope 1-3">ISO 14064-1 &amp; GHG Protocol</option>
+              <option value="ISO 14064-2 Project Scenario">ISO 14064-2 Decarbonization</option>
+              <option value="EU CBAM & DPP Disclosure">EU CBAM &amp; DPP Disclosure</option>
+            </select>
+          </label>
         </div>
 
         {/* Unified Export Dropdown */}
