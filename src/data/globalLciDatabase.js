@@ -38,12 +38,30 @@ const RAW_FACTORS = [
   { id: "ecoinvent_cardboard_box", name: "Corrugated Cardboard Packaging Box", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 0.92, unit: "kg", source: "FEFCO Corrugated LCA", notes: "Average corrugated containerboard." },
   { id: "ecoinvent_glass_container", name: "Container Glass Bottles (Clear)", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 0.85, unit: "kg", source: "European Container Glass", notes: "Melting cullet and virgin silica glass." },
   { id: "ecoinvent_cement_portland", name: "Ordinary Portland Cement (OPC)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 0.82, unit: "kg", source: "GCCA Cement LCA 2023", notes: "Clinker calcination and finish grinding." },
-  { id: "ecoinvent_concrete_ready", name: "Ready-Mix Concrete (C30/37 Grade)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 240.00, unit: "m3", source: "GCCA Cement LCA 2023", notes: "Standard structural ready-mix concrete." }
+  { id: "ecoinvent_concrete_ready", name: "Ready-Mix Concrete (C30/37 Grade)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 240.00, unit: "m3", source: "GCCA Cement LCA 2023", notes: "Standard structural ready-mix concrete." },
+  { id: "mat_pet_resin", name: "PET Resin (Bottle Grade)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 2.15, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin PET, cradle-to-gate." },
+  { id: "mat_pvc_resin", name: "PVC Resin (Suspension)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 2.0, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin PVC, cradle-to-gate." },
+  { id: "mat_abs_resin", name: "ABS Resin", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 3.1, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin ABS, cradle-to-gate." },
+  { id: "mat_polystyrene_gpps", name: "Polystyrene (General Purpose)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 3.4, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin GPPS, cradle-to-gate." },
+  { id: "mat_nylon6", name: "Nylon 6 (Polyamide 6)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 9.1, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin PA6, cradle-to-gate." },
+  { id: "mat_stainless_304", name: "Stainless Steel 304 (Cold-Rolled)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 6.15, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Typical EU/global mix with recycled content." },
+  { id: "mat_galvanized_steel", name: "Galvanized Steel Sheet", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 2.76, unit: "kg", source: "World Steel Association", notes: "Hot-dip galvanized coil, cradle-to-gate." },
+  { id: "mat_zinc_ingot", name: "Zinc Ingot (Special High Grade)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 3.09, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Primary zinc." },
+  { id: "mat_brass", name: "Brass (Cu-Zn)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 3.4, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Typical brass, cradle-to-gate." },
+  { id: "mat_paper_virgin", name: "Paper (Virgin, Uncoated)", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 1.1, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Uncoated printing paper." },
+  { id: "mat_timber_softwood", name: "Sawn Softwood Timber", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 0.31, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Excludes biogenic carbon storage." },
+  { id: "mat_flat_glass", name: "Flat Glass (Float)", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 1.28, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Float glass, cradle-to-gate." },
+  { id: "mat_clay_brick", name: "Fired Clay Brick", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 0.24, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "General fired clay brick." },
+  { id: "mat_ceramic_tile", name: "Ceramic Tile", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 0.78, unit: "kg", source: "ICE Database v3 (University of Bath)", notes: "Glazed floor/wall tile." },
+  { id: "mat_cotton_fabric", name: "Cotton Fabric (Woven)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 8.0, unit: "kg", source: "Textile Exchange / Higg MSI", notes: "Illustrative range 5-10 depending on farming and mill; verify." },
+  { id: "mat_polyester_fabric", name: "Polyester Fabric (Woven)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 9.5, unit: "kg", source: "Textile Exchange / Higg MSI", notes: "Illustrative; verify against supplier data." }
 ];
 
 // Provenance per publisher. `illustrative` means the value is a rounded industry-average
 // that has not been traced to a specific table in the cited source. Check it before use.
 const PROVENANCE = {
+  'ICE Database v3 (University of Bath)': { year: 2019, url: 'https://circularecology.com/embodied-carbon-footprint-database.html', status: 'illustrative' },
+  'Textile Exchange / Higg MSI': { year: 2022, url: 'https://textileexchange.org/', status: 'illustrative' },
   'India CEA (Central Electricity Authority)': { year: 2024, url: 'https://cea.nic.in/cdm-co2-baseline-database/', status: 'published' },
   'India GHG Platform': { year: 2024, url: 'http://www.indiaghgplatform.org/', status: 'published' },
   'India GHG Platform / MoEFCC': { year: 2024, url: 'http://www.indiaghgplatform.org/', status: 'published' },
