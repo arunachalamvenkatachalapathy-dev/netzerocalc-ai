@@ -81,7 +81,7 @@ export default function Header({
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-inner">
-                BOM-to-LCI v0.1.0-alpha
+                Carbon calculator v0.1.0-alpha
               </span>
             </div>
             
