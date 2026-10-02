@@ -78,7 +78,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
     reader.onload = (evt) => {
       // Smart extracted items from EPD / Invoice document
       const defaultPdfExtracted = [
-        { id: Date.now() + 1, name: "Primary Aluminum Ingot (EPD ISO 14025 Certified)", qty: 5000, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", status: "[PDF PARSED] EPD Certified", approved: true },
+        { id: Date.now() + 1, name: "Primary Aluminum Ingot (sample EPD-style entry)", qty: 5000, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", status: "[PDF PARSED] EPD Certified", approved: true },
         { id: Date.now() + 2, name: "Recycled Structural Steel Beam HEA 300", qty: 2500, unit: "kg", process: "Steel Electric Arc Furnace Recycled", ef: 1.35, scope: "Scope 3", status: "[PDF PARSED] Supplier Invoice", approved: true },
         { id: Date.now() + 3, name: "Industrial Diesel Fuel - Thermal Combustion", qty: 750, unit: "Liters", process: "Diesel Fuel Thermal Combustion", ef: 2.6558, scope: "Scope 1", status: "[PDF PARSED] Fuel Receipt", approved: true },
         { id: Date.now() + 4, name: "Grid Electricity Supply (CEA Verified 2024)", qty: 14000, unit: "kWh", process: "Grid Electricity (CEA India Grid Mix 2024)", ef: 0.716, scope: "Scope 2", status: "[PDF PARSED] Utility Statement", approved: true }
