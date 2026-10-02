@@ -10,8 +10,6 @@ export default function Header({
   userProfile = { name: '', role: 'Internal Analyst', organization: 'ACME Corp' },
   onUpdateUserProfile,
   activeProject, 
-  accountingStandard, 
-  setAccountingStandard,
   onGoHome,
   onUpdateProject,
   onStartTutorial,
@@ -71,7 +69,7 @@ export default function Header({
           <button 
             onClick={onGoHome}
             className="flex items-center gap-2.5 hover:opacity-90 transition-all cursor-pointer group"
-            title="Return to Landing Page"
+            title="Return to Landing Page" aria-label="Return to Landing Page"
           >
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform shadow-md shadow-emerald-600/20">
               <Activity className="text-white w-5 h-5 stroke-[2.5]" />
@@ -99,7 +97,7 @@ export default function Header({
                 <button
                   onClick={handleSaveProjectEdit}
                   className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all duration-300 active:scale-[0.92] shadow-[0_0_10px_rgba(5,150,105,0.2)] hover:shadow-[0_4px_15px_rgba(5,150,105,0.4)] cursor-pointer"
-                  title="Save Company Name"
+                  title="Save Company Name" aria-label="Save Company Name"
                 >
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                 </button>
@@ -146,24 +144,12 @@ export default function Header({
             <span>Global + India factor library</span>
           </div>
 
-          {/* Standard Select */}
-          <select 
-            title="Framework named on the exported declaration"
-            value={accountingStandard} 
-            onChange={(e) => setAccountingStandard(e.target.value)}
-            className="bg-slate-50 text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 cursor-pointer"
-          >
-            <option value="ISO 14064-1 & Scope 1-3">ISO 14064-1 & GHG Protocol</option>
-            <option value="ISO 14064-2 Project Scenario">ISO 14064-2 Decarbonization</option>
-            <option value="EU CBAM & DPP Disclosure">EU CBAM & DPP Disclosure</option>
-          </select>
-
           {/* Interactive Tutorial Button */}
           {onStartTutorial && (
             <button
               onClick={onStartTutorial}
               className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95 hover:scale-105"
-              title="Launch interactive feature guide and demo dataset"
+              title="Launch interactive feature guide and demo dataset" aria-label="Launch interactive feature guide and demo dataset"
             >
               <Sparkles className="w-3.5 h-3.5 fill-white/30" />
               <span>Tutorial & Demo Guide</span>
