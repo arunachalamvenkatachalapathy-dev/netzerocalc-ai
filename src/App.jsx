@@ -144,8 +144,8 @@ export default function App() {
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('netzerocalc_user_profile');
     return saved ? JSON.parse(saved) : {
-      name: 'Arunachalam Venkatachalapathy',
-      role: 'Internal Analyst',
+      name: '',
+      role: 'Preparer',
       organization: 'ACME Corp'
     };
   });
@@ -413,7 +413,7 @@ export default function App() {
   const handleCreateProject = ({ projectName, companyName, standard }) => {
     const newId = `proj_${Date.now()}`;
     const authorName = userProfile.name?.trim() ? userProfile.name.trim() : 'System';
-    const serial = `DECL-GHG-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const serial = `DECL-GHG-${new Date().getFullYear()}-${String([...newId].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 1000000).padStart(6, '0')}`;
     const newProj = {
       id: newId,
       projectName,
@@ -490,6 +490,7 @@ export default function App() {
 
       {/* Header Bar */}
       <Header 
+        signedIn={Boolean(authUser)}
         userProfile={userProfile}
         onUpdateUserProfile={handleUpdateUserProfile}
         activeProject={activeProject}
@@ -880,7 +881,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="mt-12 py-6 text-center text-xs font-medium text-slate-400">
-        &copy; {new Date().getFullYear()} Arunachalam Venkatachalapathy. All rights reserved.
+        &copy; {new Date().getFullYear()} NetZeroCalc. Open source under the MIT License.
       </footer>
 
     </div>
