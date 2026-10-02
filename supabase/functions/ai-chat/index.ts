@@ -2,7 +2,23 @@
 // and re-checked here). The model key lives in the GROQ_API_KEY function secret.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const MODEL = Deno.env.get("AI_MODEL") ?? "llama-3.3-70b-versatile";
+const MODEL_OVERRIDE = Deno.env.get("AI_MODEL");
+const PREFERRED_MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant", "openai/gpt-oss-20b"];
+let cachedModel: string | null = null;
+
+// Groq retires models over time, so pick one that the account can actually use right now.
+async function pickModel(apiKey: string): Promise<string> {
+  if (MODEL_OVERRIDE) return MODEL_OVERRIDE;
+  if (cachedModel) return cachedModel;
+  const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${apiKey}` } });
+  if (!res.ok) throw new Error(`model list failed: ${res.status}`);
+  const ids: string[] = ((await res.json()).data ?? []).map((m: { id: string }) => m.id);
+  const chosen = PREFERRED_MODELS.find((m) => ids.includes(m))
+    ?? ids.find((id) => !/whisper|guard|tts|orpheus|embed|safeguard|prompt/i.test(id));
+  if (!chosen) throw new Error("no usable chat model available");
+  cachedModel = chosen;
+  return chosen;
+}
 const RATE_LIMIT_PER_MINUTE = 10;
 const MAX_QUESTION_CHARS = 4000;
 const MAX_HISTORY = 20;
@@ -70,11 +86,16 @@ Deno.serve(async (req) => {
     ? `[Screen & UI Context]\n${JSON.stringify(body.screen_context).slice(0, MAX_CONTEXT_CHARS)}\n\n`
     : "";
 
+  let model: string;
+  try { model = await pickModel(apiKey); } catch (err) {
+    console.error("Model selection failed", String(err));
+    return json(req, { error: "AI request failed" }, 502);
+  }
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       temperature: 0.2,
       messages: [
         { role: "system", content: SYSTEM_INSTRUCTION },
@@ -89,5 +110,5 @@ Deno.serve(async (req) => {
   }
   const out = await res.json();
   const answer: string = out?.choices?.[0]?.message?.content ?? "";
-  return json(req, { answer: answer || "I could not produce an answer.", sources: [], model_used: MODEL });
+  return json(req, { answer: answer || "I could not produce an answer.", sources: [], model_used: model });
 });
