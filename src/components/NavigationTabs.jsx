@@ -30,11 +30,6 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
 
   // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
-    { id: 'ceo-insights', label: 'Executive CEO Insights', icon: BookOpen, desc: '5 Boardroom Strategic Briefs & Decision Frameworks' },
-    { id: 'vsme', label: 'VSME Voluntary SME Reporting', icon: FileSpreadsheet, desc: 'EFRAG C(2026) 5011 Voluntary Standard & VC Cap Shield' },
-    { id: 'eu-navigator', label: 'EU ESG Regulation Navigator', icon: Compass, desc: '60 Directives & Regulations Across 8 Policy Areas' },
-    { id: 'csrd-materiality', label: 'CSRD Double Materiality', icon: FileCheck2, desc: '325 ESRS Post-Omnibus Datapoints & Matrix' },
-    { id: 'omnibus-csddd', label: 'Omnibus & CSDDD Readiness', icon: ShieldCheck, desc: '61% Datapoint Cut & CSDDD 6-Step Due Diligence' },
     { id: 'carbon-cost', label: 'Carbon Cost & Shadow Pricing', icon: DollarSign, desc: 'EUA Trajectories to 2035 & Balance Sheet Liability' },
     { id: 'dqr', label: 'DQR & Pedigree', icon: Award, desc: 'ISO 14044 Pedigree Matrix & Quality Scores' },
     { id: 'cbam', label: 'EU CBAM Benchmark', icon: Globe, desc: 'EU Implementing Regs 2021/447 & 2024/873' },
