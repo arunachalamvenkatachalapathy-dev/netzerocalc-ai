@@ -64,3 +64,7 @@ Nothing is deleted from git history. Cuts are separate commits so any one can be
 
 Order: A, C (cheap, high trust), B, D, E, F. One commit per ID. Report after each phase.
 Out of scope for now: real MCP server (waiting on owner decision), anything that costs money.
+
+## Owner additions (Oct 2, 4:12 PM)
+- PDF export: real design pass (phase E). Render every export page, fix layout, type scale, tables, cover, disclaimers.
+- Dropdown audit (phase D/E): every select must change real behavior or be removed. Audit of 45 selects done. Removed the Header geography select (state was never read) and the fixed "India GHG Factors v6" badge. The remaining header standard select only labels the exported declaration; it moves to Settings in D.
