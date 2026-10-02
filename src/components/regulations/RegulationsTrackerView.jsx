@@ -109,45 +109,10 @@ export default function RegulationsTrackerView({ onNavigateToTab }) {
             Sustainability Reporting Regulations
           </h1>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            A comprehensive, verified regulatory intelligence tracker covering corporate ESG reporting mandates, greenhouse gas disclosure requirements, assurance timelines, and official legal sources across all G20 and international jurisdictions.
+            A reference list of corporate ESG and greenhouse gas reporting rules by jurisdiction, with timelines and links to the official legal sources. Dates and thresholds change often; check the linked source before relying on an entry.
           </p>
         </div>
       </div>
-
-      {/* Navigator Cross-Link Banner */}
-      {onNavigateToTab && (
-        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
-              <Compass className="w-5 h-5 text-indigo-400" />
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
-                Specialized European Green Deal Tool
-              </div>
-              <div className="text-sm font-bold text-white">
-                EU ESG Regulation Navigator (60 Directives & 5-Factor Strategic Radar)
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onNavigateToTab('vsme')}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer whitespace-nowrap"
-            >
-              VSME SME Tool
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onNavigateToTab('eu-navigator')}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer whitespace-nowrap"
-            >
-              Launch Navigator
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 2. Top Summary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
