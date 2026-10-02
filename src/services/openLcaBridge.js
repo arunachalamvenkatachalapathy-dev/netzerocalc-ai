@@ -1,6 +1,6 @@
 /**
  * openLCA JSON-LD Bridge Export Service
- * Serializes E-Credits BOM-to-LCI mappings into an openLCA / ILCD compatible JSON-LD dataset.
+ * Serializes NetZeroCalc BOM-to-LCI mappings into an openLCA / ILCD compatible JSON-LD dataset.
  */
 
 export function generateOpenLcaJsonLd(project) {
