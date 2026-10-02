@@ -1,99 +1,100 @@
-# NetZeroCalc: Open-Source BOM-to-LCI Mapper for Product Carbon Footprints
+# NetZeroCalc
 
-> ⚠️ **Educational Prototype Notice**: This is an open-source learning and rapid-prototyping workbench for **Bill of Materials (BOM) to Life Cycle Inventory (LCI)** mapping methodology. Computational outputs represent preliminary screening estimates and require qualified practitioner review before use in regulated corporate disclosures. It does not constitute a third-party assurance statement or formal verification under ISO 14044 or ISO 14064-3.
+Open-source tool that maps a manufacturing Bill of Materials (BOM) to Life Cycle Inventory (LCI) emission factors, scores the data quality, and exports a product carbon footprint (PCF) in BRSR Core and openLCA formats.
 
----
+**Live demo:** https://netzerocalc-ai.vercel.app/
 
-## 🎯 What It Does
+> Screening-level tool. Results are estimates for learning, prototyping and early benchmarking. They are not third-party verified and are not a substitute for ISO 14044 / ISO 14064-3 assurance or a practitioner-reviewed disclosure.
 
-**NetZeroCalc** maps manufacturing **Bill of Materials (BOM)** line items to standardized **Life Cycle Inventory (LCI)** background processes using transparent semantic matching, data quality scoring, and open factor citations.
-
-It is purpose-built for:
-- **ESG & Environmental Engineering Students** learning practical LCA and Product Carbon Footprint (PCF) accounting workflows.
-- **Sustainability Practitioners & Interns** assembling rapid cradle-to-gate PCF prototypes without complex proprietary software setup.
-- **Manufacturing SMEs & Product Teams** benchmarking product footprints against standard open datasets before investing in enterprise-scale LCA software.
-
----
-
-## 🔄 End-to-End Workflow
+## What it does
 
 ```
-[ Upload BOM CSV ] ──> [ Semantic LCI Matcher ] ──> [ DQR Pedigree Rating ] ──> [ Multi-Standard Export ]
- (Item, Qty, Unit)       (DEFRA, CEA, EU CBAM)        (1-5 Pedigree Score)        (CSV, JSON, BRSR, openLCA)
+BOM CSV  ->  LCI matching  ->  DQR pedigree score  ->  What-if scenarios  ->  Export
+(item, qty, unit)  (DEFRA / CEA / CBAM)  (5 indicators)                (BRSR Core, openLCA, PDF, CSV/JSON)
 ```
 
-1. **Import Activity Data:** Upload manufacturing Bill of Materials (CSV/Excel/Google Sheets) containing component descriptions, physical quantities, and units.
-2. **Review Semantic Matches:** Inspect auto-suggested background LCI processes with transparent factor citations, version dates, and geographic boundaries.
-3. **Data Quality Rating (DQR):** Evaluate each mapping using the 5-indicator **Pedigree Matrix** (Reliability, Completeness, Temporal, Geographical, and Technological representativeness).
-4. **Decarbonization Simulation:** Model material substitution levers (e.g. recycled aluminium, green electricity, bio-based polymers) with real-time delta tracking.
-5. **Multi-Format Export:** Export verified mappings to:
-   - **BRSR Core PCF Template** (SEBI Principle 6 Product Footprint schema)
-   - **openLCA JSON-LD Bridge** (ILCD-compliant exchange package for openLCA import)
-   - **Native PDF Declaration** (5-page vector audit summary via `@react-pdf/renderer`)
-   - **Structured JSON & CSV** ledger archives
+1. **Import** a BOM from CSV, Excel or Google Sheets.
+2. **Match** each line to a background LCI process. Each match shows its source, vintage and geography so you can accept or change it.
+3. **Score data quality** with the 5-indicator pedigree matrix (reliability, completeness, temporal, geographical, technological).
+4. **Simulate** reduction levers such as recycled aluminium or green electricity and see the footprint change.
+5. **Export** to a BRSR Core product-footprint template, openLCA JSON-LD, a PDF declaration, or CSV/JSON.
 
----
+## Try it in 60 seconds
 
-## ⚖️ Tool Comparison vs. Commercial LCA Platforms
+1. Open the live demo and start a new project.
+2. Import [`samples/demo-bom.csv`](samples/demo-bom.csv). It has four lines: aluminium ingot, polypropylene housing, grid electricity, road freight.
+3. Open the matching view and review the suggested factors.
+4. Open the DQR dashboard and check the pedigree scores.
+5. Export the BRSR Core file.
 
-| Dimension | NetZeroCalc (This Tool) | openLCA | Ecochain | Sphera / GaBi |
-| :--- | :---: | :---: | :---: | :---: |
-| **Primary Focus** | Rapid BOM-to-LCI Prototyping | Full-Suite LCIA Research | Corporate PCF Portfolios | Enterprise Supply Chain LCA |
-| **Licensing / Cost** | **Free & Open-Source (MIT)** | Free (Open Source Desktop) | Commercial SaaS ($$$) | Commercial Enterprise ($$$$) |
-| **Platform** | **Modern Web / Cloud Native** | Desktop (Java / Eclipse RCP) | Web SaaS | Desktop / Cloud Hybrid |
-| **BOM Semantic Mapping** | ✅ **Built-in Interactive Sheet** | ❌ (Manual Process Building) | ✅ Semi-Automated | ✅ Automated |
-| **Pedigree DQR Scoring** | ✅ **Interactive Matrix** | ✅ Yes | ✅ Yes | ✅ Yes |
-| **BRSR Core PCF Schema** | ✅ **Direct SEBI Export** | ❌ (Custom Modeling Needed) | ❌ | ❌ |
-| **openLCA JSON-LD Export**| ✅ **Native Export Bridge** | ✅ Native Host | ❌ | ❌ |
-| **Third-Party Assured** | ❌ *(Screening Prototype)* | ❌ *(User Responsibility)* | ✅ Commercial Certification | ✅ Commercial Certification |
+## Modules
 
----
+The BOM-to-LCI flow above is the core of the project. The repo also contains these modules, built later and with less polish:
 
-## 📊 Open Emission Factor Databases & Citations
+| Module | What it covers |
+| :--- | :--- |
+| GHG ledger | Scope 1 / 2 / 3 inventory by facility and period |
+| SBTi trajectory | Target pathway tracking |
+| Carbon cost simulator | Cost of emissions under carbon price scenarios |
+| CBAM | EU CBAM default benchmark values for iron, steel, aluminium, cement, hydrogen, fertilisers |
+| CSRD | Double materiality assessment, Omnibus / CSDDD view |
+| EU regulation navigator | Directory of EU ESG regulations |
+| VSME | Voluntary SME sustainability reporting |
+| CEO insights | Briefing notes for decision makers |
 
-NetZeroCalc ships with verified open-access reference datasets and supports Bring-Your-Own-License (BYOL) database integration:
+## Emission factor sources
 
-* **UK Government GHG Conversion Factors (DEFRA 2024):** Open government dataset for transport, fuel combustion, and general material lifecycle benchmarks.
-* **India Central Electricity Authority (CEA v19/v20) & India GHG Factors v6:** Location-based regional grid mix factors for Indian manufacturing facilities.
-* **EU CBAM Benchmark Values:** Official default values established under **Commission Implementing Regulation (EU) 2021/447** and **Implementing Regulation (EU) 2024/873** for iron, steel, aluminium, cement, hydrogen, and fertilizers.
-* **BYOL Enterprise LCA Databases:** Clean schema support for private, licensed database instances (e.g. *ecoinvent v3.x*, *GaBi/Sphera*, *USLCI*).
+Factors come from public datasets bundled in `src/data/`:
 
----
+- UK Government GHG Conversion Factors (DEFRA)
+- India Central Electricity Authority grid factors and India GHG factors
+- EU CBAM default values (Implementing Regulations (EU) 2021/447 and 2024/873)
 
-## 🛠️ Technology Stack
+The data is static. There is no automatic update path, so check the vintage on each factor before relying on it. See [docs/EMISSION_FACTOR_GOVERNANCE.md](docs/EMISSION_FACTOR_GOVERNANCE.md) for the registry design. Licensed databases (ecoinvent, GaBi) are not included.
 
-* **Frontend:** React 19, Tailwind CSS, Lucide Icons, FortuneSheet Canvas Spreadsheet, Recharts Visualization.
-* **PDF Vector Engine:** `@react-pdf/renderer` (Generates 100% searchable vector PDFs with zero canvas rasterization).
-* **Data Bridges:** PapaParse (CSV), SheetJS/XLSX (Spreadsheet parsing), Custom ILCD/openLCA JSON-LD serialier, BRSR Core PCF generator.
-* **Optional Cloud Backend:** Supabase / FastAPI for optional persistent project collaboration.
+## Tech stack
 
----
+- Frontend: React 19, Vite, Tailwind CSS, Recharts, FortuneSheet, `@react-pdf/renderer`
+- Parsing and export: PapaParse, SheetJS, custom BRSR Core and openLCA serialisers
+- Backend: FastAPI (`backend/`), SQLite by default
+- Auth and storage: Firebase Auth and Firestore (rules in `firestore.rules`)
 
-## 🚀 Quick Start (Local Setup)
+## Run locally
 
 ```bash
-# Clone repository
 git clone https://github.com/arunachalamvenkatachalapathy-dev/netzerocalc-ai.git
 cd netzerocalc-ai
-
-# Install dependencies
+cp .env.example .env     # fill in the values you need
 npm install
-
-# Run local development server
-npm run dev
-
-# Build production bundle
-npm run build
+npm run dev              # http://localhost:5173
 ```
 
----
+Backend (optional):
 
-## 📜 Regulatory & Disclaimer Notice
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-*This software is an independent educational tool designed for methodology learning and prototyping. It is not affiliated with, certified by, or endorsed by the European Commission, SEBI, ISO, or the GHG Protocol. Outputs must be verified by a qualified LCA practitioner before use in regulatory filings.*
+## Known limitations
 
-**Author:** [Arunachalam Venkatachalapathy](https://github.com/arunachalamvenkatachalapathy-dev)  
-**License:** [MIT License](LICENSE)
-## Authenticated Cloud Run deployment
+- **Backend migration to Supabase is in progress.** The old Cloud Run backend is offline, so the live demo runs client-side with data in your browser's local storage. There are no accounts, no sync between devices, and the AI copilot does not work there until the migration lands.
+- **Tests are not yet run in CI.** Test files are in `tests/ghg` and need Bun. There is no CI check for them yet.
+- **The backend is not hardened for real client data.** Several endpoints lack authentication and CORS is open. Treat it as a demo until that is fixed.
+- **Emission factors are static** and some modules use simplified methods. This is a screening tool, not an assured reporting system.
+- The deploy setup is cluttered (several hosting configs live in the repo).
 
-NetZeroCalc supports Firebase email/password authentication and stores workspaces in user-isolated Firestore paths. The AI Copilot calls Gemini server-side; its key is supplied to Cloud Run through Google Cloud Secret Manager and is never shipped to the browser. See [docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md](docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md) for the deployment and verification runbook.
+## Documentation
+
+- [Cloud Run and Firebase deployment](docs/CLOUD_RUN_FIREBASE_DEPLOYMENT.md)
+- [Emission factor governance](docs/EMISSION_FACTOR_GOVERNANCE.md)
+- [Roadmap](docs/ROADMAP.md)
+
+## Disclaimer
+
+Independent project. Not affiliated with or endorsed by the European Commission, SEBI, ISO or the GHG Protocol. Outputs must be reviewed by a qualified practitioner before use in any regulatory filing.
+
+## License
+
+[MIT](LICENSE). Author: [Arunachalam Venkatachalapathy](https://github.com/arunachalamvenkatachalapathy-dev)
