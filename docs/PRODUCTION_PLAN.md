@@ -68,3 +68,8 @@ Out of scope for now: real MCP server (waiting on owner decision), anything that
 ## Owner additions (Oct 2, 4:12 PM)
 - PDF export: real design pass (phase E). Render every export page, fix layout, type scale, tables, cover, disclaimers.
 - Dropdown audit (phase D/E): every select must change real behavior or be removed. Audit of 45 selects done. Removed the Header geography select (state was never read) and the fixed "India GHG Factors v6" badge. The remaining header standard select only labels the exported declaration; it moves to Settings in D.
+
+## Status (Oct 2, 5:00 PM IST)
+Done: README + LICENSE, Supabase migration (RLS, ai-chat edge function), backend lockdown (old FastAPI and hosting configs removed), CI with tests, Tailwind compiled, lazy-loaded tabs (first-load JS 474 KB), factor provenance in the UI, claims cleanup, cuts (CEO Insights, CSRD, Omnibus, EU navigator, VSME), PDF redesign, Google sign-in verified, global positioning on landing, README rewrite.
+Open: move standard dropdown to Settings, fold carbon cost into What-If, SBTi under Experimental, accessibility labels, screenshots and clip in the README, repo About and topics, MCP server and public API (phase G).
+Deploy note: Vercel free plan hit its daily deploy cap on Oct 2 (resets after about 24 hours). Vercel is the primary target and GitHub Pages is the backup. After the reset, push one commit to redeploy to Vercel. Everything is committed to GitHub.
