@@ -147,7 +147,7 @@ export default function TutorialGuideDock({
           <button
             onClick={onClose}
             className="p-1 rounded-lg bg-black/20 hover:bg-black/40 text-white/80 hover:text-white transition-colors"
-            title="Close Tutorial"
+            title="Close Tutorial" aria-label="Close Tutorial"
           >
             <X className="w-3.5 h-3.5" />
           </button>
