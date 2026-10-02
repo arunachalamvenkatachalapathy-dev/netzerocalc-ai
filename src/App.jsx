@@ -26,6 +26,7 @@ const PeriodManagementModal = lazy(() => import('./components/ghg/PeriodManageme
 const FactorRegistryModal = lazy(() => import('./components/ghg/FactorRegistryModal.jsx'));
 const RegulationsTrackerView = lazy(() => import('./components/regulations/RegulationsTrackerView.jsx'));
 const CarbonCostSimulatorView = lazy(() => import('./components/carbon/CarbonCostSimulatorView.jsx'));
+const ApiAccessView = lazy(() => import('./components/ApiAccessView.jsx'));
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
 
@@ -656,6 +657,10 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'api' && (
+          <ApiAccessView authUser={authUser} showToast={showToast} />
+        )}
+
         {activeTab === 'projects' && (
           <ProjectsView 
             projects={projects}
@@ -832,4 +837,4 @@ export default function App() {
 
     </div>
   );
-        }
+}
