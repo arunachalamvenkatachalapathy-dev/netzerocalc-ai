@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Upload, FileText, Plus, Check, FileCheck, ArrowRight, Bot, AlertCircle, Zap, Copy, CheckCircle, Radio } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Upload, FileText, Plus, Check, FileCheck, ArrowRight, Bot, AlertCircle } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { INDIA_GHG_FACTORS } from '../data/indiaGhgFactors.js';
 
-const BACKEND_URL = 'https://netzerocalc-backend-398062217408.us-central1.run.app';
-const EXTERNAL_API_KEY = import.meta.env.VITE_BOM_PUSH_API_KEY || '<YOUR_API_KEY>';
-
 export default function ImportModal({ isOpen, onClose, onImportItems, showToast, onOpenAiCopilot, currentProjectId }) {
-  const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'pdf' | 'preset' | 'paste' | 'api'
+  const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'pdf' | 'preset' | 'paste'
   const [selectedPreset, setSelectedPreset] = useState('');
   const [presetQty, setPresetQty] = useState(100);
   const [customName, setCustomName] = useState('');
@@ -22,75 +19,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
   const [pdfActionStage, setPdfActionStage] = useState('upload'); // 'upload' | 'parsed_ask_user'
   const [pdfSizeWarning, setPdfSizeWarning] = useState('');
 
-  // API & MCP Connect tab states
-  const [apiListening, setApiListening] = useState(false);
-  const [apiCopied, setApiCopied] = useState('');
-  const [apiLastReceived, setApiLastReceived] = useState(null);
-  const pollRef = useRef(null);
-  const projectId = currentProjectId || 'proj_default';
-
-  // ── Auto-poll silently whenever modal is open ─────────────────────────────
-  useEffect(() => {
-    if (!isOpen) return;
-    setApiListening(true);
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/bom/pending/${projectId}`);
-        const data = await res.json();
-        if (data.count > 0) {
-          onImportItems(data.items);
-          setApiLastReceived({ count: data.count, time: new Date().toLocaleTimeString() });
-          showToast(`✅ ${data.count} item(s) received via API and added to BOM!`);
-        }
-      } catch (err) {
-        // silent — don't show errors to user for background polling
-      }
-    }, 3000);
-    return () => {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-      setApiListening(false);
-    };
-  }, [isOpen, projectId]);
-
   if (!isOpen) return null;
-
-  const copyToClipboard = (text, key) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setApiCopied(key);
-      setTimeout(() => setApiCopied(''), 2000);
-    });
-  };
-
-  const curlExample = `curl -X POST ${BACKEND_URL}/api/v1/bom/push \\
-  -H "Content-Type: application/json" \\
-  -H "X-API-Key: ${EXTERNAL_API_KEY}" \\
-  -d '{
-    "project_id": "${projectId}",
-    "items": [
-      {"name": "Primary Aluminium Ingot", "qty": 1000, "unit": "kg", "scope": "Scope 3"},
-      {"name": "Diesel Fuel", "qty": 200, "unit": "Liters", "scope": "Scope 1"},
-      {"name": "Grid Electricity", "qty": 5000, "unit": "kWh", "scope": "Scope 2"}
-    ]
-  }'`;
-
-  const pythonExample = `import requests
-
-url = "${BACKEND_URL}/api/v1/bom/push"
-headers = {
-    "Content-Type": "application/json",
-    "X-API-Key": "${EXTERNAL_API_KEY}"
-}
-payload = {
-    "project_id": "${projectId}",
-    "items": [
-        {"name": "Primary Aluminium Ingot", "qty": 1000, "unit": "kg", "scope": "Scope 3"},
-        {"name": "Diesel Fuel", "qty": 200, "unit": "Liters", "scope": "Scope 1"}
-    ]
-}
-response = requests.post(url, json=payload, headers=headers)
-print(response.json())`;
-
 
   // Standard File Upload Handler (.xlsx / .csv)
   const handleFileUpload = (e) => {
@@ -324,12 +253,6 @@ print(response.json())`;
           >
             Paste CSV
           </button>
-          <button 
-            onClick={() => setActiveTab('api')}
-            className={`flex-1 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 ${activeTab === 'api' ? 'bg-violet-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            <Zap size={12} /> API / MCP
-          </button>
         </div>
 
         {/* Tab Content */}
@@ -515,74 +438,6 @@ print(response.json())`;
               <button onClick={onClose} className="px-4 py-2 border border-slate-300 rounded-lg font-bold">Cancel</button>
               <button onClick={handlePastedCsv} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow-sm">Import Text</button>
             </div>
-          </div>
-        )}
-
-        {/* ── API & MCP Connect Tab ────────────────────────────────────────── */}
-        {activeTab === 'api' && (
-          <div className="space-y-3">
-
-            {/* Always-on status */}
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
-              <div>
-                <p className="text-xs font-extrabold text-emerald-800">API is live — always accepting data</p>
-                <p className="text-[11px] text-emerald-600">Any external system or MCP agent can push items to your project right now</p>
-              </div>
-            </div>
-
-            {apiLastReceived && (
-              <div className="flex items-center gap-2 p-2.5 bg-green-100 border border-green-300 rounded-xl text-xs text-green-800 font-semibold">
-                <CheckCircle size={14} className="flex-shrink-0" />
-                {apiLastReceived.count} item(s) just arrived and were added to your BOM table at {apiLastReceived.time}
-              </div>
-            )}
-
-            {/* Credentials */}
-            <div className="space-y-2">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">Connection Details</p>
-
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                <div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Endpoint</p>
-                  <p className="text-[11px] font-mono font-bold text-slate-700 break-all">{BACKEND_URL}/api/v1/bom/push</p>
-                </div>
-                <button onClick={() => copyToClipboard(`${BACKEND_URL}/api/v1/bom/push`, 'url')} className="ml-3 p-1.5 rounded-lg bg-white border border-slate-200 hover:border-violet-300 text-slate-400 hover:text-violet-600 transition-colors flex-shrink-0">
-                  {apiCopied === 'url' ? <CheckCircle size={13} className="text-green-500" /> : <Copy size={13} />}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                <div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">API Key</p>
-                  <p className="text-xs font-mono font-bold text-violet-700">{EXTERNAL_API_KEY}</p>
-                </div>
-                <button onClick={() => copyToClipboard(EXTERNAL_API_KEY, 'key')} className="ml-3 p-1.5 rounded-lg bg-white border border-slate-200 hover:border-violet-300 text-slate-400 hover:text-violet-600 transition-colors flex-shrink-0">
-                  {apiCopied === 'key' ? <CheckCircle size={13} className="text-green-500" /> : <Copy size={13} />}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                <div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Project ID</p>
-                  <p className="text-xs font-mono font-bold text-emerald-700">{projectId}</p>
-                </div>
-                <button onClick={() => copyToClipboard(projectId, 'pid')} className="ml-3 p-1.5 rounded-lg bg-white border border-slate-200 hover:border-violet-300 text-slate-400 hover:text-violet-600 transition-colors flex-shrink-0">
-                  {apiCopied === 'pid' ? <CheckCircle size={13} className="text-green-500" /> : <Copy size={13} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Copy command */}
-            <button
-              onClick={() => copyToClipboard(curlExample, 'curl')}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold transition-colors mt-4"
-            >
-              {apiCopied === 'curl'
-                ? <><CheckCircle size={13} className="text-green-500" /> Command copied!</>
-                : <><Copy size={13} /> Copy example API call (curl)</>}
-            </button>
-
           </div>
         )}
 
