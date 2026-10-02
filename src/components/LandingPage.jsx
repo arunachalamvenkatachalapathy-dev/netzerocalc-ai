@@ -90,7 +90,7 @@ export default function LandingPage({ onLaunchDemo }) {
               <ShieldCheck className="w-8 h-8 text-emerald-500 mb-4" />
               <h3 className="text-lg font-bold mb-2">Approval Workflow</h3>
               <p className="text-slate-400 leading-relaxed text-xs">
-                Track which BOM line items were auto-mapped, manually overridden, or flagged for review with audit-ready operator attribution and DQR justifications.
+                Track which BOM line items were auto-mapped, manually overridden, or flagged for review with operator attribution and DQR justifications.
               </p>
             </div>
             
@@ -231,7 +231,7 @@ export default function LandingPage({ onLaunchDemo }) {
               <ul className="space-y-3 text-slate-300 text-xs sm:text-sm">
                 <li className="flex items-start gap-2.5">
                   <X className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span>An enterprise audit-ready corporate GHG inventory platform.</span>
+                  <span>An open-source carbon footprint calculator for products and corporate inventories, built on published global emission factors.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <X className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
