@@ -105,7 +105,7 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
           </div>
           <h2 className="text-xl font-black text-white">Search Emission Factors & LCI Databases</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-            Live factor lookup across DEFRA 2024, India CEA v19, US EPA eGRID 2024, Ecoinvent 3.9, IPCC Tier 1, and World Aluminium datasets.
+            Lookup across DEFRA 2024, India CEA, US EPA eGRID 2024, IPCC and industry-association averages. Each factor shows its publisher, year and a link. Entries marked Illustrative are rounded averages not yet traced to a specific table: check them before use. Licensed databases (ecoinvent, GaBi) are not included.
           </p>
         </div>
 
@@ -276,8 +276,14 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
                   </div>
                   <div className="text-[11px] text-slate-500 flex justify-between">
                     <span>Source:</span>
-                    <strong className="text-slate-800">{factor.source}</strong>
+                    <strong className="text-slate-800 text-right">
+                      {factor.sourceUrl ? <a href={factor.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-dotted hover:text-emerald-700">{factor.source}</a> : factor.source}
+                      {factor.sourceYear ? ` (${factor.sourceYear})` : ''}
+                    </strong>
                   </div>
+                  {factor.sourceStatus === 'illustrative' && (
+                    <div className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">Illustrative average - not traced to a specific published table. Verify before use.</div>
+                  )}
                 </div>
 
                 <p className="text-[11px] text-slate-500 leading-relaxed">
