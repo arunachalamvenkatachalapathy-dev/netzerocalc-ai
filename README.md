@@ -1,90 +1,99 @@
 # NetZeroCalc
 
-Open-source tool that maps a manufacturing Bill of Materials (BOM) to Life Cycle Inventory (LCI) emission factors, scores the data quality, and exports a product carbon footprint (PCF) in BRSR Core and openLCA formats.
+**Open-source carbon footprint calculator for products and companies.** Map a bill of materials (BOM) to life cycle inventory (LCI) emission factors, track Scope 1, 2 and 3 greenhouse gas (GHG) emissions, score data quality, and export a product carbon footprint (PCF) or a GHG declaration. Global emission factor sets (IPCC, DEFRA, US EPA, industry bodies) with deep India coverage (CEA grid, India GHG Program).
 
-**Live demo:** https://netzerocalc-ai.vercel.app/
+**Live demo:** https://netzerocalc-ai.vercel.app/ (also on [GitHub Pages](https://arunachalamvenkatachalapathy-dev.github.io/netzerocalc-ai/))
 
-> Screening-level tool. Results are estimates for learning, prototyping and early benchmarking. They are not third-party verified and are not a substitute for ISO 14044 / ISO 14064-3 assurance or a practitioner-reviewed disclosure.
+> Early alpha, screening-level. Results are estimates for learning, prototyping and early benchmarking. They are not third-party verified and do not replace ISO 14044 / ISO 14064-3 assurance or a practitioner review.
+
+Keywords: carbon footprint calculator, GHG Protocol, Scope 1 2 3, PCF, LCA, LCI, emission factors, CBAM, BRSR Core, ISO 14064, openLCA, DEFRA, IPCC, India, open source.
 
 ## What it does
 
 ```
-BOM CSV  ->  LCI matching  ->  DQR pedigree score  ->  What-if scenarios  ->  Export
-(item, qty, unit)  (DEFRA / CEA / CBAM)  (5 indicators)                (BRSR Core, openLCA, PDF, CSV/JSON)
+BOM  ->  LCI matching  ->  data quality score  ->  What-if scenarios  ->  Export
+(item, qty, unit)  (global + India factors)  (pedigree matrix)        (PDF, openLCA, BRSR Core, CSV/JSON)
 ```
 
-1. **Import** a BOM from CSV, Excel or Google Sheets.
-2. **Match** each line to a background LCI process. Each match shows its source, vintage and geography so you can accept or change it.
+1. **Import** a BOM from CSV, Excel or Google Sheets, or type items in.
+2. **Match** each line to an emission factor. Every factor shows its publisher, year and source link. Factors that are not traced to a specific published table are marked **Illustrative**.
 3. **Score data quality** with the 5-indicator pedigree matrix (reliability, completeness, temporal, geographical, technological).
 4. **Simulate** reduction levers such as recycled aluminium or green electricity and see the footprint change.
-5. **Export** to a BRSR Core product-footprint template, openLCA JSON-LD, a PDF declaration, or CSV/JSON.
+5. **Export** a 3-page PDF declaration, openLCA JSON-LD, a BRSR Core product-footprint file, or CSV/JSON.
 
 ## Try it in 60 seconds
 
-1. Open the live demo and start a new project.
-2. Import [`samples/demo-bom.csv`](samples/demo-bom.csv). It has four lines: aluminium ingot, polypropylene housing, grid electricity, road freight.
-3. Open the matching view and review the suggested factors.
-4. Open the DQR dashboard and check the pedigree scores.
-5. Export the BRSR Core file.
+1. Open the live demo and choose "Try it without an account" (data stays in your browser).
+2. In the BOM Workbench, click "Load sample data", or import [`samples/demo-bom.csv`](samples/demo-bom.csv).
+3. Open LCI Factor Search to see each factor's source.
+4. Open the DQR dashboard, then PCF Declaration to preview the PDF.
 
 ## Modules
 
-The BOM-to-LCI flow above is the core of the project. The repo also contains these modules, built later and with less polish:
-
 | Module | What it covers |
 | :--- | :--- |
-| GHG ledger | Scope 1 / 2 / 3 inventory by facility and period |
-| SBTi trajectory | Target pathway tracking |
-| Carbon cost simulator | Cost of emissions under carbon price scenarios |
-| CBAM | EU CBAM default benchmark values for iron, steel, aluminium, cement, hydrogen, fertilisers |
-| CSRD | Double materiality assessment, Omnibus / CSDDD view |
-| EU regulation navigator | Directory of EU ESG regulations |
-| VSME | Voluntary SME sustainability reporting |
-| CEO insights | Briefing notes for decision makers |
+| BOM Workbench | Line items, factor matching, scope split, totals |
+| LCI factor search | Searchable global and India factors with source and year |
+| DQR dashboard | Pedigree-matrix data quality scoring |
+| What-If simulator | Reduction scenarios against the baseline |
+| PCF declaration | PDF declaration, openLCA and BRSR Core export |
+| GHG master sheet | Spreadsheet-style Scope 1 / 2 / 3 inventory |
+| GHG ledger | Inventory by facility and reporting period, factor registry with overrides |
+| CBAM | EU CBAM default benchmark values (iron, steel, aluminium, cement, hydrogen, fertilisers) |
+| Carbon cost | Cost of emissions under carbon price scenarios |
+| Regulations reference | A reference list of reporting rules by jurisdiction, with links to official sources |
 
 ## Emission factor sources
 
-Factors come from public datasets bundled in `src/data/`:
+Factors live in `src/data/`. Each entry carries a publisher, year and link; the status is either published or illustrative.
 
-- UK Government GHG Conversion Factors (DEFRA)
-- India Central Electricity Authority grid factors and India GHG factors
+- UK Government GHG Conversion Factors (DEFRA / DESNZ)
+- India Central Electricity Authority grid data and the India GHG Program
+- US EPA eGRID and GHG Emission Factors Hub
+- IPCC AR6 and 2006 Guidelines
+- Industry bodies for materials (International Aluminium Institute, World Steel Association, PlasticsEurope, and others)
 - EU CBAM default values (Implementing Regulations (EU) 2021/447 and 2024/873)
 
-The data is static. There is no automatic update path, so check the vintage on each factor before relying on it. See [docs/EMISSION_FACTOR_GOVERNANCE.md](docs/EMISSION_FACTOR_GOVERNANCE.md) for the registry design. Licensed databases (ecoinvent, GaBi) are not included.
+The data is static, with no automatic update path. Check the year and status on each factor before relying on it, and replace illustrative values with supplier or verified data for anything that matters. See [docs/EMISSION_FACTOR_GOVERNANCE.md](docs/EMISSION_FACTOR_GOVERNANCE.md).
 
 ## Tech stack
 
-- Frontend: React 19, Vite, Tailwind CSS, Recharts, FortuneSheet, `@react-pdf/renderer`
-- Parsing and export: PapaParse, SheetJS, custom BRSR Core and openLCA serialisers
-- Backend: Supabase (Postgres with row level security, Auth, one Edge Function for the AI copilot). Schema in `supabase/migrations/`, function in `supabase/functions/ai-chat/`
+- Frontend: React 19, Vite, Tailwind CSS (compiled), Recharts, FortuneSheet, `@react-pdf/renderer`. Tabs and heavy libraries load on demand.
+- Parsing and export: PapaParse, SheetJS, custom BRSR Core and openLCA serialisers.
+- Backend: Supabase (Postgres with row level security, Auth with email and Google sign-in, one Edge Function for the AI copilot). Schema in `supabase/migrations/`, function in `supabase/functions/ai-chat/`.
+- Tests: Bun test suite in `tests/ghg`, run in CI on every push.
 
 ## Run locally
 
 ```bash
 git clone https://github.com/arunachalamvenkatachalapathy-dev/netzerocalc-ai.git
 cd netzerocalc-ai
-cp .env.example .env     # fill in the values you need
-npm install
-npm run dev              # http://localhost:5173
+cp .env.example .env     # only needed for accounts and cloud sync
+bun install              # or npm install
+bun run dev              # http://localhost:5173
+bun test                 # run the test suite
 ```
 
-The app works without any backend setup: use "Try it without an account" and data stays in your browser. To use accounts, cloud sync and the AI copilot, create a Supabase project, apply `supabase/migrations/`, deploy `supabase/functions/ai-chat` with a `GROQ_API_KEY` secret, and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`.
+The app works without any backend: use "Try it without an account" and data stays in your browser. To use accounts, cloud sync and the AI copilot, create a Supabase project, apply `supabase/migrations/`, deploy `supabase/functions/ai-chat`, and set the keys in `.env`.
 
 ## Known limitations
 
-- **Accounts and cloud sync use Supabase** (row level security, own rows only). Guest mode keeps data in your browser's local storage instead. The AI copilot needs a signed-in account and is rate limited.
-- **Tests are not yet run in CI.** Test files are in `tests/ghg` and need Bun. There is no CI check for them yet.
-- **Emission factors are static** and some modules use simplified methods. This is a screening tool, not an assured reporting system.
-- The deploy setup is cluttered (several hosting configs live in the repo).
+- **Screening tool.** Some calculations are simplified. It is not an assured reporting system.
+- **Static factors.** No automatic updates. Several material factors are rounded industry averages marked Illustrative.
+- **Guest mode** keeps data in your browser only. Signed-in data syncs to Supabase with row level security (your own rows only).
+- **No public API or MCP server yet.** Both are planned, see the [roadmap](docs/ROADMAP.md).
+- **Alpha.** Expect rough edges and changes between versions.
 
 ## Documentation
 
 - [Emission factor governance](docs/EMISSION_FACTOR_GOVERNANCE.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Production plan](docs/PRODUCTION_PLAN.md)
+- [Privacy](PRIVACY.md)
 
 ## Disclaimer
 
-Independent project. Not affiliated with or endorsed by the European Commission, SEBI, ISO or the GHG Protocol. Outputs must be reviewed by a qualified practitioner before use in any regulatory filing.
+Independent project. Not affiliated with or endorsed by the European Commission, SEBI, ISO, the GHG Protocol or any data publisher named above. Outputs must be reviewed by a qualified practitioner before use in any regulatory filing.
 
 ## License
 
