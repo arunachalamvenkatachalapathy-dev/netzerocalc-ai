@@ -9,7 +9,7 @@
     "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html', 'dist/404.html')\"",
     "postbuild": "node -e \"require('fs').copyFileSync('dist/index.html', 'dist/404.html')\"",
     "preview": "vite preview",
-    "predeploy": "npm run build"
+    "test": "bun test tests/ghg/*.test.js"
   },
   "dependencies": {
     "@fortune-sheet/react": "^1.0.4",
