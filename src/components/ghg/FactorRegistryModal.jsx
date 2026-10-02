@@ -218,7 +218,7 @@ export default function FactorRegistryModal({
                   Phase 2 Verified
                 </span>
                 <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full">
-                  {allFactors.length} Authoritative Factors
+                  {allFactors.length} Emission Factors
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -289,7 +289,7 @@ export default function FactorRegistryModal({
               className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none"
             >
               <option value="ALL">All Factors</option>
-              <option value="DEFAULT">Default Authoritative</option>
+              <option value="DEFAULT">Default</option>
               <option value="CUSTOM">Custom / Overrides</option>
             </select>
           </div>
@@ -512,7 +512,7 @@ export default function FactorRegistryModal({
 
                 {/* Source & Provenance */}
                 <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1.5">
-                  <span className="text-slate-400 font-medium">Authoritative Provenance:</span>
+                  <span className="text-slate-400 font-medium">Source:</span>
                   <div className="font-semibold text-slate-900 dark:text-white">{inspectedFactor.source}</div>
                   <div className="text-slate-600 dark:text-slate-300">Org: {inspectedFactor.sourceOrganization}</div>
                   <div className="text-slate-500 text-[11px]">Ref: {inspectedFactor.sourceReference}</div>
