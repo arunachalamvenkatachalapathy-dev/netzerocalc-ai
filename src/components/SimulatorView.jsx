@@ -135,7 +135,7 @@ export default function SimulatorView({ currentBOM, showToast, onApplyScenario }
     const blob = new Blob([JSON.stringify(roadmap, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `ECredits_WhatIf_Decarbonization_Roadmap_${Date.now()}.json`;
+    link.download = `NetZeroCalc_WhatIf_Decarbonization_Roadmap_${Date.now()}.json`;
     link.click();
     showToast("Downloaded Decarbonization Roadmap JSON.");
   };
