@@ -137,7 +137,6 @@ export default function App() {
   });
 
   const [accountingStandard, setAccountingStandard] = useState('ISO 14064-1 & Scope 1-3');
-  const [geography, setGeography] = useState('IN');
   const [appliedScenario, setAppliedScenario] = useState(null);
 
   // Genuine User Profile (Removes fake credentials/auditor persona)
@@ -498,8 +497,6 @@ export default function App() {
         onSwitchProject={handleSwitchProject}
         accountingStandard={accountingStandard}
         setAccountingStandard={setAccountingStandard}
-        geography={geography}
-        setGeography={setGeography}
         onGoHome={() => setShowLanding(true)}
         onUpdateProject={updateActiveProject}
         onStartTutorial={handleStartTutorial}
