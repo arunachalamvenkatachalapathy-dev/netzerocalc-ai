@@ -1,4 +1,4 @@
-export const GLOBAL_LCI_DATABASE = [
+const RAW_FACTORS = [
   // --- INDIA CEA & REGIONAL FACTORS ---
   { id: "in_grid_cea_2024", name: "Grid Electricity (CEA India Baseline v19 2024)", category: "Energy & Grids", region: "IN", scope: "Scope 2", ef: 0.716, unit: "kWh", source: "India CEA (Central Electricity Authority)", notes: "Weighted average carbon intensity of grid power generation in India." },
   { id: "in_diesel_dg", name: "Diesel Fuel (Commercial DG Power Generators)", category: "Fuels & Thermal", region: "IN", scope: "Scope 1", ef: 2.6558, unit: "Liters", source: "India GHG Platform", notes: "Direct thermal combustion in diesel generators." },
@@ -27,13 +27,12 @@ export const GLOBAL_LCI_DATABASE = [
   { id: "usepa_diesel", name: "Diesel Fuel No. 2 (Industrial Boilers & Trucks)", category: "Fuels & Thermal", region: "US", scope: "Scope 1", ef: 2.696, unit: "Liters", source: "US EPA GHG Hub 2024", notes: "Standard distillate fuel oil #2." },
   { id: "usepa_gasoline", name: "Motor Gasoline (E10 Blend)", category: "Fuels & Thermal", region: "US", scope: "Scope 1", ef: 2.328, unit: "Liters", source: "US EPA GHG Hub 2024", notes: "10% ethanol blended motor fuel." },
 
-  // --- METALS, CHEMICALS & ECOINVENT 3.9 FACTORS ---
-  { id: "ecoinvent_alum_primary", name: "Primary Aluminum Ingot (Smelter Average)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 14.20, unit: "kg", source: "Ecoinvent 3.9 / USLCI", notes: "Primary hall-heroult aluminum electrolysis." },
+  // --- METALS, CHEMICALS & MATERIALS (industry-association averages, NOT ecoinvent) ---
+  { id: "ecoinvent_alum_primary", name: "Primary Aluminum Ingot (Smelter Average)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 14.20, unit: "kg", source: "International Aluminium Institute / World Aluminium (global average)", notes: "Primary hall-heroult aluminum electrolysis." },
   { id: "ecoinvent_alum_secondary", name: "Secondary Recycled Scrap Aluminum", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 1.80, unit: "kg", source: "World Aluminium Model", notes: "Secondary remelting from post-consumer scrap." },
   { id: "ecoinvent_steel_hotrolled", name: "Hot-Rolled Structural Steel (BF-BOF Route)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 1.85, unit: "kg", source: "World Steel Association", notes: "Blast furnace / basic oxygen furnace steel." },
   { id: "ecoinvent_steel_scrap_eaf", name: "Recycled Steel Rebar (EAF Electric Arc Route)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 0.45, unit: "kg", source: "World Steel Association", notes: "Electric arc furnace recycled scrap steel." },
   { id: "ecoinvent_copper_wire", name: "Refined Copper Wire Drawing", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 6.50, unit: "kg", source: "International Copper Assoc", notes: "Cathode smelting and wire rod drawing." },
-  { id: "ecoinvent_polyurethane", name: "Polyurethane Flexible Foam Insert", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 4.80, unit: "pcs", source: "PlasticsEurope 2023", notes: "Polyol and MDI polymerisation foam." },
   { id: "ecoinvent_polyethylene_hdpe", name: "High-Density Polyethylene (HDPE Granules)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 1.95, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin HDPE resin granules." },
   { id: "ecoinvent_polypropylene", name: "Polypropylene (PP Resin Granules)", category: "Chemicals & Synthetics", region: "GLO", scope: "Scope 3", ef: 1.88, unit: "kg", source: "PlasticsEurope 2023", notes: "Virgin PP resin granules." },
   { id: "ecoinvent_cardboard_box", name: "Corrugated Cardboard Packaging Box", category: "Packaging & Waste", region: "GLO", scope: "Scope 3", ef: 0.92, unit: "kg", source: "FEFCO Corrugated LCA", notes: "Average corrugated containerboard." },
@@ -41,3 +40,31 @@ export const GLOBAL_LCI_DATABASE = [
   { id: "ecoinvent_cement_portland", name: "Ordinary Portland Cement (OPC)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 0.82, unit: "kg", source: "GCCA Cement LCA 2023", notes: "Clinker calcination and finish grinding." },
   { id: "ecoinvent_concrete_ready", name: "Ready-Mix Concrete (C30/37 Grade)", category: "Metals & Mining", region: "GLO", scope: "Scope 3", ef: 240.00, unit: "m3", source: "GCCA Cement LCA 2023", notes: "Standard structural ready-mix concrete." }
 ];
+
+// Provenance per publisher. `illustrative` means the value is a rounded industry-average
+// that has not been traced to a specific table in the cited source. Check it before use.
+const PROVENANCE = {
+  'India CEA (Central Electricity Authority)': { year: 2024, url: 'https://cea.nic.in/cdm-co2-baseline-database/', status: 'published' },
+  'India GHG Platform': { year: 2024, url: 'http://www.indiaghgplatform.org/', status: 'published' },
+  'India GHG Platform / MoEFCC': { year: 2024, url: 'http://www.indiaghgplatform.org/', status: 'published' },
+  'MoEFCC India': { year: 2024, url: 'https://moef.gov.in/', status: 'illustrative' },
+  'IPCC AR6 Median / NREL': { year: 2022, url: 'https://www.ipcc.ch/report/ar6/wg3/', status: 'published' },
+  'IPCC / India Bioenergy': { year: 2006, url: 'https://www.ipcc-nggip.iges.or.jp/public/2006gl/', status: 'illustrative' },
+  'Smart Freight Centre / GLEC': { year: 2023, url: 'https://www.smartfreightcentre.org/en/our-programs/global-logistics-emissions-council/', status: 'published' },
+  'UK DEFRA / DESNZ 2024': { year: 2024, url: 'https://www.gov.uk/government/collections/government-conversion-factors-for-company-reporting', status: 'published' },
+  'US EPA eGRID 2024': { year: 2024, url: 'https://www.epa.gov/egrid', status: 'published' },
+  'US EPA GHG Hub 2024': { year: 2024, url: 'https://www.epa.gov/climateleadership/ghg-emission-factors-hub', status: 'published' },
+  'International Aluminium Institute / World Aluminium (global average)': { year: 2022, url: 'https://international-aluminium.org/statistics/greenhouse-gas-emissions-aluminium-sector/', status: 'illustrative' },
+  'World Aluminium Model': { year: 2022, url: 'https://international-aluminium.org/', status: 'illustrative' },
+  'World Steel Association': { year: 2022, url: 'https://worldsteel.org/climate-action/', status: 'illustrative' },
+  'International Copper Assoc': { year: 2022, url: 'https://internationalcopper.org/', status: 'illustrative' },
+  'PlasticsEurope 2023': { year: 2023, url: 'https://plasticseurope.org/sustainability/circularity/life-cycle-thinking/eco-profiles-set/', status: 'illustrative' },
+  'FEFCO Corrugated LCA': { year: 2021, url: 'https://www.fefco.org/lca', status: 'illustrative' },
+  'European Container Glass': { year: 2022, url: 'https://feve.org/', status: 'illustrative' },
+  'GCCA Cement LCA 2023': { year: 2023, url: 'https://gccassociation.org/sustainability-innovation/', status: 'illustrative' },
+};
+
+export const GLOBAL_LCI_DATABASE = RAW_FACTORS.map((f) => {
+  const p = PROVENANCE[f.source] || { year: null, url: null, status: 'illustrative' };
+  return { ...f, sourceYear: p.year, sourceUrl: p.url, sourceStatus: p.status };
+});
