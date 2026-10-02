@@ -1,8 +1,8 @@
 // NetZeroCalc AI copilot. Requires a signed-in Supabase user (JWT verified by the gateway
-// and re-checked here). The model key lives in the GEMINI_API_KEY function secret.
+// and re-checked here). The model key lives in the GROQ_API_KEY function secret.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";
+const MODEL = Deno.env.get("AI_MODEL") ?? "llama-3.3-70b-versatile";
 const RATE_LIMIT_PER_MINUTE = 10;
 const MAX_QUESTION_CHARS = 4000;
 const MAX_HISTORY = 20;
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
   }
   await admin.from("ai_requests").insert({ user_id: userData.user.id });
 
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) return json(req, { error: "AI copilot is not configured" }, 503);
 
   let body: { question?: string; history?: { role: string; content: string }[]; screen_context?: unknown };
@@ -63,26 +63,31 @@ Deno.serve(async (req) => {
   if (!question.trim()) return json(req, { error: "Question is required" }, 400);
 
   const history = (body.history ?? []).slice(-MAX_HISTORY).map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: String(m.content ?? "").slice(0, MAX_QUESTION_CHARS) }],
+    role: m.role === "assistant" ? "assistant" : "user",
+    content: String(m.content ?? "").slice(0, MAX_QUESTION_CHARS),
   }));
   const context = body.screen_context
     ? `[Screen & UI Context]\n${JSON.stringify(body.screen_context).slice(0, MAX_CONTEXT_CHARS)}\n\n`
     : "";
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: [...history, { role: "user", parts: [{ text: context + question }] }],
+      model: MODEL,
+      temperature: 0.2,
+      messages: [
+        { role: "system", content: SYSTEM_INSTRUCTION },
+        ...history,
+        { role: "user", content: context + question },
+      ],
     }),
   });
   if (!res.ok) {
-    console.error("Gemini error", res.status, await res.text());
+    console.error("Model API error", res.status, await res.text());
     return json(req, { error: res.status === 429 ? "The AI model is rate limited. Try again shortly." : "AI request failed" }, 502);
   }
   const out = await res.json();
-  const answer = out?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
+  const answer: string = out?.choices?.[0]?.message?.content ?? "";
   return json(req, { answer: answer || "I could not produce an answer.", sources: [], model_used: MODEL });
 });
