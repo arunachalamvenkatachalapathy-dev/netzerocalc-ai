@@ -523,7 +523,7 @@ export default function App() {
           </div>
 
           {/* Period Selector & Quick Period Cloning */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1">
               <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Period:</span>
               <select
@@ -832,4 +832,4 @@ export default function App() {
 
     </div>
   );
-}
+              }
