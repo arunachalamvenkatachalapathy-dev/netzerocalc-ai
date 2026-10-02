@@ -3,7 +3,6 @@ import {
   ShieldCheck, User, UserCheck, ChevronDown, Database, Activity, 
   Edit3, Check, X, Server, Cloud, UserCog, Settings, Sparkles
 } from 'lucide-react';
-import { checkBackendHealth } from '../services/api.js';
 import { isSupabaseConfigured } from '../lib/supabase.js';
 
 export default function Header({ 
@@ -22,17 +21,12 @@ export default function Header({
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [companyName, setCompanyName] = useState(activeProject?.companyName || 'ACME Corp');
   const [projectName, setProjectName] = useState(activeProject?.projectName || 'Scope 1-3 Carbon Inventory');
-  const [backendStatus, setBackendStatus] = useState({ checked: false, online: false });
 
   // User Profile Modal State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userNameInput, setUserNameInput] = useState(userProfile.name || '');
   const [userRoleInput, setUserRoleInput] = useState(userProfile.role || 'Internal Analyst');
   const [userOrgInput, setUserOrgInput] = useState(userProfile.organization || 'ACME Corp');
-
-  useEffect(() => {
-    checkBackendHealth().then(status => setBackendStatus({ checked: true, online: status.online }));
-  }, []);
 
   useEffect(() => {
     if (activeProject) {
@@ -144,7 +138,7 @@ export default function Header({
               : 'bg-slate-50 border-slate-200 text-slate-600'
           }`}>
             <Cloud className={`w-3.5 h-3.5 ${isSupabaseConfigured() ? 'text-emerald-600' : 'text-slate-500'}`} />
-            <span>{isSupabaseConfigured() ? 'Supabase: Connected' : 'Local Storage Engine'}</span>
+            <span>{isSupabaseConfigured() ? 'Cloud sync: Supabase' : 'Local storage only'}</span>
           </div>
 
           {/* Database Badge */}
