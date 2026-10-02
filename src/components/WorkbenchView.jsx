@@ -248,6 +248,19 @@ export default function WorkbenchView({
         </div>
       </div>
 
+      {currentBOM.length === 0 && (
+        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-bold text-slate-800">This period has no items yet, so every total reads 0.</div>
+            <p className="text-xs text-slate-500 mt-1">Add your bill of materials, import a spreadsheet, or load a small sample to see how the numbers work. Sample data is for demonstration only.</p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button onClick={onOpenImportModal} className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer">Add or import items</button>
+            <button onClick={handleLoadSampleDemo} className="px-3.5 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold cursor-pointer">Load sample data</button>
+          </div>
+        </div>
+      )}
+
       {/* Scope 1, 2, 3 Breakdown Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
