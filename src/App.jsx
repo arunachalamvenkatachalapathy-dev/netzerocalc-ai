@@ -15,9 +15,8 @@ import LandingPage from './components/LandingPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AiChatSidebar from './components/AiChatSidebar.jsx';
 import { Bot, Building2, Calendar, Database } from 'lucide-react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from './lib/firebase.js';
-import { loadUserProjects, saveUserProject, deleteUserProject } from './lib/firestore.js';
+import { supabase, isSupabaseConfigured } from './lib/supabase.js';
+import { loadUserProjects, saveUserProjects, deleteUserProject } from './lib/projectsRepo.js';
 import AuthScreen from './components/AuthScreen.jsx';
 import FacilityManagementModal from './components/ghg/FacilityManagementModal.jsx';
 import PeriodManagementModal from './components/ghg/PeriodManagementModal.jsx';
@@ -113,11 +112,14 @@ const normalizeProject = (p) => {
 };
 
 export default function App() {
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured());
+  const [guestMode, setGuestMode] = useState(() => sessionStorage.getItem('netzerocalc_guest') === 'true');
   useEffect(() => {
-    if (!auth || !isFirebaseConfigured()) { setAuthLoading(false); return undefined; }
-    return onAuthStateChanged(auth, (user) => { setFirebaseUser(user); setAuthLoading(false); });
+    if (!supabase) return undefined;
+    supabase.auth.getSession().then(({ data }) => { setAuthUser(data.session?.user ?? null); setAuthLoading(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setAuthUser(session?.user ?? null));
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const [showLanding, setShowLanding] = useState(() => {
@@ -149,11 +151,11 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!firebaseUser) return;
-    loadUserProjects(firebaseUser.uid).then((remoteProjects) => {
+    if (!authUser) return;
+    loadUserProjects().then((remoteProjects) => {
       if (remoteProjects?.length) setProjects(remoteProjects.map(normalizeProject));
-    }).catch((error) => console.warn('Firestore project load failed:', error.message));
-  }, [firebaseUser]);
+    }).catch((error) => console.warn('Project load failed:', error.message));
+  }, [authUser]);
 
   // Modals & Sidebars
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -376,8 +378,12 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('netzerocalc_v4_projects', JSON.stringify(projects));
     localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
-    if (firebaseUser) projects.forEach((project) => saveUserProject(firebaseUser.uid, project).catch((error) => console.warn('Firestore save failed:', error.message)));
-  }, [projects, firebaseUser]);
+    if (!authUser) return undefined;
+    const timer = setTimeout(() => {
+      saveUserProjects(projects).catch((error) => console.warn('Project save failed:', error.message));
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [projects, authUser]);
 
   useEffect(() => {
     localStorage.setItem('netzerocalc_active_proj_id', activeProjectId);
@@ -388,7 +394,9 @@ export default function App() {
   }, [userProfile]);
 
   if (authLoading) return <div className="min-h-screen grid place-items-center bg-slate-950 text-white">Loading secure workspace...</div>;
-  if (isFirebaseConfigured() && !firebaseUser) return <AuthScreen />;
+  if (isSupabaseConfigured() && !authUser && !guestMode) {
+    return <AuthScreen onContinueAsGuest={() => { sessionStorage.setItem('netzerocalc_guest', 'true'); setGuestMode(true); }} />;
+  }
 
   // Handlers
   const handleUpdateUserProfile = (updatedProfile) => {
@@ -439,7 +447,7 @@ export default function App() {
     if (projects.length <= 1) return;
     const filtered = projects.filter(p => p.id !== projId);
     setProjects(filtered);
-    if (firebaseUser) deleteUserProject(firebaseUser.uid, projId).catch((error) => console.warn('Firestore delete failed:', error.message));
+    if (authUser) deleteUserProject(projId).catch((error) => console.warn('Project delete failed:', error.message));
     if (activeProjectId === projId) {
       setActiveProjectId(filtered[0].id);
     }
@@ -494,7 +502,7 @@ export default function App() {
         onGoHome={() => setShowLanding(true)}
         onUpdateProject={updateActiveProject}
         onStartTutorial={handleStartTutorial}
-        onSignOut={() => signOut(auth)}
+        onSignOut={() => { sessionStorage.removeItem('netzerocalc_guest'); setGuestMode(false); supabase?.auth.signOut(); }}
       />
 
       {/* Navigation Bar */}
