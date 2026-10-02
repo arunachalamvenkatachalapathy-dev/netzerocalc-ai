@@ -12,8 +12,6 @@ export default function Header({
   activeProject, 
   accountingStandard, 
   setAccountingStandard,
-  geography,
-  setGeography,
   onGoHome,
   onUpdateProject,
   onStartTutorial,
@@ -145,11 +143,12 @@ export default function Header({
           {/* Database Badge */}
           <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-xs">
             <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span>India GHG Factors v6</span>
+            <span>Global + India factor library</span>
           </div>
 
           {/* Standard Select */}
           <select 
+            title="Framework named on the exported declaration"
             value={accountingStandard} 
             onChange={(e) => setAccountingStandard(e.target.value)}
             className="bg-slate-50 text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 cursor-pointer"
@@ -159,17 +158,6 @@ export default function Header({
             <option value="EU CBAM & DPP Disclosure">EU CBAM & DPP Disclosure</option>
           </select>
 
-          {/* Geography Select */}
-          <select 
-            value={geography} 
-            onChange={(e) => setGeography(e.target.value)}
-            className="bg-slate-50 text-xs font-semibold text-slate-800 border border-slate-200 rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 cursor-pointer"
-          >
-            <option value="IN">IN — India (CEA Grid)</option>
-            <option value="GLO">GLO — Global</option>
-            <option value="EU">EU — European Union</option>
-            <option value="US">US — United States</option>
-          </select>
           {/* Interactive Tutorial Button */}
           {onStartTutorial && (
             <button
