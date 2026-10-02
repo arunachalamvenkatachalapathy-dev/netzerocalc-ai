@@ -30,7 +30,6 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
 
   // Secondary Tools & Registry (Dropdown)
   const toolTabs = [
-    { id: 'carbon-cost', label: 'Carbon Cost & Shadow Pricing', icon: DollarSign, desc: 'EUA Trajectories to 2035 & Balance Sheet Liability' },
     { id: 'dqr', label: 'DQR & Pedigree', icon: Award, desc: 'ISO 14044 Pedigree Matrix & Quality Scores' },
     { id: 'cbam', label: 'EU CBAM Benchmark', icon: Globe, desc: 'EU Implementing Regs 2021/447 & 2024/873' },
     { id: 'lci-search', label: 'LCI Factor Search', icon: Search, desc: 'India GHG & Global Emission Database' },
