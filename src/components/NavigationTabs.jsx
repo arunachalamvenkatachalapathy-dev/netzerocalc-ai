@@ -141,7 +141,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
                 <Database className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
                 <div>
                   <div className="text-xs font-bold text-slate-900">Emission Factor Registry</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Authoritative Factors, Overrides & Provenance</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Emission factors, overrides and sources</div>
                 </div>
               </button>
 
