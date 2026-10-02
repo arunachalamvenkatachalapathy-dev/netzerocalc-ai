@@ -63,7 +63,7 @@ Nothing is deleted from git history. Cuts are separate commits so any one can be
 | F3 | Google sign-in end-to-end check | Needs his phone code once |
 
 Order: A, C (cheap, high trust), B, D, E, F. One commit per ID. Report after each phase.
-Out of scope for now: real MCP server (waiting on owner decision), anything that costs money.
+Out of scope for now: anything that costs money. The MCP server and API shipped in phase G (alpha).
 
 ## Owner additions (Oct 2, 4:12 PM)
 - PDF export: real design pass (phase E). Render every export page, fix layout, type scale, tables, cover, disclaimers.
@@ -73,3 +73,11 @@ Out of scope for now: real MCP server (waiting on owner decision), anything that
 Done: README + LICENSE, Supabase migration (RLS, ai-chat edge function), backend lockdown (old FastAPI and hosting configs removed), CI with tests, Tailwind compiled, lazy-loaded tabs (first-load JS 474 KB), factor provenance in the UI, claims cleanup, cuts (CEO Insights, CSRD, Omnibus, EU navigator, VSME), PDF redesign, Google sign-in verified, global positioning on landing, README rewrite.
 Open: move standard dropdown to Settings, fold carbon cost into What-If, SBTi under Experimental, accessibility labels, screenshots and clip in the README, repo About and topics, MCP server and public API (phase G).
 Deploy note: Vercel free plan hit its daily deploy cap on Oct 2 (resets after about 24 hours). Vercel is the primary target and GitHub Pages is the backup. After the reset, push one commit to redeploy to Vercel. Everything is committed to GitHub.
+
+## Token and access policy (owner decision, Oct 2, 2026)
+1. Own-data tokens are self-serve and instant. A signed-in user creates a personal token in the app. It reads and writes that user's own projects, over both REST and MCP. Tokens are all-or-nothing: no read-only mode. Automation is the point.
+2. Anything shared or privileged needs admin approval. That covers writes to the global factor library and elevated rate or usage limits. These need an admin approval step before they exist.
+
+Status: the current build matches rule 1 and has no shared-write surface, so rule 2 is a design constraint for future endpoints, not code. Do not add an endpoint that writes shared data without an approval gate.
+
+Optional future work, not a priority: token scopes and expiry.
