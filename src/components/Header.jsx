@@ -6,6 +6,7 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase.js';
 
 export default function Header({ 
+  signedIn = false,
   userProfile = { name: '', role: 'Internal Analyst', organization: 'ACME Corp' },
   onUpdateUserProfile,
   activeProject, 
@@ -129,16 +130,16 @@ export default function Header({
 
         {/* Global Metadata & Operator Profile */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {onSignOut && <button onClick={onSignOut} className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100" title="Sign out">Sign out</button>}
+          {onSignOut && <button onClick={onSignOut} className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100" title={signedIn ? 'Sign out' : 'Leave guest mode'}>{signedIn ? 'Sign out' : 'Sign in / leave guest mode'}</button>}
           
           {/* Cloud Sync Status */}
           <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 shadow-xs ${
-            isSupabaseConfigured() 
+            isSupabaseConfigured() && signedIn
               ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
               : 'bg-slate-50 border-slate-200 text-slate-600'
           }`}>
-            <Cloud className={`w-3.5 h-3.5 ${isSupabaseConfigured() ? 'text-emerald-600' : 'text-slate-500'}`} />
-            <span>{isSupabaseConfigured() ? 'Cloud sync: Supabase' : 'Local storage only'}</span>
+            <Cloud className={`w-3.5 h-3.5 ${isSupabaseConfigured() && signedIn ? 'text-emerald-600' : 'text-slate-500'}`} />
+            <span>{isSupabaseConfigured() && signedIn ? 'Cloud sync: Supabase' : 'Saved in this browser only'}</span>
           </div>
 
           {/* Database Badge */}
