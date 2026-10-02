@@ -141,7 +141,7 @@ export default function Header({
           </div>
 
           {/* Database Badge */}
-          <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-xs">
+          <div className="hidden sm:flex px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 items-center gap-2 shadow-xs">
             <Database className="w-3.5 h-3.5 text-emerald-600" />
             <span>Global + India factor library</span>
           </div>
