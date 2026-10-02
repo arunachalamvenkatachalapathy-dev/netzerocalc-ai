@@ -53,7 +53,7 @@ export default function GoogleSheetsModal({ isOpen, onClose, currentBOM, activeP
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `ECredits_Google_Sheets_Sync_${Date.now()}.csv`;
+    link.download = `NetZeroCalc_Google_Sheets_Sync_${Date.now()}.csv`;
     link.click();
     showToast("✅ Generated Google Sheets CSV file! Open in Google Drive.");
     onClose();
