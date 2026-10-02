@@ -8,6 +8,14 @@
 
 Keywords: carbon footprint calculator, GHG Protocol, Scope 1 2 3, PCF, LCA, LCI, emission factors, CBAM, BRSR Core, ISO 14064, openLCA, DEFRA, IPCC, India, open source.
 
+## Screenshots
+
+Sample BOM loaded in the guest workspace (the "Load Sample Demo" button).
+
+![Dashboard with Scope 1, 2 and 3 totals](https://gxzrfngjypmijvfhtjiv.supabase.co/storage/v1/object/public/readme-assets/3-dashboard.png)
+
+![BOM workbench with matched emission factors](https://gxzrfngjypmijvfhtjiv.supabase.co/storage/v1/object/public/readme-assets/4-workbench.png)
+
 ## What it does
 
 ```
