@@ -47,12 +47,12 @@ export default function GhgCalculatorView({
     setLoading(true);
     setErrorMsg('');
 
-    const templatePath = `${import.meta.env.BASE_URL}GHG_Calculator_RECTIFIED_v6.xlsx`;
-
-    fetch(templatePath)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch template from ${templatePath}`);
-        return res.arrayBuffer();
+    import('../data/ghgTemplateBase64.js')
+      .then(({ default: b64 }) => {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes.buffer;
       })
       .then(buffer => {
         const file = new File([buffer], "GHG_Calculator_RECTIFIED_v6.xlsx", { 
