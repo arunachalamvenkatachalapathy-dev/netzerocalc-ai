@@ -14,3 +14,7 @@ grant select, insert, delete on public.api_tokens to authenticated;
 create policy "api_tokens_select_own" on public.api_tokens for select to authenticated using (user_id = (select auth.uid()));
 create policy "api_tokens_insert_own" on public.api_tokens for insert to authenticated with check (user_id = (select auth.uid()));
 create policy "api_tokens_delete_own" on public.api_tokens for delete to authenticated using (user_id = (select auth.uid()));
+
+-- The api edge function uses the service role (tables are not auto-exposed on this project).
+grant select, update on public.api_tokens to service_role;
+grant select, update on public.projects to service_role;
