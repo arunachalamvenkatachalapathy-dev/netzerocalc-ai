@@ -26,11 +26,6 @@ const PeriodManagementModal = lazy(() => import('./components/ghg/PeriodManageme
 const FactorRegistryModal = lazy(() => import('./components/ghg/FactorRegistryModal.jsx'));
 const RegulationsTrackerView = lazy(() => import('./components/regulations/RegulationsTrackerView.jsx'));
 const CarbonCostSimulatorView = lazy(() => import('./components/carbon/CarbonCostSimulatorView.jsx'));
-const CsrdDoubleMaterialityView = lazy(() => import('./components/csrd/CsrdDoubleMaterialityView.jsx'));
-const OmnibusCsdddReadinessView = lazy(() => import('./components/csrd/OmnibusCsdddReadinessView.jsx'));
-const EuRegulationNavigatorView = lazy(() => import('./components/regulations/EuRegulationNavigatorView.jsx'));
-const VsmeReportingView = lazy(() => import('./components/vsme/VsmeReportingView.jsx'));
-const CeoInsightsView = lazy(() => import('./components/insights/CeoInsightsView.jsx'));
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
 
@@ -705,16 +700,6 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        {activeTab === 'eu-navigator' && (
-          <ErrorBoundary>
-            <EuRegulationNavigatorView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-              onNavigateToTab={(tabId) => setActiveTab(tabId)}
-            />
-          </ErrorBoundary>
-        )}
-
         {activeTab === 'carbon-cost' && (
           <ErrorBoundary>
             <CarbonCostSimulatorView 
@@ -724,47 +709,6 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        {activeTab === 'csrd-materiality' && (
-          <ErrorBoundary>
-            <CsrdDoubleMaterialityView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-              onNavigateToTab={(tabId) => setActiveTab(tabId)}
-            />
-          </ErrorBoundary>
-        )}
-
-        {activeTab === 'omnibus-csddd' && (
-          <ErrorBoundary>
-            <OmnibusCsdddReadinessView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-              onNavigateToTab={(tabId) => setActiveTab(tabId)}
-            />
-          </ErrorBoundary>
-        )}
-
-        {activeTab === 'vsme' && (
-          <ErrorBoundary>
-            <VsmeReportingView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-              onNavigateToTab={(tabId) => setActiveTab(tabId)}
-              showToast={showToast}
-            />
-          </ErrorBoundary>
-        )}
-
-        {activeTab === 'ceo-insights' && (
-          <ErrorBoundary>
-            <CeoInsightsView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-              onNavigateToTab={(tabId) => setActiveTab(tabId)}
-              showToast={showToast}
-            />
-          </ErrorBoundary>
-        )}
         </Suspense>
       </main>
 
