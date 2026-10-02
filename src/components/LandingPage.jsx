@@ -45,16 +45,16 @@ export default function LandingPage({ onLaunchDemo }) {
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6 mt-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-400 text-xs font-semibold tracking-wide uppercase shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            v0.1.0-alpha • Open-Source BOM-to-LCI Prototype
+            v0.1.0-alpha • Open source • Global emission factors
           </div>
           
           {/* Single Tasteful Gradient on Main Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-100 to-slate-400 leading-tight">
-            NetZeroCalc: BOM-to-LCI Carbon Footprint Mapper
+            Open-source carbon footprint calculator for products and companies
           </h1>
           
           <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
-            Map manufacturing Bills of Materials to Life Cycle Inventory processes transparently and efficiently. A lightweight, open-source tool for product carbon footprint (PCF) prototyping and ESG education. Built by an ESG practitioner, for ESG practitioners.
+            Map a bill of materials to life cycle inventory factors, track Scope 1, 2 and 3 emissions, and export a declaration. Uses global emission factor sets (IPCC, DEFRA, EPA, IAI and others) with deep India coverage (CEA grid, India GHG Program). Early alpha: every factor shows its source, and unsourced ones are marked illustrative.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
