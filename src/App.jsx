@@ -490,8 +490,6 @@ export default function App() {
         activeProject={activeProject}
         projects={projects}
         onSwitchProject={handleSwitchProject}
-        accountingStandard={accountingStandard}
-        setAccountingStandard={setAccountingStandard}
         onGoHome={() => setShowLanding(true)}
         onUpdateProject={updateActiveProject}
         onStartTutorial={handleStartTutorial}
@@ -638,6 +636,16 @@ export default function App() {
             onApplyScenario={handleApplyScenario}
           />
         )}
+        {activeTab === 'simulator' && (
+          <ErrorBoundary>
+            <div className="mt-8">
+              <CarbonCostSimulatorView 
+                activeProject={activeProject}
+                activePeriodYear={activePeriodYear}
+              />
+            </div>
+          </ErrorBoundary>
+        )}
 
         {activeTab === 'cbam' && (
           <CbamView 
@@ -669,6 +677,7 @@ export default function App() {
             periods={periods}
             baseYearPeriod={baseYearPeriod}
             accountingStandard={accountingStandard}
+            setAccountingStandard={setAccountingStandard}
             appliedScenario={appliedScenario}
             showToast={showToast}
           />
@@ -697,15 +706,6 @@ export default function App() {
         {activeTab === 'regulations' && (
           <ErrorBoundary>
             <RegulationsTrackerView onNavigateToTab={(tabId) => setActiveTab(tabId)} />
-          </ErrorBoundary>
-        )}
-
-        {activeTab === 'carbon-cost' && (
-          <ErrorBoundary>
-            <CarbonCostSimulatorView 
-              activeProject={activeProject}
-              activePeriodYear={activePeriodYear}
-            />
           </ErrorBoundary>
         )}
 
@@ -832,4 +832,4 @@ export default function App() {
 
     </div>
   );
-              }
+        }
