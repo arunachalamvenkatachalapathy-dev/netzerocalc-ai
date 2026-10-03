@@ -26,7 +26,7 @@ export default function AuthScreen({ onContinueAsGuest }) {
   if (!isSupabaseConfigured()) return <div className="min-h-screen grid place-items-center bg-slate-950 p-6 text-center text-white"><div><h1 className="text-2xl font-black">NetZeroCalc</h1><p className="mt-2 text-slate-300">Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</p></div></div>;
   const googleSignIn = async () => {
     setError('');
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href } });
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: new URL('./', window.location.href).href } });
     if (oauthError) setError(oauthError.message);
   };
 
