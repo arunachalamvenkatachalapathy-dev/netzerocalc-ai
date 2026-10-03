@@ -65,7 +65,7 @@ export default function Header({
       <div className="max-w-7xl mx-auto rounded-2xl bg-white/60 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-3 flex flex-wrap justify-between items-center gap-4 relative">
         
         {/* Brand & Project Identity */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 max-w-full">
           <button 
             onClick={onGoHome}
             className="flex items-center gap-2.5 hover:opacity-90 transition-all cursor-pointer group"
@@ -76,9 +76,9 @@ export default function Header({
             </div>
             <h1 className="font-black text-lg tracking-tight text-slate-900 group-hover:text-emerald-600 transition-colors">NetZeroCalc</h1>
           </button>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-inner">
+              <span className="px-2.5 py-0.5 rounded-full truncate text-[9px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-inner">
                 Carbon calculator v0.1.0-alpha
               </span>
             </div>
@@ -115,9 +115,9 @@ export default function Header({
                 className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 cursor-pointer hover:text-slate-800 transition-colors group/edit"
                 title="Click to edit Company Name"
               >
-                <span className="font-bold text-slate-700">{companyName}</span>
+                <span className="font-bold text-slate-700 truncate">{companyName}</span>
                 <span>•</span>
-                <span className="truncate max-w-[200px]">{projectName}</span>
+                <span className="hidden sm:inline truncate max-w-[200px]">{projectName}</span>
                 <Edit3 className="w-3 h-3 opacity-0 group-hover/edit:opacity-100 transition-opacity text-emerald-600" />
               </div>
             )}
