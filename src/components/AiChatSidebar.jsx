@@ -85,6 +85,7 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
             </div>
           </div>
           <button 
+            aria-label="Close AI copilot"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
           >
@@ -171,11 +172,13 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              aria-label="Message to AI copilot"
               placeholder="Ask the copilot..."
               className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all pr-10"
             />
             <button 
               type="submit"
+              aria-label="Send message to AI copilot"
               disabled={!input.trim() || isLoading}
               className="absolute right-2 p-1.5 rounded-lg text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors flex items-center justify-center"
             >
