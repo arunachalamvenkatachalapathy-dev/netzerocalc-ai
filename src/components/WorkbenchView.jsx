@@ -455,6 +455,7 @@ export default function WorkbenchView({
               type="text"
               value={quickSearchTerm}
               onChange={(e) => setQuickSearchTerm(e.target.value)}
+              aria-label="Search emission factors"
               placeholder="Search factors (e.g. Diesel, Grid, Coal, Transport...)"
               className="w-full text-xs font-semibold pl-9 pr-3 py-2.5 bg-slate-50 text-slate-800 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:bg-white transition-all"
             />
@@ -462,6 +463,7 @@ export default function WorkbenchView({
 
           {/* Select Dropdown with Explicit Option Styling */}
           <select 
+            aria-label="Emission factor preset"
             value={quickPreset} 
             onChange={(e) => setQuickPreset(e.target.value)}
             className="flex-1 min-w-[260px] text-xs font-bold p-2.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 cursor-pointer"
@@ -481,6 +483,7 @@ export default function WorkbenchView({
             type="number"
             value={quickQty}
             onChange={(e) => setQuickQty(e.target.value)}
+            aria-label="Preset quantity"
             placeholder="Qty"
             className="w-24 text-xs font-bold p-2.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-mono text-center"
           />
@@ -677,6 +680,8 @@ export default function WorkbenchView({
                     <tr key={item.id} className={`hover:bg-slate-50 transition-colors ${isApproved ? 'bg-emerald-50/20' : ''}`}>
                       <td className="p-3">
                         <button 
+                          aria-label={`${isApproved ? 'Unapprove' : 'Approve'} ${item.name}`}
+                          aria-pressed={isApproved}
                           onClick={() => toggleApprove(item.id)}
                           className={`w-6 h-6 rounded-md flex items-center justify-center border transition-colors ${
                             isApproved 
@@ -699,6 +704,7 @@ export default function WorkbenchView({
                       <td className="p-3 text-right">
                         <input 
                           type="number" 
+                          aria-label={`Quantity for ${item.name}`}
                           value={item.qty} 
                           onChange={(e) => handleQtyChange(item.id, e.target.value)}
                           className="w-24 text-right p-1 font-mono font-bold border border-slate-300 rounded outline-none focus:border-emerald-500 bg-white"
