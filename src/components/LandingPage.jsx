@@ -231,7 +231,7 @@ export default function LandingPage({ onLaunchDemo }) {
               <ul className="space-y-3 text-slate-300 text-xs sm:text-sm">
                 <li className="flex items-start gap-2.5">
                   <X className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span>An open-source carbon footprint calculator for products and corporate inventories, built on published global emission factors.</span>
+                  <span>A verified or certified carbon accounting system. Calculations are screening-level and require practitioner review.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <X className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
