@@ -51,7 +51,7 @@ async function listProjects(uid: string) {
 }
 
 async function getProject(uid: string, id: string) {
-  const { data, error } = await admin.from("projects").select("id,name,data").eq("user_id", uid).eq("id", id).maybeSingle();
+  const { data, error } = await admin.from("projects").select("id,name,data,updated_at").eq("user_id", uid).eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("project not found");
   return data;
@@ -98,8 +98,9 @@ async function addBomItems(uid: string, id: string, items: Json[], year?: number
     };
   });
   period.bom = [...(period.bom ?? []), ...added];
-  const { error } = await admin.from("projects").update({ data }).eq("user_id", uid).eq("id", id);
+  const { data: saved, error } = await admin.from("projects").update({ data }).eq("user_id", uid).eq("id", id).eq("updated_at", p.updated_at).select("id").maybeSingle();
   if (error) throw new Error(error.message);
+  if (!saved) throw new Error("project changed during this write; read the latest project and retry");
   return { added: added.length, period_year: period.year, totals: periodTotals(period) };
 }
 

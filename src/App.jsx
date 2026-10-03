@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { withLocalHistory } from './services/history/inventoryHistory.js';
 import Header from './components/Header.jsx';
 import NavigationTabs from './components/NavigationTabs.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -10,6 +11,7 @@ import AuthScreen from './components/AuthScreen.jsx';
 import { normalizeProjectWithCorporate, loadAndMigrateProjects } from './services/ghg/projectMigration.js';
 import { getActiveFacilitiesForPeriod } from './services/ghg/facilityService.js';
 
+const InventoryHistoryView = lazy(() => import('./components/InventoryHistoryView.jsx'));
 const WorkbenchView = lazy(() => import('./components/WorkbenchView.jsx'));
 const LciSearchTab = lazy(() => import('./components/LciSearchTab.jsx'));
 const SimulatorView = lazy(() => import('./components/SimulatorView.jsx'));
@@ -109,6 +111,8 @@ const normalizeProject = (p) => {
 
 export default function App() {
   const [authUser, setAuthUser] = useState(null);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudError, setCloudError] = useState('');
   const [authLoading, setAuthLoading] = useState(isSupabaseConfigured());
   const [guestMode, setGuestMode] = useState(() => sessionStorage.getItem('netzerocalc_guest') === 'true');
   useEffect(() => {
@@ -146,10 +150,12 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!authUser) return;
+    if (!authUser) { setCloudReady(false); return; }
+    setCloudReady(false);
     loadUserProjects().then((remoteProjects) => {
       if (remoteProjects?.length) setProjects(remoteProjects.map(normalizeProject));
-    }).catch((error) => console.warn('Project load failed:', error.message));
+      setCloudReady(true); setCloudError('');
+    }).catch((error) => setCloudError(`Cloud load failed: ${error.message}. Cloud saving is paused.`));
   }, [authUser]);
 
   // Modals & Sidebars
@@ -229,7 +235,8 @@ export default function App() {
           }
           return per;
         });
-        return { ...norm, periods: updatedPeriods, bom: newBOM };
+        const updated = { ...norm, periods: updatedPeriods, bom: newBOM };
+        return authUser ? updated : withLocalHistory(norm, updated);
       }
       return proj;
     }));
@@ -254,7 +261,8 @@ export default function App() {
   const updateActiveProject = (updates) => {
     setProjects(prevProjects => prevProjects.map(proj => {
       if (proj.id === activeProjectId) {
-        return { ...proj, ...updates };
+        const updated = { ...proj, ...updates };
+        return authUser ? updated : withLocalHistory(proj, updated);
       }
       return proj;
     }));
@@ -373,12 +381,12 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('netzerocalc_v4_projects', JSON.stringify(projects));
     localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
-    if (!authUser) return undefined;
+    if (!authUser || !cloudReady) return undefined;
     const timer = setTimeout(() => {
-      saveUserProjects(projects).catch((error) => console.warn('Project save failed:', error.message));
+      saveUserProjects(projects).then(() => setCloudError('')).catch((error) => setCloudError(`Cloud save failed: ${error.message}`));
     }, 1500);
     return () => clearTimeout(timer);
-  }, [projects, authUser]);
+  }, [projects, authUser, cloudReady]);
 
   useEffect(() => {
     localStorage.setItem('netzerocalc_active_proj_id', activeProjectId);
@@ -483,6 +491,7 @@ export default function App() {
         </div>
       )}
 
+      {cloudError && <div role="alert" className="relative z-40 m-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900">{cloudError}</div>}
       {/* Header Bar */}
       <Header 
         signedIn={Boolean(authUser)}
@@ -657,6 +666,8 @@ export default function App() {
             showToast={showToast}
           />
         )}
+
+        {activeTab === 'history' && <InventoryHistoryView project={activeProject} signedIn={Boolean(authUser)} />}
 
         {activeTab === 'api' && (
           <ApiAccessView authUser={authUser} showToast={showToast} />
@@ -838,4 +849,4 @@ export default function App() {
 
     </div>
   );
-}
+        }

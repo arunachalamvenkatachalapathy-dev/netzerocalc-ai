@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Table, Sliders, FolderKanban, FileCheck, Search, Globe, FileSpreadsheet, 
   ChevronDown, MoreHorizontal, Award, Building2, Calendar, Database, Scale,
-  DollarSign, Plug, FileCheck2, ShieldCheck, Compass, BookOpen
+  History, DollarSign, Plug, FileCheck2, ShieldCheck, Compass, BookOpen
 } from 'lucide-react';
 
 export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacilityModal, onOpenPeriodModal, onOpenFactorRegistryModal }) {
@@ -33,6 +33,7 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
     { id: 'dqr', label: 'DQR & Pedigree', icon: Award, desc: 'ISO 14044 Pedigree Matrix & Quality Scores' },
     { id: 'cbam', label: 'EU CBAM Benchmark', icon: Globe, desc: 'EU Implementing Regs 2021/447 & 2024/873' },
     { id: 'lci-search', label: 'LCI Factor Search', icon: Search, desc: 'India GHG & Global Emission Database' },
+    { id: 'history', label: 'Inventory History', icon: History, desc: 'Who changed each item, when, before and after' },
     { id: 'api', label: 'API & MCP', icon: Plug, desc: 'Personal tokens, REST API and MCP server' },
     { id: 'projects', label: 'Audit Workspaces', icon: FolderKanban, desc: 'Multi-Entity Projects Registry' },
   ];
