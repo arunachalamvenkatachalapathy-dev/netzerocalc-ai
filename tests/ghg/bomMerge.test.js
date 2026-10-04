@@ -22,3 +22,5 @@ it('matches quick-add and spreadsheet Scope 1 category spellings', () => {
  expect(b).toHaveLength(1);expect(b[0].qty).toBe(8);
 });
 it('retains a zero factor and quantity without inventing defaults',()=>{expect(mergeBomItems([],[row('Renewable',0,{ef:0})])[0]).toMatchObject({qty:0,ef:0});});
+
+it('keeps different provenance separate and resets review for new activity',()=>{expect(mergeBomItems([row('Steel',1,{source:'A'})],[row('Steel',1,{source:'B'})])).toHaveLength(2);expect(mergeBomItems([row('Steel',1,{approved:true})],[row('Steel',1,{approved:false})])[0].approved).toBe(false);});

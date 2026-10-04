@@ -1,5 +1,5 @@
 import { withBomQuantity } from '../services/ghg/bomMerge.js';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Upload, Trash2, CheckCircle2, AlertTriangle, Download, 
   RefreshCw, FileSpreadsheet, Sparkles, Filter, Check, Info, ExternalLink, Search, Shield, FileCheck, PieChart as PieIcon, BarChart3
@@ -105,6 +105,8 @@ export default function WorkbenchView({
     .slice(0, 5);
 
   // Filtered Items
+  const [page,setPage]=useState(0);
+  useEffect(()=>setPage(0),[currentBOM.length,riskFilter]);
   const filteredItems = currentBOM.filter(i => {
     if (riskFilter === 'ALL') return true;
     return (i.risk || 'LOW') === riskFilter;
@@ -672,7 +674,7 @@ export default function WorkbenchView({
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item) => {
+                filteredItems.slice(Math.min(page,Math.max(0,Math.ceil(filteredItems.length/100)-1))*100, (Math.min(page,Math.max(0,Math.ceil(filteredItems.length/100)-1))+1)*100).map((item) => {
                   const tco2e = (item.result_tco2e !== undefined && item.result_tco2e !== null) ? item.result_tco2e.toFixed(3) : ((item.qty * item.ef) / 1000).toFixed(3);
                   const isApproved = item.approved;
                   const scopeBadge = item.scope === 'Scope 1' ? 'bg-purple-100 text-purple-800 border-purple-200' :
@@ -745,7 +747,7 @@ export default function WorkbenchView({
               )}
             </tbody>
           </table>
-        </div>
+        </div><div className="flex flex-wrap gap-3 p-3 text-xs items-center"><button aria-label="Previous inventory page" disabled={page===0} onClick={()=>setPage(Math.max(0,page-1))} className="border p-2 rounded disabled:opacity-30">Previous</button><span>{filteredItems.length} rows · Page {Math.min(page,Math.max(0,Math.ceil(filteredItems.length/100)-1))+1} of {Math.max(1,Math.ceil(filteredItems.length/100))} · 100 per page</span><button aria-label="Next inventory page" disabled={(page+1)*100>=filteredItems.length} onClick={()=>setPage(page+1)} className="border p-2 rounded disabled:opacity-30">Next</button><p>Totals and exports include all rows, not just this page.</p></div>
 
       </div>
 

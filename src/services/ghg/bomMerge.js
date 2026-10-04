@@ -5,7 +5,8 @@ const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
 const category = item => text(item.scope).startsWith('scope 1') || text(item.scope).startsWith('scope 2') ? '' : text(item.scope3Category || 'Cat 1: Purchased Goods & Services');
 const key = item => JSON.stringify([
   text(item.name || item.item), text(item.unit), text(item.scope),
-  category(item), text(item.facilityId), number(item.ef)
+  category(item), text(item.facilityId), number(item.ef),
+  text(item.factorId),text(item.sourceUrl),text(item.source),text(item.factorYear),text(item.factorRegion),text(item.factorBoundary),text(item.factorLicence)
 ]);
 
 export function withBomQuantity(item, qty) {
@@ -22,8 +23,9 @@ export function mergeBomItems(existing = [], incoming = []) {
     const identity = key(item);
     const index = text(item.name || item.item) ? byKey.get(identity) : undefined;
     if (index !== undefined) {
-      // Keep the original ID, factor, approval, notes and attribution.
+      // Keep provenance, but new unreviewed activity cannot inherit approval.
       rows[index] = withBomQuantity(rows[index], number(rows[index].qty) + number(item.qty));
+      if (item.approved === false) rows[index] = {...rows[index],approved:false,risk:item.risk||rows[index].risk,status:item.status||rows[index].status};
     } else {
       let id = item.id;
       if (id == null || ids.has(String(id))) id = globalThis.crypto.randomUUID();

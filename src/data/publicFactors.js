@@ -1,0 +1,11 @@
+import p0 from './publicFactors0.json';
+import p1 from './publicFactors1.json';
+import p2 from './publicFactors2.json';
+import p3 from './publicFactors3.json';
+import p4 from './publicFactors4.json';
+import p5 from './publicFactors5.json';
+import p6 from './publicFactors6.json';
+import p7 from './publicFactors7.json';
+import p8 from './publicFactors8.json';
+import p9 from './publicFactors9.json';
+export default [...p0,...p1,...p2,...p3,...p4,...p5,...p6,...p7,...p8,...p9];

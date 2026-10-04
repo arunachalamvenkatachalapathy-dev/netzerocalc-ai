@@ -1,3 +1,4 @@
+import CustomReportPanel from './CustomReportPanel.jsx';
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, FileText, Lock, Check, BarChart2, 
@@ -138,6 +139,7 @@ export default function ComplianceView({
 
   return (
     <div className="space-y-6">
+      <CustomReportPanel project={activeProject} period={activePeriod}/>
       
       {/* Action Header */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm flex justify-between items-center flex-wrap gap-4">
@@ -516,4 +518,4 @@ export default function ComplianceView({
 
     </div>
   );
-      }
+}
