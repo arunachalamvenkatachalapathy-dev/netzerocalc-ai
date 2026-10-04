@@ -62,33 +62,15 @@ export default function CorporateGhgLedgerView({
     const existing = activeProject?.corporateGhg?.periods?.[activePeriodYear];
     if (existing) return existing;
 
-    return {
-      year: parseInt(activePeriodYear) || 2024,
-      stationary: [
-        { id: 'st_1', facility: facilities[0]?.id || '', fuel: 'natural_gas', qty: 50000, unit: 'kWh_gross' },
-        { id: 'st_2', facility: facilities[0]?.id || '', fuel: 'diesel', qty: 2500, unit: 'L' }
-      ],
-      mobile: [
-        { id: 'mb_1', facility: facilities[0]?.id || '', method: 'fuel', fueltype: 'diesel', qty: 1200, unit: 'L' },
-        { id: 'mb_2', facility: facilities[1]?.id || '', method: 'distance', fueltype: 'car_avg', qty: 15000, unit: 'km' }
-      ],
-      s2lb: [
-        { id: 's2_1', facility: facilities[0]?.id || '', region: 'IN', kwh: 120000, year: 2024 },
-        { id: 's2_2', facility: facilities[1]?.id || '', region: 'EU', kwh: 35000, year: 2024 }
-      ],
-      s2mb: [
-        { id: 's2m_1', facility: facilities[0]?.id || '', instrument: 'eac', kwh: 60000, efOverride: 0 },
-        { id: 's2m_2', facility: facilities[0]?.id || '', instrument: 'residual', kwh: 60000, efOverride: 0.40 },
-        { id: 's2m_3', facility: facilities[1]?.id || '', instrument: 'supplier', kwh: 35000, efOverride: 0.12 }
-      ],
-      s3: [
-        { id: 's3_1', cat: 'cat1', method: 'spend_based', value: 45000, unit: '$' },
-        { id: 's3_2', cat: 'cat3', method: 'activity_based', value: 155000, unit: 'kWh' },
-        { id: 's3_3', cat: 'cat4', method: 'activity_based', value: 250000, unit: 'tonne-km' },
-        { id: 's3_4', cat: 'cat6', method: 'activity_based', value: 35000, unit: 'passenger-km' }
-      ]
-    };
+    return { year: Number(activePeriodYear) || 2024, stationary: [], mobile: [], s2lb: [], s2mb: [], s3: [] };
   });
+
+  useEffect(() => {
+    const existing = activeProject?.corporateGhg?.periods?.[activePeriodYear];
+    setPeriodData(existing || {year:Number(activePeriodYear),stationary:[],mobile:[],s2lb:[],s2mb:[],s3:[]});
+    setIsDirty(false);
+  }, [activeProject?.id, activePeriodYear]);
+  const locked = activeProject?.periods?.find(p => Number(p.year) === Number(activePeriodYear))?.status === 'locked';
 
   // Calculate live results
   const calculation = useMemo(() => {
@@ -97,6 +79,7 @@ export default function CorporateGhgLedgerView({
 
   // Handle row mutations
   const updateRow = useCallback((collection, id, field, value) => {
+    if (locked) {showToast?.('Unlock this reporting period before editing.');return;}
     setPeriodData(prev => {
       const updated = { ...prev };
       updated[collection] = updated[collection].map(row => {
@@ -109,9 +92,10 @@ export default function CorporateGhgLedgerView({
     });
     setIsDirty(true);
     setSaveStatus('saving');
-  }, []);
+  }, [locked, showToast]);
 
   const addRow = useCallback((collection, defaultRow) => {
+    if (locked) {showToast?.('Unlock this reporting period before editing.');return;}
     setPeriodData(prev => {
       const updated = { ...prev };
       const newId = `${collection}_${Date.now()}`;
@@ -120,9 +104,10 @@ export default function CorporateGhgLedgerView({
     });
     setIsDirty(true);
     setSaveStatus('saving');
-  }, []);
+  }, [locked, showToast]);
 
   const deleteRow = useCallback((collection, id) => {
+    if (locked) {showToast?.('Unlock this reporting period before editing.');return;}
     setPeriodData(prev => {
       const updated = { ...prev };
       updated[collection] = updated[collection].filter(r => r.id !== id);
@@ -130,7 +115,7 @@ export default function CorporateGhgLedgerView({
     });
     setIsDirty(true);
     setSaveStatus('saving');
-  }, []);
+  }, [locked, showToast]);
 
   // Save changes to project state
   useEffect(() => {
@@ -138,7 +123,6 @@ export default function CorporateGhgLedgerView({
     const timer = setTimeout(() => {
       if (onUpdateProject && activeProject) {
         const updatedProject = {
-          ...activeProject,
           corporateGhg: {
             ...activeProject.corporateGhg,
             periods: {
@@ -1057,4 +1041,4 @@ export default function CorporateGhgLedgerView({
 
     </div>
   );
-}
+                  }
