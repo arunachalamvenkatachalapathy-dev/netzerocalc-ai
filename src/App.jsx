@@ -28,6 +28,7 @@ const RegulationsTrackerView = lazy(() => import('./components/regulations/Regul
 const CarbonCostSimulatorView = lazy(() => import('./components/carbon/CarbonCostSimulatorView.jsx'));
 const ApiAccessView = lazy(() => import('./components/ApiAccessView.jsx'));
 const GhgCalculatorView = lazy(() => import('./components/GhgCalculatorView.jsx'));
+import { mergeBomItems } from './services/ghg/bomMerge.js';
 import { INDIA_GHG_FACTORS } from './data/indiaGhgFactors.js';
 
 // Interactive Tutorial Demo Items (Loaded on-demand when Tutorial is launched)
@@ -225,11 +226,11 @@ export default function App() {
         const norm = normalizeProject(proj);
         const updatedPeriods = norm.periods.map(per => {
           if (per.year === activePeriod.year) {
-            return { ...per, bom: newBOM };
+            return { ...per, bom: typeof newBOM === 'function' ? newBOM(per.bom || []) : newBOM };
           }
           return per;
         });
-        return { ...norm, periods: updatedPeriods, bom: newBOM };
+        return { ...norm, periods: updatedPeriods, bom: updatedPeriods.find(per => per.year === activePeriod.year).bom };
       }
       return proj;
     }));
@@ -357,16 +358,16 @@ export default function App() {
       };
     });
 
-    // Set active period BOM directly to prevent duplicate rows and double calculation
-    setCurrentBOM(formattedBOM);
+    // Imports add quantities while retaining all existing inventory rows.
+    setCurrentBOM(previous => mergeBomItems(previous, formattedBOM));
     
     if (coverBoundary) {
       updateActiveProject({ coverBoundary });
     }
     
-    appendChangeLog('MASTER_SHEET_SYNC', `Synchronized ${formattedBOM.length} line items from GHG Master Calculator into FY${activePeriod.year}`);
+    appendChangeLog('MASTER_SHEET_SYNC', `Merged ${formattedBOM.length} line items from GHG Master Calculator into FY${activePeriod.year}`);
     setActiveTab('workbench');
-    showToast(`✅ Synced ${formattedBOM.length} items from GHG Master Sheet to FY${activePeriod.year} BOM.`);
+    showToast(`✅ Merged ${formattedBOM.length} items from GHG Master Sheet to FY${activePeriod.year} BOM.`);
   };
 
   // LocalStorage Persist (v4 Schema + Legacy v3 fallback)
@@ -451,8 +452,8 @@ export default function App() {
 
   const handleImportItems = (newItems) => {
     const items = Array.isArray(newItems) ? newItems : [newItems];
-    setCurrentBOM([...items, ...currentBOM]);
-    appendChangeLog('INVENTORY_UPDATE', `Added ${items.length} line item(s) to FY${activePeriod.year} BOM`);
+    setCurrentBOM(previous => mergeBomItems(previous, items));
+    appendChangeLog('INVENTORY_UPDATE', `Merged ${items.length} incoming line item(s) to FY${activePeriod.year} BOM`);
   };
 
   const handleApplyScenario = (scenarioData) => {
@@ -608,6 +609,7 @@ export default function App() {
             onSwitchPeriod={handleSwitchPeriod}
             onAddPeriod={handleAddPeriod}
             onSetBaseYear={handleSetBaseYear}
+            onImportItems={handleImportItems}
             onOpenImportModal={() => setIsImportModalOpen(true)}
             onOpenGoogleSheetsModal={() => setIsGoogleSheetsModalOpen(true)}
             onNavigateToCompliance={() => setActiveTab('compliance')}
@@ -838,4 +840,4 @@ export default function App() {
 
     </div>
   );
-}
+              }

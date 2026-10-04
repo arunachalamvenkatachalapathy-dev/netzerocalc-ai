@@ -77,12 +77,19 @@ export default function GhgCalculatorView({
                 const savedEdits = JSON.parse(rawSavedEdits);
                 sheets.forEach(sheet => {
                   const sheetEdits = savedEdits[sheet.name];
-                  if (sheetEdits && sheet.data) {
+                  if (sheetEdits) {
                     Object.entries(sheetEdits).forEach(([key, val]) => {
                       const [r, c] = key.split('_').map(Number);
-                      if (sheet.data[r] && sheet.data[r][c]) {
+                      if (sheet.data?.[r]?.[c]) {
                         sheet.data[r][c].v = val;
                         sheet.data[r][c].m = String(val);
+                      }
+                      // LuckyExcel supplies sparse celldata before FortuneSheet
+                      // expands it into data. Restore edits in that form too.
+                      if (Array.isArray(sheet.celldata)) {
+                        const entry = sheet.celldata.find(cell => cell.r === r && cell.c === c);
+                        if (entry) entry.v = { ...entry.v, v: val, m: String(val) };
+                        else sheet.celldata.push({ r, c, v: { v: val, m: String(val) } });
                       }
                     });
                   }
@@ -287,7 +294,7 @@ export default function GhgCalculatorView({
     }
 
     const activeItems = bomItems.filter(i => i.qty > 0);
-    const itemsToSave = activeItems.length > 0 ? activeItems : bomItems;
+    const itemsToSave = activeItems;
 
     if (onSave) {
       onSave(itemsToSave, coverBoundary);
@@ -389,7 +396,7 @@ export default function GhgCalculatorView({
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-400">Edits auto-save. Click "Save to BOM" to sync inventory into active workspace.</p>
+            <p className="text-[11px] text-slate-400">Edits auto-save. "Save to BOM" adds quantities to matching inventory rows. Saving again adds again.</p>
           </div>
         </div>
 
@@ -546,4 +553,4 @@ export default function GhgCalculatorView({
       </div>
     </div>
   );
-}
+              }

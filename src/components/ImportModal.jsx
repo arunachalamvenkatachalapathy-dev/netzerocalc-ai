@@ -103,19 +103,21 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       const first = String(row[0] || '').trim();
       const firstLower = first.toLowerCase();
 
+      if (['name', 'item', 'material', 'activity', 'item name'].includes(firstLower)) return;
       if (!first || firstLower.startsWith('scope') || firstLower.startsWith('category') || firstLower.includes('total')) return;
 
       const name = first;
-      const qty = parseFloat(row[1]) || 100;
+      const qty = Number(String(row[1] ?? '').replace(/,/g, '').trim());
+      if (!Number.isFinite(qty) || qty < 0 || String(row[1] ?? '').trim() === '') return;
       const unit = String(row[2] || 'kg').trim();
       const rawEf = parseFloat(row[3]);
 
       let matchedFactor = INDIA_GHG_FACTORS.find(f => f.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(f.name.toLowerCase()));
-      let ef = !isNaN(rawEf) && rawEf > 0 ? rawEf : (matchedFactor ? matchedFactor.ef : 1.0);
+      let ef = !isNaN(rawEf) && rawEf >= 0 ? rawEf : (matchedFactor ? matchedFactor.ef : 1.0);
       let scope = matchedFactor ? matchedFactor.scope : (name.toLowerCase().includes('diesel') || name.toLowerCase().includes('cng') ? 'Scope 1' : name.toLowerCase().includes('electricity') ? 'Scope 2' : 'Scope 3');
 
       importedItems.push({
-        id: Date.now() + idx,
+        id: crypto.randomUUID(),
         name: name,
         qty: qty,
         unit: unit,
@@ -132,7 +134,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
 
     if (importedItems.length > 0) {
       onImportItems(importedItems);
-      showToast(`Imported ${importedItems.length} inventory items from file.`);
+      showToast(`Merged ${importedItems.length} inventory items from file.`);
       onClose();
     } else {
       showToast("Could not parse items from file.");
@@ -219,7 +221,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
             </div>
             <div>
               <h2 className="text-base font-extrabold text-slate-900">Import Inventory & PDF Data</h2>
-              <p className="text-[11px] text-slate-500 font-medium">BOM Spreadsheets, EPD Certificates, & Invoices</p>
+              <p className="text-[11px] text-slate-500 font-medium">Imports add quantities to matching rows and keep other rows. Re-importing adds again.</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
