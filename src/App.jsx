@@ -386,8 +386,8 @@ export default function App() {
 
   // LocalStorage Persist (v4 Schema + Legacy v3 fallback)
   useEffect(() => {
-    localStorage.setItem('netzerocalc_v4_projects', JSON.stringify(projects));
-    localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
+    try {const compact=projects.map(p=>{const {bom,...rest}=p;return rest});localStorage.setItem('netzerocalc_v4_projects',JSON.stringify(compact));localStorage.removeItem('netzerocalc_v3_projects');}
+    catch {setCloudStatus('error: Browser storage quota exceeded. Export All Workspaces now; local persistence is not guaranteed.');}
     if (!authUser || !cloudReady) return undefined;
     setCloudStatus('pending');
     const timer = setTimeout(() => {
@@ -466,9 +466,11 @@ export default function App() {
     showToast("Deleted project workspace.");
   };
 
-  const handleImportItems = (newItems) => {
+  const handleImportItems = (newItems, meta = {}) => {
     const items = Array.isArray(newItems) ? newItems : [newItems];
-    setCurrentBOM(previous => mergeBomItems(previous, items));
+    if(activePeriod.status === 'locked'){showToast('Unlock this period before importing.');return;}
+    setCurrentBOM(previous => meta.mode === 'replace' ? items : meta.mode === 'append' ? [...previous,...items] : mergeBomItems(previous, items));
+    if(meta.hash) updateActiveProject({importHistory:[...(activeProject.importHistory||[]),{hash:meta.hash,year:activePeriod.year,mode:meta.mode,valid:meta.valid,rejected:meta.rejected,at:new Date().toISOString()}].slice(-200)});
     appendChangeLog('INVENTORY_UPDATE', `Merged ${items.length} incoming line item(s) to FY${activePeriod.year} BOM`);
   };
 
@@ -750,6 +752,7 @@ export default function App() {
         onImportItems={handleImportItems}
         showToast={showToast}
         onOpenAiCopilot={() => setIsAiPanelOpen(true)}
+        importHistory={(activeProject.importHistory||[]).filter(h=>h.year===activePeriod.year)}
         currentProjectId={activeProject?.id || 'proj_default'}
       />
 
@@ -862,4 +865,4 @@ export default function App() {
 
     </div>
   );
-              }
+             }
