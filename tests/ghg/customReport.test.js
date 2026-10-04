@@ -1,0 +1,5 @@
+import {test,expect} from 'bun:test';
+import {prepareCustomReport,customReportCsv} from '../../src/services/ghg/customReport.js';
+import data from '../../src/data/publicFactors.js';
+test('report filters preserve evidence, include selected year and neutralize spreadsheet formulas',()=>{const p={projectName:'Test',reportingNotes:{verification:'None'}};const r=prepareCustomReport(p,{year:2025,bom:[{name:'=evil',qty:2,ef:3,scope:'Scope 1',sourceUrl:'https://example.com',approved:false},{name:'Other',qty:5,ef:5,scope:'Scope 3'}]},{scope:'Scope 1'});expect(r.rowCount).toBe(1);expect(r.year).toBe(2025);expect(r.totalTco2e).toBe(.006);expect(r.rows[0].sourceUrl).toBe('https://example.com');expect(customReportCsv(r)).toContain("'=evil");});
+test('catalogue contains only finite total factors with licence/source/unit; no archived ADEME rows',()=>{expect(data.length).toBe(8798);expect(new Set(data.map(f=>f.id)).size).toBe(data.length);for(const f of data){expect(Number.isFinite(f.ef)&&f.ef>=0).toBe(true);expect(!!f.unit&&!!f.sourceUrl&&!!f.licence&&!!f.licenceUrl).toBe(true);}expect(data.filter(f=>f.source.startsWith('UK')).length).toBe(2622);});
