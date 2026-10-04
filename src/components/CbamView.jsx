@@ -45,26 +45,27 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
 
   // Financial Liability Calculations
   const tonnes = Math.max(0, parseFloat(exportTonnes) || 0);
-  const price = Math.max(0, parseFloat(cbamPriceEur) || 85);
+  const price = Math.max(0, Number(cbamPriceEur) || 0);
   const inrEurRate = Math.max(1, parseFloat(inrEurRateInput) || 90);
 
+  const hasIntensity = (hasBomData || customIntensity !== '') && Number.isFinite(actualIntensity) && actualIntensity >= 0;
   const defaultTotalEmissions = tonnes * activeBenchmark.euDefaultBenchmark;
   const verifiedTotalEmissions = tonnes * actualIntensity;
   const avoidedEmissions = Math.max(0, defaultTotalEmissions - verifiedTotalEmissions);
 
   const defaultLiabilityEur = defaultTotalEmissions * price;
   const verifiedLiabilityEur = verifiedTotalEmissions * price;
-  const netSavingsEur = Math.max(0, defaultLiabilityEur - verifiedLiabilityEur);
+  const netSavingsEur = hasIntensity ? Math.max(0, defaultLiabilityEur - verifiedLiabilityEur) : 0;
   const netSavingsInr = netSavingsEur * inrEurRate;
-  const savingsPct = defaultTotalEmissions > 0 ? ((avoidedEmissions / defaultTotalEmissions) * 100).toFixed(1) : '0.0';
+  const savingsPct = hasIntensity && defaultTotalEmissions > 0 ? ((avoidedEmissions / defaultTotalEmissions) * 100).toFixed(1) : '0.0';
 
   // Intensity Comparison Chart Data
   const chartData = [
     {
-      name: 'Your Verified Actual',
+      name: 'Your Screening Estimate',
       intensity: actualIntensity,
       color: '#059669',
-      label: 'Verified Facility Data'
+      label: 'User-supplied screening data'
     },
     {
       name: 'EU ETS Top-10% Best',
@@ -81,6 +82,7 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
   ];
 
   const handleExportCbamSummary = () => {
+    if (!hasIntensity) {showToast('Enter a valid intensity before exporting.');return;}
     const report = {
       reportingStandard: 'EU Carbon Border Adjustment Mechanism (Regulation EU 2023/956)',
       company: activeProject?.companyName || 'Exporting Installation',
@@ -96,7 +98,8 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
         productionRoute: activeBenchmark.productionRoute
       },
       emissionIntensityComparison: {
-        actualVerifiedIntensityTco2ePerTonne: actualIntensity,
+        screeningIntensityTco2ePerTonne: actualIntensity,
+        disclaimer: 'Illustrative screening using unvalidated built-in benchmarks. Not verified facility emissions or statutory CBAM liability.',
         euDefaultBenchmarkTco2ePerTonne: activeBenchmark.euDefaultBenchmark,
         euEtsBestInClassTco2ePerTonne: activeBenchmark.euEtsBestInClass,
         unit: 'tCO2e / tonne of good'
@@ -104,7 +107,7 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
       financialImpactAnalysis: {
         euEtsCarbonPriceEurPerTonne: price,
         defaultCbamTariffLiabilityEur: defaultLiabilityEur.toFixed(2),
-        verifiedCbamTariffLiabilityEur: verifiedLiabilityEur.toFixed(2),
+        screeningCbamCostEur: verifiedLiabilityEur.toFixed(2),
         netCommercialSavingsEur: netSavingsEur.toFixed(2),
         netCommercialSavingsInr: netSavingsInr.toFixed(0),
         effectiveTariffReductionPct: `${savingsPct}%`
@@ -132,13 +135,13 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
           </div>
           <h2 className="text-xl font-black text-white">CN-Code Benchmark Comparison & Tariff Savings Calculator</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Compare your actual verified facility emissions against the European Union's punitive default benchmarks across the 6 covered sectors to quantify real CBAM certificate savings.
+            Benchmarks in this prototype have not been validated against current statutory defaults. Compare your screening emissions estimate against the unvalidated illustrative benchmarks across the 6 covered sectors to explore indicative carbon-cost differences, not a statutory liability calculation.
           </p>
         </div>
 
         <button
           onClick={handleExportCbamSummary}
-          disabled={!hasBomData && customIntensity === ''}
+          disabled={!hasIntensity}
           className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
         >
           <Download className="w-4 h-4" />
@@ -153,7 +156,7 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
           <div className="space-y-1">
             <div className="font-bold text-blue-900">No Inventory Data Loaded — Calculations Are Inactive</div>
             <p className="text-[11px] leading-relaxed text-blue-800">
-              To activate CBAM savings calculations, first go to <strong>BOM Workbench</strong> and add your materials inventory. Your actual carbon intensity (tCO₂e per tonne of exported good) will be automatically calculated from your BOM. Alternatively, manually enter your <strong>Verified Intensity</strong> below.
+              To activate CBAM savings calculations, first go to <strong>BOM Workbench</strong> and add your materials inventory. Your actual carbon intensity (tCO₂e per tonne of exported good) will be automatically calculated from your BOM. Alternatively, manually enter your <strong>Screening Intensity</strong> below.
             </p>
           </div>
         </div>
@@ -233,10 +236,10 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
             <span className="text-[10px] text-slate-500 block">Shipped net mass of covered good</span>
           </div>
 
-          {/* Facility Actual Verified Intensity */}
+          {/* Facility Actual Screening Intensity */}
           <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700">Verified Intensity (tCO₂e/t)</label>
+              <label className="text-xs font-bold text-slate-700">Screening Intensity (tCO₂e/t)</label>
               {customIntensity !== '' && (
                 <button 
                   onClick={() => setCustomIntensity('')} 
@@ -318,20 +321,20 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
             €{defaultLiabilityEur.toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </div>
           <div className="text-[10px] text-slate-500">
-            Based on punitive fallback: <strong>{activeBenchmark.euDefaultBenchmark} tCO₂e/t</strong>
+            Based on illustrative fallback: <strong>{activeBenchmark.euDefaultBenchmark} tCO₂e/t</strong>
           </div>
         </div>
 
         {/* Verified Facility Liability */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-1">
           <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Verified Actual Liability
+            <CheckCircle2 className="w-3.5 h-3.5" /> Indicative Actual Liability
           </div>
           <div className="text-2xl font-black text-emerald-700 font-mono">
             €{verifiedLiabilityEur.toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </div>
           <div className="text-[10px] text-slate-500">
-            Based on actual measured: <strong>{actualIntensity} tCO₂e/t</strong>
+            Based on user-supplied: <strong>{actualIntensity} tCO₂e/t</strong>
           </div>
         </div>
 
@@ -457,4 +460,4 @@ export default function CbamView({ currentBOM = [], activeProject, userProfile, 
 
     </div>
   );
-}
+                                                                    }
