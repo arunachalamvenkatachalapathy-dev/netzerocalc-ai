@@ -472,7 +472,7 @@ export default function WorkbenchView({
             className="flex-1 min-w-[260px] text-xs font-bold p-2.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 cursor-pointer"
           >
             <option value="" className="bg-white text-slate-900 font-semibold p-2">
-              -- Select Verified Factor ({filteredPresets.length} options) --
+              -- Select Preset Factor ({filteredPresets.length} options) --
             </option>
             {filteredPresets.map(f => (
               <option key={f.key} value={f.key} className="bg-white text-slate-900 font-semibold p-2">
@@ -751,4 +751,4 @@ export default function WorkbenchView({
 
     </div>
   );
-                          }
+}
