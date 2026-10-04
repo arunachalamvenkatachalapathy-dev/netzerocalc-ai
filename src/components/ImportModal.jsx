@@ -11,6 +11,8 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
   const [customName, setCustomName] = useState('');
   const [customQty, setCustomQty] = useState(100);
   const [customUnit, setCustomUnit] = useState('kg');
+  const [workbookSheets, setWorkbookSheets] = useState(null);
+  const [selectedSheet, setSelectedSheet] = useState('');
   const [pasteText, setPasteText] = useState('');
 
   // PDF Upload & Next Action States
@@ -46,6 +48,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
+        if (workbook.SheetNames.length > 1) {setWorkbookSheets(workbook);setSelectedSheet(workbook.SheetNames[0]);return;}
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1 });
@@ -67,27 +70,10 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       passesFilter: passesSizeFilter
     });
 
-    if (!passesSizeFilter) {
-      setPdfSizeWarning(`Note: File size is ${sizeKb} KB. Filter threshold specifies files > 250 KB for full multi-page EPD parsing, but we will extract available document text.`);
-    } else {
-      setPdfSizeWarning(`File Filter Passed: ${sizeKb} KB (> 250 KB filter requirement). High-resolution document parser active.`);
-    }
+    // No document extractor is connected. Never manufacture invoice evidence.
+    showToast('PDF extraction is not available. Enter verified document values using Excel, CSV or manual input.');
+    setPdfSizeWarning('PDF extraction is not available. No items have been imported. Use verified values in Excel, CSV or manual input.');
 
-    // Extract text and parse items from PDF document
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      // Smart extracted items from EPD / Invoice document
-      const defaultPdfExtracted = [
-        { id: Date.now() + 1, name: "Primary Aluminum Ingot (sample EPD-style entry)", qty: 5000, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", status: "[PDF PARSED] EPD Certified", approved: true },
-        { id: Date.now() + 2, name: "Recycled Structural Steel Beam HEA 300", qty: 2500, unit: "kg", process: "Steel Electric Arc Furnace Recycled", ef: 1.35, scope: "Scope 3", status: "[PDF PARSED] Supplier Invoice", approved: true },
-        { id: Date.now() + 3, name: "Industrial Diesel Fuel - Thermal Combustion", qty: 750, unit: "Liters", process: "Diesel Fuel Thermal Combustion", ef: 2.6558, scope: "Scope 1", status: "[PDF PARSED] Fuel Receipt", approved: true },
-        { id: Date.now() + 4, name: "Grid Electricity Supply (CEA Verified 2024)", qty: 14000, unit: "kWh", process: "Grid Electricity (CEA India Grid Mix 2024)", ef: 0.716, scope: "Scope 2", status: "[PDF PARSED] Utility Statement", approved: true }
-      ];
-
-      setPdfParsedData(defaultPdfExtracted);
-      setPdfActionStage('parsed_ask_user');
-    };
-    reader.readAsText(file);
   };
 
   // Process Parsed Matrix Data
@@ -97,23 +83,28 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       return;
     }
 
+    const header = matrix.find(row => Array.isArray(row) && row.some(c => /^(?:name|item|material|activity|item description)$/i.test(String(c || '').trim())) && row.some(c => /^(?:qty|quantity|quantity \(input\))$/i.test(String(c || '').trim())));
+    if (!header || !header.some(c=>/^unit$/i.test(String(c||'').trim())) || !header.some(c=>/^(ef|emission factor(?:.*)?)$/i.test(String(c||'').trim()))) {showToast('Unsupported layout. Use a simple table with Name, Quantity, Unit and numeric EF columns. Municipal/CoM matrices must be mapped first.');return;}
+    const col = (pattern, fallback) => {const i=header.findIndex(c=>pattern.test(String(c||'').trim()));return i < 0 ? fallback : i;};
+    const nameCol=col(/^(name|item|material|activity|item description)$/i,0), qtyCol=col(/^(qty|quantity|quantity \(input\))$/i,1), unitCol=col(/^unit$/i,2), efCol=col(/^(ef|emission factor(?:.*)?)$/i,3);
     const importedItems = [];
-    matrix.forEach((row, idx) => {
+    matrix.slice(matrix.indexOf(header)+1).forEach((row, idx) => {
       if (!Array.isArray(row) || row.length === 0) return;
-      const first = String(row[0] || '').trim();
+      const first = String(row[nameCol] || '').trim();
       const firstLower = first.toLowerCase();
 
-      if (['name', 'item', 'material', 'activity', 'item name'].includes(firstLower)) return;
+      if (row === header || ['name', 'item', 'material', 'activity', 'item name', 'item description'].includes(firstLower)) return;
       if (!first || firstLower.startsWith('scope') || firstLower.startsWith('category') || firstLower.includes('total')) return;
 
       const name = first;
-      const qty = Number(String(row[1] ?? '').replace(/,/g, '').trim());
-      if (!Number.isFinite(qty) || qty < 0 || String(row[1] ?? '').trim() === '') return;
-      const unit = String(row[2] || 'kg').trim();
-      const rawEf = parseFloat(row[3]);
+      const qty = Number(String(row[qtyCol] ?? '').replace(/,/g, '').trim());
+      if (!Number.isFinite(qty) || qty < 0 || String(row[qtyCol] ?? '').trim() === '') return;
+      const unit = String(row[unitCol] || 'kg').trim();
+      const rawEf = Number(String(row[efCol] ?? "").trim());
+      if (String(row[efCol] ?? "").trim() === "" || !Number.isFinite(rawEf) || rawEf < 0) return;
 
       let matchedFactor = INDIA_GHG_FACTORS.find(f => f.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(f.name.toLowerCase()));
-      let ef = !isNaN(rawEf) && rawEf >= 0 ? rawEf : (matchedFactor ? matchedFactor.ef : 1.0);
+      let ef = rawEf;
       let scope = matchedFactor ? matchedFactor.scope : (name.toLowerCase().includes('diesel') || name.toLowerCase().includes('cng') ? 'Scope 1' : name.toLowerCase().includes('electricity') ? 'Scope 2' : 'Scope 3');
 
       importedItems.push({
@@ -123,18 +114,18 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
         unit: unit,
         process: matchedFactor ? matchedFactor.name : `Uploaded LCI: ${name}`,
         ef: ef,
-        sim: 0.95,
-        ter: 1, ger: 1, tir: 1,
-        risk: 'LOW',
+        sim: 0,
+        ter: 5, ger: 5, tir: 5,
+        risk: 'HIGH',
         scope: scope,
-        status: 'Auto-Matched',
-        approved: true
+        status: 'Imported - Needs Review',
+        approved: false
       });
     });
 
     if (importedItems.length > 0) {
       onImportItems(importedItems);
-      showToast(`Merged ${importedItems.length} inventory items from file.`);
+      showToast(`Merged ${importedItems.length} rows for review. Invalid quantity/factor rows were skipped; compare the result with your source.`);
       onClose();
     } else {
       showToast("Could not parse items from file.");
@@ -212,7 +203,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-6 max-w-xl w-full border border-slate-200 relative space-y-4 shadow-2xl">
-        
+
         {/* Header */}
         <div className="flex justify-between items-center border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
@@ -231,40 +222,42 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
 
         {/* Tab Buttons */}
         <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-bold">
-          <button 
+          <button
             onClick={() => { setActiveTab('upload'); setPdfActionStage('upload'); }}
             className={`flex-1 py-2 rounded-lg transition-colors ${activeTab === 'upload' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Upload File (.xlsx / .csv)
           </button>
-          <button 
+          <button
             onClick={() => { setActiveTab('pdf'); }}
             className={`flex-1 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 ${activeTab === 'pdf' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
-            <FileCheck size={14} /> PDF Upload & Parser (&gt;250KB)
+            <FileCheck size={14} /> PDF values (manual only)
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('preset')}
             className={`flex-1 py-2 rounded-lg transition-colors ${activeTab === 'preset' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Preset Factor
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('paste')}
             className={`flex-1 py-2 rounded-lg transition-colors ${activeTab === 'paste' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
-            Paste CSV
+            Paste CSV (with headers)
           </button>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'upload' && (
           <div className="space-y-3">
+            <p className="text-xs text-slate-600">Simple BOM columns: Name, Quantity, Unit, EF (kg CO2e per activity unit). Select the sheet in multi-sheet workbooks. CoM municipal matrices need a separate mapping, not direct BOM import.</p>
+            {workbookSheets && <div className="flex gap-2"><select aria-label="Workbook sheet" value={selectedSheet} onChange={e=>setSelectedSheet(e.target.value)} className="border rounded p-2 text-xs">{workbookSheets.SheetNames.map(n=><option key={n}>{n}</option>)}</select><button onClick={()=>processParsedData(XLSX.utils.sheet_to_json(workbookSheets.Sheets[selectedSheet],{header:1}))} className="rounded bg-emerald-600 text-white p-2 text-xs">Import Selected Sheet</button></div>}
             <label className="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-8 text-center cursor-pointer bg-slate-50 flex flex-col items-center justify-center transition-colors block">
               <input type="file" accept=".csv,.xlsx,.xls,.pdf" onChange={handleFileUpload} className="hidden" />
               <Upload className="w-8 h-8 text-emerald-600 mb-2" />
-              <span className="font-extrabold text-xs text-slate-900">Click to browse or drop Excel / CSV / PDF file</span>
-              <span className="text-[11px] text-slate-500 mt-1">Supports BOM files, GHG Calculator templates, & PDF EPDs</span>
+              <span className="font-extrabold text-xs text-slate-900">Click to browse Excel / CSV file</span>
+              <span className="text-[11px] text-slate-500 mt-1">Simple BOM tables only. PDF extraction unavailable.</span>
             </label>
           </div>
         )}
@@ -275,18 +268,18 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
               <input type="file" accept=".pdf" onChange={(e) => handlePdfUpload(e.target.files[0])} className="hidden" />
               <FileCheck className="w-10 h-10 text-emerald-600 mb-2 animate-bounce" />
               <span className="font-extrabold text-xs text-slate-900">Upload PDF Document (EPD Certificate, Invoice, or Audit Report)</span>
-              <span className="text-[11px] text-slate-600 mt-1 font-medium">Automatic Size Filter Check (&gt; 250 KB) & Multi-Page Document Parser</span>
+              <span className="text-[11px] text-slate-600 mt-1 font-medium">Document extraction unavailable - no automatic inventory added</span>
             </label>
 
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-slate-700">
                 <AlertCircle size={14} className="text-emerald-600" />
-                <span>PDF Filter & Document Processing Standards:</span>
+                <span>PDF extraction status:</span>
               </div>
               <ul className="list-disc list-inside text-[11px] text-slate-500 space-y-0.5 pl-1">
-                <li>Size Filter: Automatically checks file size against the &gt; 250 KB threshold.</li>
-                <li>Extracts material names, quantities, Scope categories, and verified LCI emission factors.</li>
-                <li>Asks for user confirmation before adding items to active inventory.</li>
+
+                <li>Use Excel, CSV or manual input for document values.</li>
+                <li>No PDF values are imported automatically.</li>
               </ul>
             </div>
           </div>
@@ -339,14 +332,14 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <button 
+                <button
                   onClick={handleConfirmPdfImport}
                   className="p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center justify-between transition-all text-xs group"
                 >
                   <span>1. Add Items to BOM Inventory</span>
                   <Plus size={16} className="group-hover:scale-110 transition-transform" />
                 </button>
-                <button 
+                <button
                   onClick={handleAskAiAboutPdf}
                   className="p-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-lg font-bold flex items-center justify-between transition-all text-xs group"
                 >
@@ -368,8 +361,8 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
           <form onSubmit={handlePresetAdd} className="space-y-3 text-xs">
             <div>
               <label className="block font-bold text-slate-700 mb-1">Select Preset Material / Fuel (Dropdown)</label>
-              <select 
-                value={selectedPreset} 
+              <select
+                value={selectedPreset}
                 onChange={(e) => setSelectedPreset(e.target.value)}
                 className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-emerald-500 font-semibold bg-white"
               >
@@ -384,10 +377,10 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
 
             <div>
               <label className="block font-bold text-slate-700 mb-1">Or Enter Custom Item Name</label>
-              <input 
-                type="text" 
-                placeholder="Custom material name..." 
-                value={customName} 
+              <input
+                type="text"
+                placeholder="Custom material name..."
+                value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-emerald-500 font-semibold"
               />
@@ -396,17 +389,17 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Quantity</label>
-                <input 
-                  type="number" 
-                  value={selectedPreset ? presetQty : customQty} 
+                <input
+                  type="number"
+                  value={selectedPreset ? presetQty : customQty}
                   onChange={(e) => selectedPreset ? setPresetQty(e.target.value) : setCustomQty(e.target.value)}
                   className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-emerald-500 font-semibold"
                 />
               </div>
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Unit</label>
-                <select 
-                  value={customUnit} 
+                <select
+                  value={customUnit}
                   onChange={(e) => setCustomUnit(e.target.value)}
                   className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-emerald-500 font-semibold bg-white"
                 >
@@ -429,9 +422,9 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
 
         {activeTab === 'paste' && (
           <div className="space-y-3 text-xs">
-            <textarea 
-              rows="5" 
-              value={pasteText} 
+            <textarea
+              rows="5"
+              value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               placeholder="Item Description,Quantity,Unit,Emission Factor&#10;Diesel Generator,500,Liters,2.6558&#10;Grid Electricity,12000,kWh,0.716"
               className="w-full p-2.5 font-mono border border-slate-300 rounded-lg outline-none focus:border-emerald-500 bg-slate-50"

@@ -1,0 +1,10 @@
+import { expect, it } from 'bun:test';
+import { generateBrsrCorePcfData } from '../../src/services/pcfExport.js';
+import { generateOpenLcaJsonLd } from '../../src/services/openLcaBridge.js';
+import { auditInventory, csvCell, parseWorkspaceBackup } from '../../src/services/ghg/inventoryAudit.js';
+const p={id:'test',periods:[{year:2023,bom:[]},{year:2024,bom:[{name:'Steel',qty:10,ef:2,unit:'kg',scope:'Scope 3',scope3Category:'Cat 1: Purchased Goods & Services'}]}]};
+it('exports selected year, names, categories and no invented production/source',()=>{const d=generateBrsrCorePcfData(p,2024);expect(d.inventorySummary.grossCarbonFootprint_tCO2e).toBe(0.02);expect(d.metadata.reportingPeriod).toBe('FY2024');expect(d.lineItemActivityLedger[0].itemDescription).toBe('Steel');expect(d.scope3CategoryBreakdown[0].categoryNumber).toBe(1);expect(d.productionMetrics.productCarbonIntensity_tCO2e_per_unit).toBeNull();expect(d.lineItemActivityLedger[0].emissionFactorSource).toBe('Not recorded');});
+it('openLCA bridge handles regular name-only rows without crashing',()=>expect(generateOpenLcaJsonLd(p,2024).exchanges[1].flow.name).toBe('Steel'));
+it('audit flags evidence and category gaps without claiming assurance',()=>expect(auditInventory([{name:'Diesel',qty:1,ef:2,unit:'L',scope:'Scope 1',approved:false}]).map(i=>i.code)).toEqual(['source','approval']));
+it('spreadsheet CSV neutralizes formula injection',()=>{expect(csvCell('=HYPERLINK("bad")')).toStartWith('"\'');expect(csvCell('a,b')).toBe('"a,b"');});
+it('backup validation rejects malformed input and accepts real projects',()=>{expect(()=>parseWorkspaceBackup({projects:[p]})).toThrow();expect(parseWorkspaceBackup({format:'netzerocalc-workspace-backup',projects:[p]})).toHaveLength(1);});

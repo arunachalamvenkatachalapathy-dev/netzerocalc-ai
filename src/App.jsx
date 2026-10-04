@@ -1,4 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import InventoryReadiness from './components/InventoryReadiness.jsx';
+import { parseWorkspaceBackup } from './services/ghg/inventoryAudit.js';
 import Header from './components/Header.jsx';
 import NavigationTabs from './components/NavigationTabs.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -123,6 +125,8 @@ export default function App() {
     return localStorage.getItem('netzerocalc_has_visited') !== 'true';
   });
   const [activeTab, setActiveTab] = useState('workbench');
+  const [cloudStatus, setCloudStatus] = useState('local');
+  const [cloudReady, setCloudReady] = useState(false);
   const [projects, setProjects] = useState(() => {
     return loadAndMigrateProjects(INITIAL_PROJECTS);
   });
@@ -147,11 +151,18 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!authUser) return;
-    loadUserProjects().then((remoteProjects) => {
-      if (remoteProjects?.length) setProjects(remoteProjects.map(normalizeProject));
-    }).catch((error) => console.warn('Project load failed:', error.message));
-  }, [authUser]);
+    let alive = true;
+    setCloudReady(false);
+    if (!authUser) { setCloudStatus('local'); return () => { alive = false; }; }
+    setCloudStatus('loading');
+    loadUserProjects().then(remoteProjects => {
+      if (!alive) return;
+      // Never upload cached data into a different signed-in account.
+      setProjects(remoteProjects?.length ? remoteProjects.map(normalizeProject) : INITIAL_PROJECTS.map(p=>normalizeProject({...p,id:crypto.randomUUID()})));
+      setCloudReady(true); setCloudStatus('saved');
+    }).catch(error => { if (alive) setCloudStatus(`error: ${error.message}`); });
+    return () => { alive = false; };
+  }, [authUser?.id]);
 
   // Modals & Sidebars
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -171,6 +182,7 @@ export default function App() {
   };
 
   const handleStartTutorial = () => {
+    if (currentBOM.length && !window.confirm('Replace your active inventory with demo data? Export a backup first if needed.')) return;
     setCurrentBOM(DEMO_BOM_2024);
     setIsTutorialOpen(true);
     showToast('Loaded demonstration dataset for interactive walkthrough.');
@@ -221,6 +233,7 @@ export default function App() {
   };
 
   const setCurrentBOM = (newBOM) => {
+    if (activePeriod.status === 'locked') { showToast('This reporting period is locked. Unlock it in Periods before editing.'); return; }
     setProjects(prevProjects => prevProjects.map(proj => {
       if (proj.id === activeProjectId) {
         const norm = normalizeProject(proj);
@@ -253,6 +266,7 @@ export default function App() {
   };
 
   const updateActiveProject = (updates) => {
+    if (activePeriod.status === 'locked' && !updates.periods && !updates.activePeriodYear) {showToast('Unlock this reporting period before editing.');return;}
     setProjects(prevProjects => prevProjects.map(proj => {
       if (proj.id === activeProjectId) {
         return { ...proj, ...updates };
@@ -374,12 +388,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('netzerocalc_v4_projects', JSON.stringify(projects));
     localStorage.setItem('netzerocalc_v3_projects', JSON.stringify(projects));
-    if (!authUser) return undefined;
+    if (!authUser || !cloudReady) return undefined;
+    setCloudStatus('pending');
     const timer = setTimeout(() => {
-      saveUserProjects(projects).catch((error) => console.warn('Project save failed:', error.message));
+      setCloudStatus('saving');
+      saveUserProjects(projects).then(() => setCloudStatus('saved')).catch(error => setCloudStatus(`error: ${error.message}`));
     }, 1500);
     return () => clearTimeout(timer);
-  }, [projects, authUser]);
+  }, [projects, authUser, cloudReady]);
 
   useEffect(() => {
     localStorage.setItem('netzerocalc_active_proj_id', activeProjectId);
@@ -459,7 +475,7 @@ export default function App() {
   const handleApplyScenario = (scenarioData) => {
     setAppliedScenario(scenarioData);
     appendChangeLog('SCENARIO_APPLIED', `Applied decarbonization scenario: ${scenarioData.name || 'Custom Reduction'}`);
-    showToast("Scenario applied! Baseline vs Project scenario synchronized for ISO 14064-2 report.");
+    showToast("Scenario applied! Planning scenario attached to your internal report.");
     setActiveTab('compliance');
   };
 
@@ -598,6 +614,12 @@ export default function App() {
 
       {/* Main View Container */}
       <main className="max-w-7xl mx-auto px-4 pt-6">
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3 text-xs flex flex-wrap items-center gap-3">
+          <span role="status">{cloudStatus === 'local' ? 'Browser-only storage. Export a backup before clearing browser data.' : cloudStatus.startsWith('error:') ? `Cloud save stopped. Local changes are retained. ${cloudStatus.slice(7)}` : `Cloud: ${cloudStatus}`}</span>
+          <button className="font-bold underline" onClick={() => {const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({format:'netzerocalc-workspace-backup',version:1,exportedAt:new Date().toISOString(),projects},null,2)],{type:'application/json'}));a.download='NetZeroCalc_Workspace_Backup.json';a.click();URL.revokeObjectURL(a.href);}}>Export All Workspaces</button>
+          <label className="font-bold underline cursor-pointer">Restore Backup<input aria-label="Restore workspace backup" type="file" accept=".json" className="hidden" onChange={async e=>{const f=e.target.files[0];if(!f)return;try{const incoming=parseWorkspaceBackup(JSON.parse(await f.text()));if(!window.confirm(`Add ${incoming.length} restored workspace(s) as new copies? Existing workspaces will not be replaced.`))return;const copies=incoming.map(p=>({...p,id:crypto.randomUUID(),projectName:`${p.projectName || 'Workspace'} (restored)`}));setProjects(prev=>[...prev,...copies]);setActiveProjectId(copies[0].id);showToast('Backup restored as new workspace copies.');}catch(error){showToast(error.message);}e.target.value='';}} /></label>
+        </div>
+        {activeTab === 'workbench' && <InventoryReadiness items={currentBOM} project={activeProject} period={activePeriod} onUpdateProject={updateActiveProject} />}
         <Suspense fallback={<div className="py-24 text-center text-sm text-slate-400">Loading...</div>}>
         {activeTab === 'workbench' && (
           <WorkbenchView 

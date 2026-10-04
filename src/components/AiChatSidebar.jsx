@@ -58,6 +58,8 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
@@ -69,7 +71,7 @@ export default function AiChatSidebar({ isOpen, onClose, activeProject, screenCo
       )}
 
       {/* Sidebar Panel */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[480px] lg:w-[540px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+      <div role="dialog" aria-modal="true" aria-label="AI copilot" className={`fixed top-0 right-0 h-full w-full sm:w-[480px] lg:w-[540px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         

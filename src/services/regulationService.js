@@ -6,6 +6,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || '';
  * Fetch regulations from backend API with automatic fallback to bundled database
  */
 export async function fetchRegulations({ status = 'all', region = 'All Regions', search = '' } = {}) {
+  if (!API_BASE) return filterRegulationsLocally(REGULATIONS_2026_DATABASE, { status, region, search });
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);

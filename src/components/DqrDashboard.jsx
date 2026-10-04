@@ -33,7 +33,7 @@ export default function DqrDashboard({ project, activePeriodYear, onUpdateBomIte
   const totalEmissions = bom.reduce((sum, item) => sum + (item.result_tco2e ?? ((item.qty * item.ef) / 1000)), 0);
   const weightedDqrSum = bom.reduce((sum, item) => {
     const itemEmissions = (item.result_tco2e ?? ((item.qty * item.ef) / 1000));
-    return sum + (getItemDqr(item) * (itemEmissions > 0 ? itemEmissions : 0.001));
+    return sum + (getItemDqr(item) * Math.max(0, itemEmissions));
   }, 0);
   const projectDqr = totalEmissions > 0 ? (weightedDqrSum / totalEmissions) : 2.0;
 
@@ -67,7 +67,7 @@ export default function DqrDashboard({ project, activePeriodYear, onUpdateBomIte
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
               ISO 14044 / GHG Product Standard
             </span>
-            <span className="text-xs text-slate-500 font-medium">Reporting Period: <strong>{activePeriod.periodName}</strong></span>
+            <span className="text-xs text-slate-500 font-medium">Reporting Period: <strong>{activePeriod.periodName || activePeriod.label || `FY${activePeriod.year}`}</strong></span>
           </div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight mt-1">Data Quality Rating (DQR) & Pedigree Matrix</h2>
           <p className="text-sm text-slate-500 mt-1 max-w-2xl">
@@ -105,25 +105,25 @@ export default function DqrDashboard({ project, activePeriodYear, onUpdateBomIte
 
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
-            onClick={() => downloadBrsrCorePcfJson(project)}
+            onClick={() => downloadBrsrCorePcfJson(project, activePeriodYear)}
             className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             BRSR Core PCF (JSON)
           </button>
           <button
-            onClick={() => downloadBrsrCorePcfCsv(project)}
+            onClick={() => downloadBrsrCorePcfCsv(project, activePeriodYear)}
             className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-600" />
             BRSR Core PCF (CSV)
           </button>
           <button
-            onClick={() => downloadOpenLcaJsonLd(project)}
+            onClick={() => downloadOpenLcaJsonLd(project, activePeriodYear)}
             className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-sm shadow-emerald-600/20 transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4 text-white" />
-            openLCA JSON-LD (.jsonld)
+            Experimental openLCA bridge (.jsonld)
           </button>
         </div>
       </div>

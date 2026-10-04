@@ -174,6 +174,7 @@ export default function WorkbenchView({
 
   // Load Sample Demo Data
   const handleLoadSampleDemo = () => {
+    if (currentBOM.length && !window.confirm('Replace the active inventory with sample data? Export a backup first.')) return;
     const demoItems = [
       { id: Date.now() + 1, name: "Aluminum Sheet, Primary Ingot 5052-H32", qty: 1450, unit: "kg", process: "Aluminum Sheet Primary Ingot", ef: 14.2, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: true },
       { id: Date.now() + 2, name: "Custom Polyurethane Foam Insert", qty: 320, unit: "pcs", process: "Polyurethane Flexible Foam Fabrication", ef: 4.8, scope: "Scope 3", scope3Category: "Cat 1: Purchased Goods & Services", gwpBasis: "IPCC AR6", ter: 1, ger: 1, tir: 1, risk: "LOW", status: "[DEMO DATA] Auto-Matched", approved: true },
@@ -471,7 +472,7 @@ export default function WorkbenchView({
             className="flex-1 min-w-[260px] text-xs font-bold p-2.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 cursor-pointer"
           >
             <option value="" className="bg-white text-slate-900 font-semibold p-2">
-              -- Select Verified Factor ({filteredPresets.length} options) --
+              -- Select Preset Factor ({filteredPresets.length} options) --
             </option>
             {filteredPresets.map(f => (
               <option key={f.key} value={f.key} className="bg-white text-slate-900 font-semibold p-2">
@@ -750,4 +751,4 @@ export default function WorkbenchView({
 
     </div>
   );
-            }
+}

@@ -1,0 +1,19 @@
+import React from 'react';
+import { auditInventory, emissions } from '../services/ghg/inventoryAudit.js';
+export default function InventoryReadiness({ items, project, period, onUpdateProject }) {
+  const issues = auditInventory(items);
+  const download = () => {
+    const data = { format: 'netzerocalc-audit-readiness', generatedAt: new Date().toISOString(), project: project.projectName, year: period.year, totalTco2e: items.reduce((s,i)=>s+emissions(i),0), issues, inventory: items, reportingNotes: project.reportingNotes || {}, organization: project.organization, facilities: project.facilities, disclaimer: 'Internal completeness checks only. Not assurance, certification or full LCA.' };
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download=`NetZeroCalc_Readiness_FY${period.year}.json`;a.click();URL.revokeObjectURL(a.href);
+  };
+  return <section className="rounded-2xl border border-slate-200 bg-white p-5 mb-5 space-y-3">
+    <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-bold text-sm">Inventory readiness & product boundary</h2><p className="text-xs text-slate-500">{items.length} rows · {issues.length} review flags. Internal checks, not third-party assurance.</p></div><button onClick={download} className="text-xs font-bold rounded-lg border px-3 py-2">Export Readiness JSON</button></div>
+    <div className="grid sm:grid-cols-3 gap-3 text-xs">
+      <label>Production volume (optional)<input aria-label="Production volume" type="number" min="0" value={project.productionVolume ?? ''} onChange={e=>onUpdateProject({productionVolume:e.target.value===''?null:Number(e.target.value)})} className="block w-full border rounded-lg p-2 mt-1" /></label>
+      <label>Production unit<input aria-label="Production unit" placeholder="e.g. units or tonnes" value={project.productionUnit || ''} onChange={e=>onUpdateProject({productionUnit:e.target.value})} className="block w-full border rounded-lg p-2 mt-1" /></label>
+      <label>Product system boundary<select aria-label="Product system boundary" value={project.systemBoundary || ''} onChange={e=>onUpdateProject({systemBoundary:e.target.value})} className="block w-full border rounded-lg p-2 mt-1"><option value="">Not configured</option><option>Cradle-to-gate</option><option>Cradle-to-grave</option><option>Gate-to-gate</option><option>Corporate inventory (not a product LCA)</option></select></label>
+    </div>
+    <details><summary className="cursor-pointer text-xs font-semibold">GHG Protocol reporting notes</summary><p className="text-xs text-slate-500 mt-2">Based on the reporting template. Unfilled fields are not assumed. Gas-specific, biogenic and offset disclosure still require separate verified data.</p><div className="grid sm:grid-cols-2 gap-3 mt-2">{[['exclusions','Excluded facilities / sources and reasons'],['baseYearPolicy','Base-year recalculation policy'],['methodology','Methodology and factor references'],['verification','External verification statement / not verified'],['uncertainty','Uncertainty and data improvement plan'],['reductionPlan','Reduction programs and changes']].map(([key,label])=><label key={key} className="text-xs">{label}<textarea aria-label={label} value={project.reportingNotes?.[key] || ''} onChange={e=>onUpdateProject({reportingNotes:{...project.reportingNotes,[key]:e.target.value}})} className="block w-full rounded border p-2 mt-1" /></label>)}</div></details>
+    {issues.length>0 && <details><summary className="cursor-pointer text-xs font-semibold text-amber-800">Review missing evidence and assignments</summary><ul className="mt-2 space-y-1 text-xs max-h-48 overflow-auto">{issues.map((i,n)=><li key={n}><strong>{i.item}:</strong> {i.detail}</li>)}</ul></details>}
+  </section>;
+}

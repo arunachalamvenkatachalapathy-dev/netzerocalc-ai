@@ -28,7 +28,7 @@ export default function SimulatorView({ currentBOM, showToast, onApplyScenario }
   // Sim Matrix Calculation (Using exact database factor swapping)
   const simMatrix = currentBOM.map(item => {
     let factor = item.ef;
-    const nameLower = item.name.toLowerCase();
+    const nameLower = String(item.name || item.item || '').toLowerCase();
 
     // 1. Recycled material lever (Swap primary virgin metal factor with secondary database scrap factor)
     if (recycledPct > 0 && nameLower.includes('aluminum')) {
@@ -76,9 +76,9 @@ export default function SimulatorView({ currentBOM, showToast, onApplyScenario }
   const avoidedTotal = Math.max(0, baselineTotal - netFootprint);
 
   // Financial Metrics
-  const internalDecarbonizationValueInr = avoidedTotal * (parseFloat(carbonPriceInr) || 1500);
-  const cbamSavingsEur = avoidedTotal * (parseFloat(cbamTariffEur) || 85);
-  const cbamSavingsInr = cbamSavingsEur * (parseFloat(inrEurRate) || 90);
+  const internalDecarbonizationValueInr = avoidedTotal * (Number(carbonPriceInr) || 0);
+  const cbamSavingsEur = avoidedTotal * (Number(cbamTariffEur) || 0);
+  const cbamSavingsInr = cbamSavingsEur * (Number(inrEurRate) || 0);
 
   // Comparison Chart Data: Baseline vs. Simulated Decarbonization
   const comparisonData = useMemo(() => [
@@ -155,7 +155,7 @@ export default function SimulatorView({ currentBOM, showToast, onApplyScenario }
         <div>
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
             <Sliders className="w-4 h-4" />
-            <span>ISO 14064-2 Decarbonization Scenario Engine</span>
+            <span>Indicative Decarbonization Scenario Engine</span>
           </div>
           <h2 className="text-xl font-black text-white">What-If Decarbonization Simulator</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
@@ -169,7 +169,7 @@ export default function SimulatorView({ currentBOM, showToast, onApplyScenario }
             className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <CheckCircle className="w-4 h-4" />
-            Apply as ISO 14064-2 Scenario
+            Apply Planning Scenario
           </button>
           <button 
             onClick={handleExportRoadmap}

@@ -26,7 +26,7 @@ export default function GoogleSheetsModal({ isOpen, onClose, currentBOM, activeP
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        showToast("✅ Successfully synced project to Google Sheet & Drive!");
+        showToast("Request sent. This endpoint does not allow response verification; check your Google Sheet before relying on the sync.");
         onClose();
         return;
       } catch (e) {
