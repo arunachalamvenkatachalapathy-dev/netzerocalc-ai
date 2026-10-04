@@ -1,10 +1,12 @@
+import BulkImportPanel from './BulkImportPanel.jsx';
 import React, { useState } from 'react';
 import { X, Upload, FileText, Plus, Check, FileCheck, ArrowRight, Bot, AlertCircle } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { INDIA_GHG_FACTORS } from '../data/indiaGhgFactors.js';
 
-export default function ImportModal({ isOpen, onClose, onImportItems, showToast, onOpenAiCopilot, currentProjectId }) {
+export default function ImportModal({ isOpen, onClose, onImportItems, showToast, onOpenAiCopilot, currentProjectId, importHistory=[] }) {
+  const [pendingMatrix,setPendingMatrix]=useState(null);
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'pdf' | 'preset' | 'paste'
   const [selectedPreset, setSelectedPreset] = useState('');
   const [presetQty, setPresetQty] = useState(100);
@@ -76,61 +78,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
 
   };
 
-  // Process Parsed Matrix Data
-  const processParsedData = (matrix) => {
-    if (!Array.isArray(matrix) || matrix.length === 0) {
-      showToast("No valid rows found in file.");
-      return;
-    }
-
-    const header = matrix.find(row => Array.isArray(row) && row.some(c => /^(?:name|item|material|activity|item description)$/i.test(String(c || '').trim())) && row.some(c => /^(?:qty|quantity|quantity \(input\))$/i.test(String(c || '').trim())));
-    if (!header || !header.some(c=>/^unit$/i.test(String(c||'').trim())) || !header.some(c=>/^(ef|emission factor(?:.*)?)$/i.test(String(c||'').trim()))) {showToast('Unsupported layout. Use a simple table with Name, Quantity, Unit and numeric EF columns. Municipal/CoM matrices must be mapped first.');return;}
-    const col = (pattern, fallback) => {const i=header.findIndex(c=>pattern.test(String(c||'').trim()));return i < 0 ? fallback : i;};
-    const nameCol=col(/^(name|item|material|activity|item description)$/i,0), qtyCol=col(/^(qty|quantity|quantity \(input\))$/i,1), unitCol=col(/^unit$/i,2), efCol=col(/^(ef|emission factor(?:.*)?)$/i,3);
-    const importedItems = [];
-    matrix.slice(matrix.indexOf(header)+1).forEach((row, idx) => {
-      if (!Array.isArray(row) || row.length === 0) return;
-      const first = String(row[nameCol] || '').trim();
-      const firstLower = first.toLowerCase();
-
-      if (row === header || ['name', 'item', 'material', 'activity', 'item name', 'item description'].includes(firstLower)) return;
-      if (!first || firstLower.startsWith('scope') || firstLower.startsWith('category') || firstLower.includes('total')) return;
-
-      const name = first;
-      const qty = Number(String(row[qtyCol] ?? '').replace(/,/g, '').trim());
-      if (!Number.isFinite(qty) || qty < 0 || String(row[qtyCol] ?? '').trim() === '') return;
-      const unit = String(row[unitCol] || 'kg').trim();
-      const rawEf = Number(String(row[efCol] ?? "").trim());
-      if (String(row[efCol] ?? "").trim() === "" || !Number.isFinite(rawEf) || rawEf < 0) return;
-
-      let matchedFactor = INDIA_GHG_FACTORS.find(f => f.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(f.name.toLowerCase()));
-      let ef = rawEf;
-      let scope = matchedFactor ? matchedFactor.scope : (name.toLowerCase().includes('diesel') || name.toLowerCase().includes('cng') ? 'Scope 1' : name.toLowerCase().includes('electricity') ? 'Scope 2' : 'Scope 3');
-
-      importedItems.push({
-        id: crypto.randomUUID(),
-        name: name,
-        qty: qty,
-        unit: unit,
-        process: matchedFactor ? matchedFactor.name : `Uploaded LCI: ${name}`,
-        ef: ef,
-        sim: 0,
-        ter: 5, ger: 5, tir: 5,
-        risk: 'HIGH',
-        scope: scope,
-        status: 'Imported - Needs Review',
-        approved: false
-      });
-    });
-
-    if (importedItems.length > 0) {
-      onImportItems(importedItems);
-      showToast(`Merged ${importedItems.length} rows for review. Invalid quantity/factor rows were skipped; compare the result with your source.`);
-      onClose();
-    } else {
-      showToast("Could not parse items from file.");
-    }
-  };
+  const processParsedData = matrix => {if(!matrix?.length){showToast('No rows found.');return;}setPendingMatrix(matrix);};
 
   // Paste Text Handler
   const handlePastedCsv = () => {
@@ -248,6 +196,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
           </button>
         </div>
 
+        {pendingMatrix && <BulkImportPanel matrix={pendingMatrix} history={importHistory} onCancel={()=>setPendingMatrix(null)} onCommit={(rows,meta)=>{onImportItems(rows,meta);setPendingMatrix(null);onClose();}} />}
         {/* Tab Content */}
         {activeTab === 'upload' && (
           <div className="space-y-3">
@@ -439,4 +388,4 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       </div>
     </div>
   );
-}
+            }
