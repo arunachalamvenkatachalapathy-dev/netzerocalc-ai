@@ -54,6 +54,7 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
   });
 
   const handleAddCustomFactor = () => {
+    if (!customForm.name.trim() || !Number.isFinite(Number(customForm.ef)) || Number(customForm.ef) < 0 || customForm.ef === '') { showToast('Enter a factor name and a non-negative numeric factor.'); return; }
     const newFactor = {
       id: `custom_${Date.now()}`,
       category: customForm.category,
@@ -83,8 +84,12 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
       ter: 1, ger: 1, tir: 1,
       risk: 'LOW',
       scope: factor.scope,
-      status: 'LCI Search Verified',
-      approved: true,
+      status: 'LCI Search - Review Required',
+      approved: false,
+      source: factor.source,
+      sourceUrl: factor.sourceUrl,
+      factorYear: factor.year,
+      factorRegion: factor.region,
       notes: factor.notes
     };
 
