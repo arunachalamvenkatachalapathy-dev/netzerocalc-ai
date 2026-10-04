@@ -475,7 +475,7 @@ export default function App() {
   const handleApplyScenario = (scenarioData) => {
     setAppliedScenario(scenarioData);
     appendChangeLog('SCENARIO_APPLIED', `Applied decarbonization scenario: ${scenarioData.name || 'Custom Reduction'}`);
-    showToast("Scenario applied! Baseline vs Project scenario synchronized for ISO 14064-2 report.");
+    showToast("Scenario applied! Planning scenario attached to your internal report.");
     setActiveTab('compliance');
   };
 
@@ -862,4 +862,4 @@ export default function App() {
 
     </div>
   );
-      }
+              }
