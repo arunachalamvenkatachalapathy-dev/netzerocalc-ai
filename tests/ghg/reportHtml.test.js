@@ -1,0 +1,4 @@
+import {test,expect} from 'bun:test';
+import {prepareCustomReport} from '../../src/services/ghg/customReport.js';
+import {customReportHtml} from '../../src/services/ghg/reportHtml.js';
+test('printable report preserves selected coverage and escapes external content',()=>{const p={companyName:'<img onerror=alert(1)>',systemBoundary:'Cradle-to-gate'};const r=prepareCustomReport(p,{year:2026,bom:[{name:'<script>evil</script>',qty:2,ef:3,scope:'Scope 1',sourceUrl:'javascript:alert(1)'},{name:'other',qty:1,ef:2,scope:'Scope 3'}]},{scope:'Scope 1'});expect(r.excludedRowCount).toBe(1);expect(r.scopeTotals['Scope 1'].totalTco2e).toBe(.006);expect(r.issues.length).toBeGreaterThan(0);const html=customReportHtml(r);expect(html).toContain('&lt;script&gt;');expect(html).not.toContain('<img onerror');expect(html).not.toContain('href="javascript:');expect(html).toContain('1 inventory rows excluded');expect(html).toContain('Cradle-to-gate');});
