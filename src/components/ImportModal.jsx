@@ -388,4 +388,4 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
       </div>
     </div>
   );
-            }
+}
