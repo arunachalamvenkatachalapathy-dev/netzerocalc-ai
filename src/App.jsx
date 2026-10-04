@@ -158,7 +158,7 @@ export default function App() {
     loadUserProjects().then(remoteProjects => {
       if (!alive) return;
       // Never upload cached data into a different signed-in account.
-      setProjects(remoteProjects?.length ? remoteProjects.map(normalizeProject) : INITIAL_PROJECTS.map(normalizeProject));
+      setProjects(remoteProjects?.length ? remoteProjects.map(normalizeProject) : INITIAL_PROJECTS.map(p=>normalizeProject({...p,id:crypto.randomUUID()})));
       setCloudReady(true); setCloudStatus('saved');
     }).catch(error => { if (alive) setCloudStatus(`error: ${error.message}`); });
     return () => { alive = false; };
@@ -862,4 +862,4 @@ export default function App() {
 
     </div>
   );
-              }
+      }
