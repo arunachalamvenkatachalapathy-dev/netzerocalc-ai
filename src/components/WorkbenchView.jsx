@@ -1,3 +1,4 @@
+import { withBomQuantity } from '../services/ghg/bomMerge.js';
 import React, { useState } from 'react';
 import { 
   Plus, Upload, Trash2, CheckCircle2, AlertTriangle, Download, 
@@ -21,7 +22,8 @@ const calcTCO2e = (item) => {
 
 export default function WorkbenchView({ 
   currentBOM, 
-  setCurrentBOM, 
+  setCurrentBOM,
+  onImportItems,
   activePeriod,
   periods = [],
   baseYearPeriod,
@@ -133,7 +135,7 @@ export default function WorkbenchView({
       notes: factorObj.notes
     };
 
-    setCurrentBOM([newItem, ...currentBOM]);
+    onImportItems([newItem]);
     setQuickPreset('');
     showToast(`Added ${factorObj.name} (${quickQty} ${factorObj.unit})`);
   };
@@ -142,7 +144,7 @@ export default function WorkbenchView({
   const handleQtyChange = (id, newQty) => {
     const val = parseFloat(newQty);
     if (isNaN(val) || val < 0) return;
-    setCurrentBOM(currentBOM.map(item => item.id === id ? { ...item, qty: val } : item));
+    setCurrentBOM(currentBOM.map(item => item.id === id ? withBomQuantity(item, val) : item));
   };
 
   // Toggle Approved Status
@@ -748,4 +750,4 @@ export default function WorkbenchView({
 
     </div>
   );
-}
+            }
