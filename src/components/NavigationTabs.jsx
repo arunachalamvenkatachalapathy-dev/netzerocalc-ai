@@ -71,6 +71,8 @@ export default function NavigationTabs({ activeTab, setActiveTab, onOpenFacility
         {/* Secondary Tools & Utilities Dropdown (UI Fix C) */}
         <div className="relative" ref={dropdownRef}>
           <button
+            aria-label="Open tools and registry"
+            aria-expanded={isToolsOpen}
             onClick={() => setIsToolsOpen(!isToolsOpen)}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl transition-all duration-300 active:scale-[0.96] border cursor-pointer ${
               activeTool
