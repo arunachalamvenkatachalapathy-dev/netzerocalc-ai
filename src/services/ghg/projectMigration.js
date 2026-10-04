@@ -42,8 +42,8 @@ export function normalizeProjectWithCorporate(p = {}) {
         activeTo: null,
         metadata: {
           notes: 'Default operational facility created during migration.',
-          floorAreaM2: 5000,
-          employeeCount: 150
+          floorAreaM2: null,
+          employeeCount: null
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
