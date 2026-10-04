@@ -17,7 +17,10 @@ export default class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
-    localStorage.clear();
+    const saved = {format:'netzerocalc-browser-recovery', exportedAt:new Date().toISOString(), storage:Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('netzerocalc_')).map(k=>[k,localStorage.getItem(k)]))};
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(saved,null,2)],{type:'application/json'}));a.download='NetZeroCalc_Recovery_Backup.json';a.click();
+    if (!window.confirm('A recovery backup was downloaded. Clear NetZeroCalc workspace storage? This deletes browser-only work.')) return;
+    for (const key of Object.keys(localStorage)) if (key.startsWith('netzerocalc_')) localStorage.removeItem(key);
     window.location.reload();
   };
 
@@ -37,7 +40,7 @@ export default class ErrorBoundary extends React.Component {
             <div className="space-y-2">
               <h2 className="text-xl font-black text-white">Something went wrong</h2>
               <p className="text-xs text-slate-400">
-                An unexpected UI state occurred. You can reload the workspace or reset cached session data.
+                An unexpected UI state occurred. You can reload the workspace or download a recovery backup before clearing browser-only data.
               </p>
             </div>
 
@@ -59,7 +62,7 @@ export default class ErrorBoundary extends React.Component {
                 onClick={this.handleReset}
                 className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-2 cursor-pointer"
               >
-                <span>Reset Cache & Storage</span>
+                <span>Backup & Reset Workspace</span>
               </button>
             </div>
           </div>
