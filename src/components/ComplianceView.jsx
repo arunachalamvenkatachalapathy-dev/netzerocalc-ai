@@ -6,8 +6,6 @@ import {
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LineChart, Line, Legend 
 } from 'recharts';
-import { pdf } from '@react-pdf/renderer';
-import GhgDeclarationDocument from '../pdf/GhgDeclarationDocument.jsx';
 import { downloadBrsrCorePcfJson, downloadBrsrCorePcfCsv } from '../services/pcfExport.js';
 import { downloadOpenLcaJsonLd } from '../services/openLcaBridge.js';
 
@@ -101,6 +99,7 @@ export default function ComplianceView({
       setIsGeneratingPDF(true);
       if (showToast) showToast("Generating high-resolution audit PDF document...");
 
+      const [{ pdf }, { default: GhgDeclarationDocument }] = await Promise.all([import('@react-pdf/renderer'), import('../pdf/GhgDeclarationDocument.jsx')]);
       const doc = (
         <GhgDeclarationDocument
           currentBOM={currentBOM}
@@ -213,7 +212,7 @@ export default function ComplianceView({
               <button
                 onClick={() => {
                   setIsExportDropdownOpen(false);
-                  downloadBrsrCorePcfJson(activeProject);
+                  downloadBrsrCorePcfJson(activeProject, activePeriod?.year);
                 }}
                 className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 text-slate-800 transition-colors flex items-start gap-2.5 cursor-pointer group"
               >
@@ -230,7 +229,7 @@ export default function ComplianceView({
               <button
                 onClick={() => {
                   setIsExportDropdownOpen(false);
-                  downloadBrsrCorePcfCsv(activeProject);
+                  downloadBrsrCorePcfCsv(activeProject, activePeriod?.year);
                 }}
                 className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 text-slate-800 transition-colors flex items-start gap-2.5 cursor-pointer group"
               >
@@ -247,7 +246,7 @@ export default function ComplianceView({
               <button
                 onClick={() => {
                   setIsExportDropdownOpen(false);
-                  downloadOpenLcaJsonLd(activeProject);
+                  downloadOpenLcaJsonLd(activeProject, activePeriod?.year);
                 }}
                 className="w-full text-left p-2.5 rounded-xl hover:bg-teal-50 text-slate-800 transition-colors flex items-start gap-2.5 cursor-pointer group"
               >
@@ -255,7 +254,7 @@ export default function ComplianceView({
                   <Layers className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-slate-900">openLCA JSON-LD (.jsonld)</div>
+                  <div className="text-xs font-bold text-slate-900">Experimental openLCA bridge (.jsonld)</div>
                   <div className="text-[10px] text-slate-500">ILCD process flow for openLCA import</div>
                 </div>
               </button>
@@ -517,4 +516,4 @@ export default function ComplianceView({
 
     </div>
   );
-}
+      }
