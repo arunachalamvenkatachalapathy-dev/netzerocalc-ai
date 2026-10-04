@@ -232,7 +232,7 @@ export default function ImportModal({ isOpen, onClose, onImportItems, showToast,
             onClick={() => { setActiveTab('pdf'); }}
             className={`flex-1 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 ${activeTab === 'pdf' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
-            <FileCheck size={14} /> PDF Upload & Parser (&gt;250KB)
+            <FileCheck size={14} /> PDF values (manual only)
           </button>
           <button
             onClick={() => setActiveTab('preset')}
