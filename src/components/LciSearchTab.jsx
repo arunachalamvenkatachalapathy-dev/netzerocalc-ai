@@ -1,3 +1,4 @@
+import PublicFactorCatalogue from './PublicFactorCatalogue.jsx';
 import React, { useState, useEffect } from 'react';
 import { Search, Globe, Filter, Plus, Database, Sparkles, CheckCircle, Save } from 'lucide-react';
 import { GLOBAL_LCI_DATABASE } from '../data/globalLciDatabase.js';
@@ -44,8 +45,8 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
   const filteredFactors = allFactors.filter(f => {
     const matchesSearch = searchTerm.trim() === '' || 
       f.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      f.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.notes.toLowerCase().includes(searchTerm.toLowerCase());
+      String(f.source||'').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(f.notes||'').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = selectedCategory === 'ALL' || f.category === selectedCategory;
     const matchesRegion = selectedRegion === 'ALL' || f.region === selectedRegion;
@@ -100,6 +101,7 @@ export default function LciSearchTab({ onAddFactorToBOM, showToast }) {
 
   return (
     <div className="space-y-6">
+      <PublicFactorCatalogue onAddFactorToBOM={onAddFactorToBOM} showToast={showToast}/> 
       
       {/* Search Header Banner */}
       <div className="bg-slate-900 text-white rounded-xl p-6 shadow-sm space-y-4">
