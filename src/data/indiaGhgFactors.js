@@ -90,7 +90,7 @@ export const INDIA_GHG_FACTORS = [
     "ef": 675,
     "scope": "Scope 1",
     "scope3Category": "N/A",
-    "gwpBasis": "IPCC AR6 (CO2, CH4, N2O)",
+    "gwpBasis": "IPCC AR4 GWP-100 (refrigerant)",
     "notes": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework",
     "sourceUrl": "http://www.indiaghgplatform.org/",
     "status": "Fixed Factor"
@@ -102,7 +102,7 @@ export const INDIA_GHG_FACTORS = [
     "ef": 2088,
     "scope": "Scope 1",
     "scope3Category": "N/A",
-    "gwpBasis": "IPCC AR6 (CO2, CH4, N2O)",
+    "gwpBasis": "IPCC AR4 GWP-100 (refrigerant)",
     "notes": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework",
     "sourceUrl": "http://www.indiaghgplatform.org/",
     "status": "Fixed Factor"
@@ -114,7 +114,7 @@ export const INDIA_GHG_FACTORS = [
     "ef": 1810,
     "scope": "Scope 1",
     "scope3Category": "N/A",
-    "gwpBasis": "IPCC AR6 (CO2, CH4, N2O)",
+    "gwpBasis": "IPCC AR4 GWP-100 (refrigerant)",
     "notes": "IPCC AR4 GWP-100 (kgCO2e/kg) -- verify vintage required by your framework",
     "sourceUrl": "http://www.indiaghgplatform.org/",
     "status": "Fixed Factor"
